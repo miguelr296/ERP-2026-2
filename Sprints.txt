@@ -1,0 +1,60 @@
+Plan de Implementación: Prototipo Frontend ERP Comercial Famihogar S.A.C.
+Descripción del Objetivo
+
+El objetivo es construir un prototipo funcional (frontend) para el módulo comercial del ERP de la empresa ficticia Mueblería Famihogar S.A.C., basado íntegramente en el macroproceso PO.02 (Order-to-Cash) y su Matriz de Trazabilidad v3.
+
+El prototipo deberá reflejar fielmente la estructura de menús (49 subopciones), simular los diferentes flujos (MTS, MTO, Retail, B2B), los controles de reglas de negocio y los diferentes roles involucrados, respetando estándares modernos de desarrollo en Angular.
+
+NOTE
+
+Como acordamos, este es un prototipo "frontend-only". Toda la lógica de negocio compleja, cálculo persistente y almacenamiento de datos se simulará mediante Mocking (interceptores HTTP y LocalStorage) directamente en la capa de servicios de la aplicación.
+
+🏗️ Arquitectura y Stack Tecnológico Propuesto (Actualizado)
+
+Acorde a tu requerimiento, el desarrollo se realizará utilizando Angular.
+
+Core Framework: Angular + TypeScript
+Utilizaremos el enfoque de Standalone Components para una arquitectura más limpia y modular.
+Librería de Componentes y Estilos: PrimeNG + Tailwind CSS (o Angular Material)
+Tailwind CSS servirá para utilidades y construcción rápida de layouts que complementen a los componentes.
+Gestión de Estado: Servicios de Angular + RxJS (BehaviorSubjects)
+Al ser un prototipo, el uso de NgRx (Redux) puede agregar demasiada complejidad innecesaria. Usaremos RxJS para manejar estados globales reactivos (ej. usuario logueado, carrito de la cotización actual, sede seleccionada).
+Enrutamiento: Angular Router
+Implementaremos Lazy Loading y Guards de rutas. El esquema de rutas reflejará la estructura de árbol descrita en el documento: Sistema → Subsistema → Módulo → Opción → Subopción.
+Simulación de Backend (Mocking): Angular HTTP Interceptors
+Implementaremos un interceptor que "atrape" las peticiones HTTP que haga el frontend y devuelva respuestas mockeadas usando datos estáticos en JSON o LocalStorage, añadiendo un retraso simulado (ej. 500ms) para emular latencia de red.
+📅 Plan de Acción y Sprints
+
+Implementaremos el sistema bajo un marco de Sprints temáticos.
+
+Sprint 1: Foundation (Arquitectura, Layout y Login de Roles)
+Configuración del proyecto (Angular CLI, PrimeNG, Tailwind).
+Estructuración de la arquitectura en carpetas (core, shared, features).
+Módulo de Autenticación (Login): Pantalla de inicio de sesión que permita seleccionar / loguearse asumiendo cualquiera de los 18 roles descritos (Asesor comercial, Ejecutivo B2B, Jefatura, etc.).
+App Layout: Implementación del Sidebar dinámico (dependiente del rol activo) con los menús definidos y Topbar con la configuración de sede.
+Sprint 2: CRM y Pre-venta (15 RFs)
+Clientes: Pantallas de búsqueda y creación de ficha única (validación de RUC/DNI).
+Oportunidades: Registro y derivación.
+Disponibilidad: Consulta del catálogo y stock físico vs. reservado por sede (MTS).
+Integración simulada (ING): Creación de la solicitud digital de costeo (MTO) y bandeja de seguimiento.
+Sprint 3: Precios, Descuentos y Cotizaciones (15 RFs)
+Listas de Precios: Aplicación automática según segmento.
+Cotizador Web: Formulario reactivo complejo para la elaboración de la cotización, con cálculo dinámico de subtotales e IGV.
+Descuentos: Lógica (en el mock/interceptor) que evalúa si el descuento rompe la tabla parametrizada (RF-COM-019), bloqueando la cotización y enviándola a la bandeja de aprobaciones.
+Simulación de vista previa de PDF.
+Sprint 4: Crédito, Pagos y Pedidos de Venta (21 RFs)
+Créditos y Pagos: Registro de anticipos/vouchers, pantalla para tesorería para validar conciliación bancaria.
+Límites de Crédito: Semáforo de riesgo y flujo de excepciones.
+Generación de Pedido: Botón de "Convertir a Nota de Pedido" que hereda la data de la cotización (sin redigitar) y ejecuta la reserva sistémica de stock.
+Sprint 5: Tableros, Interfaces simuladas y Refinamiento (6 RFs)
+Construcción del Dashboard de KPIs Comerciales (RF-COM-055).
+Pantallas simuladas de Producción (PRO) y Logística (LOG) para notificar envíos a planta o habilitar facturación.
+Revisión de QA contra los Criterios de Aceptación de los 57 RFs de la matriz.
+🛠️ Plan de Verificación y Ejecución
+Se usará Angular CLI (ng serve) para levantar el entorno de desarrollo local.
+El usuario probará interactivamente el inicio de sesión y verificará cómo el menú principal cambia dependiendo del rol seleccionado.
+Se verificarán los flujos de "Order-to-Cash" simulando la red mediante las herramientas de desarrollo del navegador o la latencia inyectada en los interceptores.
+
+TIP
+
+Plan aprobado. Haz clic en Proceed para que el agente inicie la ejecución del Sprint 1: Foundation.
