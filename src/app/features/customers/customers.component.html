@@ -1,0 +1,61 @@
+<section class="customers-page">
+  <div class="page-heading">
+    <div>
+      <a routerLink="/dashboard" class="back-link"><app-icon name="angle-right"></app-icon> Área Comercial</a>
+      <p class="eyebrow">CRM · Clientes</p>
+      <h1>Clientes</h1>
+      <p class="page-description">Consulta y administra la ficha única de clientes de Famihogar.</p>
+    </div>
+     @if (canCreate()) { <button class="primary-button" type="button" (click)="openForm()"><app-icon name="plus"></app-icon> Nuevo cliente</button> }
+  </div>
+
+  @if (feedback()) { <div class="feedback" [class.error]="feedbackType() === 'error'"><app-icon [name]="feedbackType() === 'error' ? 'info-circle' : 'check-circle'"></app-icon>{{ feedback() }}</div> }
+
+  @if (view() === 'history') {
+    <section class="search-panel"><div class="search-heading"><div><p class="eyebrow">Historial del cliente</p><h2>Compras registradas</h2></div><span class="result-count">{{ customerService.customers().length }} fichas</span></div><div class="table-scroll"><table><thead><tr><th>Cliente</th><th>Última compra</th><th>Monto</th><th>Estado</th></tr></thead><tbody>@for (customer of customerService.customers(); track customer.id) {@for (purchase of customer.purchases ?? []; track purchase.id) {<tr><td><strong>{{ customer.name }}</strong><small>{{ customer.documentNumber }}</small></td><td>{{ purchase.date }} · {{ purchase.description }}</td><td>S/ {{ purchase.amount | number:'1.0-2' }}</td><td>{{ purchase.status }}</td></tr>}} @empty {<tr><td colspan="4" class="empty-state"><app-icon name="info-circle"></app-icon><strong>No hay compras registradas</strong><span>El historial se habilitará cuando existan pedidos asociados.</span></td></tr>}</tbody></table></div></section>
+  } @else if (view() === 'b2b') {
+    <section class="search-panel"><div class="search-heading"><div><p class="eyebrow">Expediente B2B</p><h2>Crédito y documentos</h2></div><span class="result-count">{{ customerService.customers().filter(c => c.customerType === 'Empresa').length }} empresas</span></div><div class="table-scroll"><table><thead><tr><th>Empresa</th><th>RUC</th><th>Límite de crédito</th><th>Documentos</th></tr></thead><tbody>@for (customer of customerService.customers().filter(c => c.customerType === 'Empresa'); track customer.id) {<tr><td><strong>{{ customer.name }}</strong><small>{{ customer.email }}</small></td><td>{{ customer.documentNumber }}</td><td>S/ {{ customer.creditLimit ?? 0 | number:'1.0-2' }}</td><td>{{ customer.documents?.length ?? 0 }} documento(s)</td></tr>} @empty {<tr><td colspan="4" class="empty-state"><app-icon name="info-circle"></app-icon><strong>No hay expedientes B2B</strong><span>Registra una empresa para iniciar su expediente.</span></td></tr>}</tbody></table></div></section>
+  } @else {
+  <section class="search-panel">
+    <div class="search-heading"><div><p class="eyebrow">Ficha única</p><h2>Búsqueda de clientes</h2></div><span class="result-count">{{ filteredCustomers().length }} resultados</span></div>
+    <div class="search-controls">
+      <label class="search-input"><app-icon name="search"></app-icon><input type="search" placeholder="Buscar por documento, nombre o correo" [value]="searchTerm()" (input)="updateSearch($event)" /></label>
+      <div class="filter-group" aria-label="Filtrar por documento">
+        @for (filter of ['Todos', 'DNI', 'RUC']; track filter) { <button type="button" [class.active]="documentFilter() === filter" (click)="setDocumentFilter($any(filter))">{{ filter }}</button> }
+      </div>
+    </div>
+  </section>
+
+  <section class="table-panel">
+    <div class="table-scroll"><table>
+      <thead><tr><th>Cliente</th><th>Documento</th><th>Contacto</th><th>Sede de registro</th><th>Alta</th>@if (canCreate()) { <th>Acciones</th> }</tr></thead>
+      <tbody>
+        @for (customer of filteredCustomers(); track customer.id) {
+          <tr><td><strong>{{ customer.name }}</strong><small>{{ customer.customerType }} · {{ customer.status ?? 'Activo' }}</small></td><td><span class="document-chip">{{ customer.documentType }}</span> {{ customer.documentNumber }}</td><td><strong>{{ customer.email }}</strong><small>{{ customer.phone }}</small></td><td>{{ customer.siteId | titlecase }}</td><td>{{ customer.createdAt }}</td>@if (canCreate()) { <td><button type="button" class="action-button" (click)="openEdit(customer)">Editar</button><button type="button" class="action-button" (click)="toggleStatus(customer)">{{ customer.status === 'Inactivo' ? 'Activar' : 'Inactivar' }}</button></td> }</tr>
+        } @empty { <tr><td colspan="5" class="empty-state"><app-icon name="search"></app-icon><strong>No encontramos clientes</strong><span>Prueba con otro término o registra una nueva ficha.</span></td></tr> }
+      </tbody>
+    </table></div>
+  </section>
+  }
+
+  @if (showForm()) {
+    <div class="modal-backdrop" (click)="closeForm()">
+      <section class="customer-modal" role="dialog" aria-modal="true" aria-labelledby="new-customer-title" (click)="$event.stopPropagation()">
+        <div class="modal-heading"><div><p class="eyebrow">Registro CRM</p><h2 id="new-customer-title">Nueva ficha de cliente</h2></div><button type="button" class="icon-button" aria-label="Cerrar" (click)="closeForm()"><app-icon name="times"></app-icon></button></div>
+        <p class="modal-description">La ficha será visible para el equipo comercial según los permisos del rol activo.</p>
+        <form [formGroup]="customerForm" (ngSubmit)="saveCustomer()">
+          <div class="form-grid">
+            <label>Tipo de documento<select formControlName="documentType"><option value="DNI">DNI · Persona</option><option value="RUC">RUC · Empresa</option></select></label>
+            <label>Documento<input formControlName="documentNumber" inputmode="numeric" maxlength="11" placeholder="Ingrese el número" /><small class="field-error" [class.visible]="controlError('documentNumber')">{{ customerForm.controls.documentType.value === 'DNI' ? 'DNI inválido: requiere 8 dígitos.' : 'RUC inválido: revisa prefijo y dígito verificador.' }}</small></label>
+            <label class="wide">Nombre o razón social<input formControlName="name" placeholder="Ej. María Fernanda Salazar" /><small class="field-error" [class.visible]="controlError('name')">Ingresa al menos 3 caracteres.</small></label>
+            <label>Correo electrónico<input formControlName="email" type="email" placeholder="cliente@correo.com" /></label>
+            <label>Teléfono<input formControlName="phone" inputmode="tel" placeholder="987654321" /></label>
+            <label class="wide">Dirección<input formControlName="address" placeholder="Dirección fiscal o de contacto" /></label>
+          </div>
+          @if (feedbackType() === 'error' && feedback()) { <p class="form-error"><app-icon name="info-circle"></app-icon>{{ feedback() }}</p> }
+           <div class="modal-actions"><button type="button" class="secondary-button" (click)="closeForm()">Cancelar</button>@if (canCreate()) { <button type="submit" class="primary-button"><app-icon name="check"></app-icon> Guardar cliente</button> }</div>
+        </form>
+      </section>
+    </div>
+  }
+</section>

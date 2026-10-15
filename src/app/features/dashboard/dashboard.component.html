@@ -1,0 +1,51 @@
+<div class="dashboard-page">
+  @if (selectedMenu(); as selected) {
+    <section class="module-preview">
+      <div class="module-preview-top">
+        <div class="module-icon"><app-icon [name]="selected.subsystem.icon"></app-icon></div>
+        <div>
+          <p class="eyebrow">{{ selected.system.shortLabel }} · {{ selected.item.code }}</p>
+          <h1>{{ selected.item.label }}</h1>
+          <p class="module-path">{{ selected.system.label }} <app-icon name="angle-right"></app-icon> {{ selected.subsystem.label }} <app-icon name="angle-right"></app-icon> {{ selected.item.module }} <app-icon name="angle-right"></app-icon> {{ selected.item.option }}</p>
+        </div>
+      </div>
+      <div class="preview-message"><app-icon name="wrench"></app-icon><div><strong>Pantalla contemplada en el alcance del prototipo</strong><p>La navegación, el rol y la trazabilidad ya están habilitados en Sprint 1. La funcionalidad de esta opción se implementará en el sprint temático correspondiente.</p></div><span class="status-chip">Planificada</span></div>
+    </section>
+  } @else {
+    <section class="hero-section">
+      <div>
+        <p class="eyebrow">Workspace comercial · {{ currentSite().label }}</p>
+        <h1>Buenos días, {{ greetingName() }}.</h1>
+        <p class="hero-copy">Esta es la base operativa del ERP Comercial Famihogar. Desde aquí podrás recorrer los procesos del macroproceso PO.02 con navegación y permisos por rol.</p>
+      </div>
+      <div class="hero-badge"><span class="pulse"></span><strong>Sprint 2</strong><small>Sprint 1 cerrada · Sprint 2 en revisión</small></div>
+    </section>
+  }
+
+  <section class="section-heading"><div><p class="eyebrow">Control de alcance</p><h2>Base del sistema</h2></div><span class="last-update"><app-icon name="clock"></app-icon> Sesión iniciada hoy</span></section>
+  <section class="foundation-grid">
+    @for (card of foundationCards; track card.label) {
+      <article class="foundation-card"><span class="card-icon"><app-icon [name]="card.icon"></app-icon></span><div><strong>{{ card.value }}</strong><span>{{ card.label }}</span><small>{{ card.note }}</small></div><app-icon name="arrow-up-right" class="card-arrow"></app-icon></article>
+    }
+  </section>
+
+  <section class="content-grid">
+    <article class="panel process-panel">
+       <div class="panel-heading"><div><p class="eyebrow">Macroproceso PO.02</p><h2>Mapa de procesos</h2></div><span class="coverage-chip"><app-icon name="check"></app-icon> Trazabilidad habilitada</span></div>
+      <div class="process-list">
+        @for (process of processes; track process.code) {
+          <div class="process-row"><span [class]="'process-accent accent-' + process.accent"></span><span class="process-code">{{ process.code }}</span><div><strong>{{ process.title }}</strong><small>{{ process.detail }}</small></div><app-icon name="arrow-right"></app-icon></div>
+        }
+      </div>
+      <div class="panel-footnote"><app-icon name="info-circle"></app-icon> El menú lateral refleja únicamente los subsistemas permitidos para tu rol activo.</div>
+    </article>
+    <article class="panel role-panel">
+      <div class="panel-heading"><div><p class="eyebrow">Control de acceso</p><h2>Sesión actual</h2></div><app-icon name="shield" class="panel-heading-icon"></app-icon></div>
+      <div class="session-user"><span class="session-avatar">{{ currentRole()?.name?.charAt(0) }}</span><div><strong>{{ currentRole()?.name }}</strong><small>{{ currentRole()?.area }}</small></div></div>
+      <div class="session-divider"></div>
+      <div class="session-detail"><span>Sede operativa</span><strong><app-icon name="map-marker"></app-icon> {{ currentSite().label }}</strong></div>
+      <div class="session-detail"><span>Usuario simulado</span><strong><app-icon name="user"></app-icon> {{ currentUser()?.username }}</strong></div>
+      <div class="role-note"><app-icon name="lock"></app-icon><span>La visibilidad de las opciones se controla por rol y subsistema, según la matriz de permisos v3.</span></div>
+    </article>
+  </section>
+</div>

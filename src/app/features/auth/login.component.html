@@ -1,0 +1,113 @@
+<main class="login-page">
+  <section class="login-brand-panel">
+    <div class="brand-mark large">FH</div>
+    <p class="eyebrow light">Prototipo académico · Sprint 1</p>
+    <h1>Una sola vista para mover el negocio.</h1>
+    <p class="brand-copy">
+      Base del ERP Comercial de Mueblería Famihogar S.A.C. para el macroproceso
+      PO.02 Order-to-Cash.
+    </p>
+
+    <div class="process-preview" aria-label="Flujo Order-to-Cash">
+      <div class="process-line"></div>
+      @for (step of [
+        { number: '01', title: 'Captura', detail: 'CRM y pre-venta' },
+        { number: '02', title: 'Cotiza', detail: 'Precios y condiciones' },
+        { number: '03', title: 'Convierte', detail: 'Pedido integrado' }
+      ]; track step.number) {
+        <div class="process-step">
+          <span class="step-number">{{ step.number }}</span>
+          <div>
+            <strong>{{ step.title }}</strong>
+            <small>{{ step.detail }}</small>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="brand-footer">
+      <span><app-icon name="shield"></app-icon> Acceso por rol</span>
+      <span><app-icon name="map-marker"></app-icon> Control por sede</span>
+      <span><app-icon name="sitemap"></app-icon> 49 subopciones</span>
+    </div>
+  </section>
+
+  <section class="login-form-panel">
+    <div class="login-card">
+      <div class="login-heading">
+        <div>
+          <p class="eyebrow">Sistema Comercial · SIS-COM</p>
+          <h2>Ingresar al prototipo</h2>
+        </div>
+        <span class="demo-badge"><app-icon name="bolt"></app-icon> Modo demo</span>
+      </div>
+      <p class="login-intro">
+        Selecciona un rol del catálogo de la matriz v3 para simular sus permisos y su navegación.
+      </p>
+
+      <form (ngSubmit)="submit()">
+        <fieldset class="role-fieldset">
+          <legend>Selecciona el rol a simular</legend>
+          <div class="role-grid">
+            @for (role of roles; track role.id) {
+              <button
+                type="button"
+                class="role-option"
+                [class.selected]="selectedRoleId() === role.id"
+                [attr.aria-pressed]="selectedRoleId() === role.id"
+                (click)="chooseRole(role)"
+              >
+                <span class="role-avatar">{{ role.name.charAt(0) }}</span>
+                <span class="role-option-text">
+                  <strong>{{ role.name }}</strong>
+                  <small>{{ role.area }}</small>
+                </span>
+                @if (selectedRoleId() === role.id) {
+                  <app-icon name="check-circle" class="selected-icon"></app-icon>
+                }
+              </button>
+            }
+          </div>
+        </fieldset>
+
+        <div class="selected-context">
+          <div class="context-icon"><app-icon name="user"></app-icon></div>
+          <div>
+            <span>Rol activo</span>
+            <strong>{{ selectedRole().name }}</strong>
+          </div>
+          <span class="access-label">Permisos cargados</span>
+        </div>
+
+        <div class="credentials-grid">
+          <label>
+            Usuario de demostración
+            <span class="input-wrap">
+              <app-icon name="at"></app-icon>
+              <input name="username" [(ngModel)]="username" autocomplete="username" />
+            </span>
+          </label>
+          <label>
+            Contraseña
+            <span class="input-wrap">
+              <app-icon name="lock"></app-icon>
+              <input name="password" type="password" [(ngModel)]="password" autocomplete="current-password" />
+            </span>
+          </label>
+        </div>
+
+        @if (errorMessage()) {
+          <p class="form-error"><app-icon name="info-circle"></app-icon> {{ errorMessage() }}</p>
+        }
+
+        <button class="submit-button" type="submit" [disabled]="isSubmitting()">
+          <span>{{ isSubmitting() ? 'Cargando espacio de trabajo…' : 'Ingresar al ERP' }}</span>
+          <app-icon name="arrow-right"></app-icon>
+        </button>
+      </form>
+
+      <p class="login-note"><app-icon name="info-circle"></app-icon> La autenticación es simulada y no conecta con un backend real.</p>
+    </div>
+    <footer class="login-footer">Famihogar S.A.C. <span>·</span> Planeamiento de Recursos Empresariales <span>·</span> v0.1 Foundation</footer>
+  </section>
+</main>

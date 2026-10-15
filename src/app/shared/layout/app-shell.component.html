@@ -1,0 +1,78 @@
+<div class="erp-shell">
+  @if (sidebarOpen()) {
+    <button class="sidebar-backdrop" aria-label="Cerrar menú" (click)="closeSidebar()"></button>
+  }
+
+  <aside class="sidebar" [class.open]="sidebarOpen()">
+    <div class="sidebar-brand">
+      <a routerLink="/dashboard" class="brand-link" (click)="closeSidebar()">
+        <span class="brand-mark">FH</span>
+        <span class="brand-wordmark"><strong>FAMIHOGAR</strong><small>ERP COMERCIAL</small></span>
+      </a>
+      <button class="sidebar-close" aria-label="Cerrar menú" (click)="closeSidebar()"><app-icon name="times"></app-icon></button>
+    </div>
+
+    <div class="workspace-label"><span class="status-dot"></span> Workspace operativo</div>
+
+    <nav class="sidebar-nav" aria-label="Menú principal del ERP">
+      <a class="home-link" routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeSidebar()">
+        <app-icon name="home"></app-icon><span>Inicio</span><app-icon name="angle-right" class="nav-arrow"></app-icon>
+      </a>
+
+      @for (system of visibleSystems(); track system.id) {
+        <div class="system-group">
+          <div class="system-heading">
+            <span [class]="'system-code accent-' + system.accent">{{ system.shortLabel }}</span>
+            <span>{{ system.label }}</span>
+          </div>
+          @for (subsystem of system.subsystems; track $index) {
+            <div class="subsystem-group">
+              <div class="subsystem-heading"><app-icon [name]="subsystem.icon"></app-icon>{{ subsystem.label }}</div>
+              @for (menu of subsystem.items; track menu.code) {
+                <a
+                  class="menu-link"
+                   [routerLink]="menuRoute(menu.code)"
+                   [queryParams]="menuQuery(menu.code)"
+                  routerLinkActive="active"
+                  (click)="closeSidebar()"
+                >
+                  <span>{{ menu.label }}</span><small>{{ menu.code }}</small>
+                </a>
+              }
+            </div>
+          }
+        </div>
+      }
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="trace-note"><app-icon name="link"></app-icon><div><strong>Trazabilidad v3</strong><span>49 subopciones · 57 RF</span></div></div>
+      <button class="logout-link" (click)="logout()"><app-icon name="sign-out"></app-icon><span>Cerrar sesión</span></button>
+    </div>
+  </aside>
+
+  <section class="main-shell">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" aria-label="Abrir menú" (click)="toggleSidebar()"><app-icon name="bars"></app-icon></button>
+        <div class="breadcrumb"><span>SIS-COM</span><app-icon name="angle-right"></app-icon><strong>Área Comercial</strong></div>
+      </div>
+      <div class="topbar-actions">
+        <label class="site-picker" title="Sede activa">
+          <app-icon name="map-marker"></app-icon>
+          <select [value]="workspace.activeSite()" (change)="setSite($event)">
+            @for (site of workspace.sites; track site.id) { <option [value]="site.id">{{ site.label }}</option> }
+          </select>
+          <app-icon name="chevron-down"></app-icon>
+        </label>
+        <button class="notification-button" aria-label="Notificaciones"><app-icon name="bell"></app-icon><span></span></button>
+        <div class="user-menu">
+          <span class="user-avatar">{{ initials(currentRole()?.name) }}</span>
+          <span class="user-info"><strong>{{ currentRole()?.name }}</strong><small>{{ currentSite().detail }}</small></span>
+          <app-icon name="angle-down"></app-icon>
+        </div>
+      </div>
+    </header>
+    <main class="content-area"><router-outlet /></main>
+  </section>
+</div>
