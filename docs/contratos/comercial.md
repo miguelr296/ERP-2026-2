@@ -2,7 +2,7 @@
 
 [← Índice](../../README.md)
 
-**Sprint en que se construye:** 1 (29/10 – 18/11) · **Dueño del módulo:** Miguel · **Estado:** Borrador; se completa en S1-04 junto con los contratos de Planta, Logistica, Finanzas y Postventa
+**Sprint en que se construye:** 1 (29/10 – 18/11) · **Dueño del módulo:** Miguel · **Estado:** Borrador; se completa en S1-04 junto con los contratos de Finanzas, Logística, Planta y Compartido
 
 ## 1. Qué hace el módulo
 Submódulos **CRM** (clientes, leads, oportunidades), **Ventas** (cotización, anticipo, orden de venta) y **Postventa** (reclamos, garantía, servicio, nota de crédito): `PO.02` y `PO.06`. Postventa usa directamente la OV de Ventas (mismo módulo, sin contrato).

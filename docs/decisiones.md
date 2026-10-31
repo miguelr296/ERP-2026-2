@@ -87,14 +87,15 @@ Solo se crea una decisión `Dnn` nueva cuando el tema no estaba decidido antes. 
 **Vigente:** Tarjetas de 1–1,5 h, sesiones de 2–3 h que encadenan tarjetas, WIP de 1 por persona.
 
 ## D09 — Uso de la IA para escribir código
-**Fecha:** 2026-10-28 · **Estado:** Modificada (2026-10-30) · **Ámbito:** Global
+**Fecha:** 2026-10-28 · **Estado:** Modificada (2026-10-31) · **Ámbito:** Global
 **Decisión original:** La IA solo genera código repetitivo (entidades, DTOs, CRUD, configuración de EF Core, semillas, HTML/CSS de tablas y formularios) y siempre pide permiso antes de escribir o ejecutar. Las reglas de negocio y las pruebas las escribe el equipo
 **Alternativas:** Que la IA escriba todo; que no escriba nada.
 **Por qué:** Acelera lo mecánico sin quitarle al equipo lo que debe aprender y defender.
 **Confirmada 2026-10-29** sin cambios (se cambia "HTML/Bootstrap" por "HTML/CSS" por D13).
 **Modificación 2026-10-29 (modo tutor):** Luis y Pablo llegan solo con POO y existe el riesgo de "vibecodear" (pedirle todo a la IA sin entenderlo). Por eso el asistente identifica a la persona al iniciar (`/iniciar`) y, con Luis y Pablo, trabaja en **modo tutor**: (1) antes de escribir, pregunta cómo lo construirían; (2) escribe solo lo repetitivo y las **bases**: clases, propiedades, DTOs, firmas de métodos, configuración y HTML de formularios; (3) el cuerpo de las reglas, las pruebas y la lógica de las pantallas (`fetch`, mostrar resultados) los escribe la persona, a partir de marcas `// TODO (Nombre): …` que describen en palabras qué hacer; (4) si la persona se traba, da pistas graduales (pregunta → concepto → ejemplo de un caso distinto), nunca la solución exacta; (5) al terminar, le pide que explique lo que escribió. Con Miguel se aplica D09 sin modo tutor.
 **Modificación 2026-10-30:** **La IA puede generar código**, incluidas reglas de negocio y pruebas, siempre **sencillo y fácil de entender** (nombres claros, métodos cortos, comentarios donde haga falta, sin patrones avanzados). **Siempre pregunta antes** de escribir o ejecutar. **Regla general: el asistente no crea ni modifica ningún archivo sin preguntar antes.** El **modo tutor queda suspendido**; su descripción se conserva arriba por si el equipo decide volver a él. **Se mantiene** que en `/cierre` cada integrante explique con sus palabras lo que hizo: explicar es fundamental en este proyecto.
-**Vigente:** La IA genera código sencillo, pregunta antes y nunca crea ni modifica archivos sin permiso; cada uno explica su trabajo en /cierre; modo tutor suspendido.
+**Modificación 2026-10-31 (explicar los términos):** el asistente **explica cada término técnico nuevo antes de usarlo**: qué es, para qué sirve y por qué se introduce, en lenguaje sencillo y con lo esencial. Aplica en toda la conversación, no solo en `/cierre`.
+**Vigente:** La IA genera código sencillo, pregunta antes y nunca crea ni modifica archivos sin permiso; cada uno explica su trabajo en /cierre; explica cada término técnico nuevo antes de usarlo; modo tutor suspendido.
 
 ## D10 — Pruebas xUnit por regla de negocio
 **Fecha:** 2026-10-28 · **Estado:** Aprobada · **Ámbito:** Global
@@ -224,3 +225,10 @@ Solo se crea una decisión `Dnn` nueva cuando el tema no estaba decidido antes. 
 Vive en `Compartido` (S1-08, S1-09) y en un componente de ficha común (S1-17); la pantalla de trazabilidad (S1-64) reconstruye el flujo completo de cualquier documento.
 **Alternativas:** Registrar solo el estado actual; auditoría solo en aprobaciones.
 **Por qué:** El profesor indicó que la trazabilidad es lo más valioso del sistema. El TO-BE lo exige en sus principios ("toda aprobación queda en el sistema con usuario y hora", "un dato se digita una sola vez") y los indicadores se calculan desde ese historial.
+
+## D26 — Estructura de la solución: un proyecto por submódulo
+**Fecha:** 2026-10-31 · **Estado:** Aprobada · **Ámbito:** Global
+**Decisión:** La solución `Erp.sln` tiene un proyecto `.csproj` por submódulo, con las capas `Api`, `Servicios` y `Datos` como carpetas dentro de cada uno (11 proyectos: Compartido, 3 de Comercial, 3 de Finanzas, 2 de Logística y 2 de Planta), más `Erp.Api` como único host y `Erp.Tests`. `Erp.Api` referencia a todos los submódulos; entre módulos no hay referencias, salvo que todos pueden referenciar `Compartido` (regla 3.4.4). Los ensamblados de `Contratos` se crean en la fase B, con la primera llamada real entre módulos (S1-33 Planta, S1-36 Crédito, S1-38 Stock).
+**Alternativas:** Un proyecto único para todo el ERP; tres proyectos por submódulo, uno por capa (más de 30 proyectos); crear los ensamblados de `Contratos` desde el inicio.
+**Por qué:** El compilador impone la frontera entre módulos que pide D06: si un módulo usa clases de otro sin la referencia declarada, no compila; con un proyecto único la regla sería solo escrita y se rompería sin aviso. Tres proyectos por submódulo multiplican el mantenimiento sin enseñar nada nuevo en tres semanas. Los contratos en la fase B evitan cuatro proyectos vacíos durante días.
+**Vigente:** Un proyecto por submódulo con tres carpetas de capa; `Erp.Api` es el único host; `Contratos` como ensamblados desde la fase B.

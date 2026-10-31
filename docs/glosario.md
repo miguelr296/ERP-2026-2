@@ -43,6 +43,11 @@ Todo término nuevo se agrega en la misma sesión en que aparece.
 | Submódulo | Grupo de procesos de un módulo con sus propios documentos y un rol responsable (p. ej. Comercial › Ventas). Comparte el esquema SQL del módulo |
 | Contrato | Interfaz pública de un módulo: lo único que otros módulos pueden usar |
 | Capa | Nivel dentro de un módulo: Api, Servicios o Datos |
+| Proyecto (`.csproj`) | Carpeta con su archivo `.csproj` que se compila a un ensamblado; aquí hay uno por submódulo |
+| Solución (`.sln`) | Archivo que agrupa proyectos para abrirlos y compilarlos juntos en Visual Studio o con `dotnet build`; no tiene código |
+| Ensamblado (assembly) | El `.dll` que produce un proyecto al compilar; es lo que .NET carga al ejecutar |
+| Referencia entre proyectos | Línea de un `.csproj` que le permite usar las clases públicas de otro proyecto; sin ella el código no compila |
+| Contrato en borrador | Contrato de integración escrito antes del código (`docs/contratos/`); con estado Borrador pasa a Acordado e Implementado cuando ambos lados existen |
 | Servicio | Clase que contiene las reglas de negocio |
 | Repositorio | Clase que lee y guarda datos en la base |
 | Entidad | Clase que representa una tabla (Cliente, Cotizacion…) |

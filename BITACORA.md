@@ -24,6 +24,12 @@ Una entrada por sesión, la más reciente arriba. Tres líneas bastan; el nombre
 
 ## Sesiones
 
+### 2026-10-31 · Miguel · 0,5 h · S1-04 (esqueleto)
+
+- Hice: creé `Erp.sln` con 13 proyectos en `net10.0`: 11 de submódulo (uno por submódulo, con las carpetas `Api/`, `Servicios/` y `Datos/`), `Erp.Api` como único host y `Erp.Tests`. `Erp.Api` referencia a los 11 submódulos, sirve `wwwroot` en `/` y expone `/api/salud`; verificado en vivo (`/` y `estilos.css` en 200), `dotnet build` sin advertencias y `dotnet test` con 12 pruebas en verde. Edité a mano los 5 Issues pendientes. Escribí los borradores de contrato de Finanzas, Logística, Planta y Compartido, corregí la línea de `comercial.md` que trataba a Postventa como módulo, agregué 5 términos al glosario, modifiqué D09 (explicar cada término técnico nuevo) y registré D26 (estructura de la solución). Actualicé comandos y estado actual en `contexto.md`, y el índice y la ejecución del `README.md`.
+- Falló / dudas: la revisión de S1-00 sigue pendiente (Luis debe explicar los tres archivos del front). Sigue sin confirmarse la fuente y fecha del área Logística. La pantalla de acceso se probó por HTTP; falta abrirla a mano en Chrome o Edge.
+- Siguiente paso exacto: pedir a Luis o Pablo la revisión del PR `miguel/esqueleto`, fusionarlo y mover S1-04 a Done. Después: S1-05 (entidades y estados de Comercial, migración y datos semilla), que desbloquea S1-07 de todos.
+
 ### 2026-10-31 · Miguel · — h · módulos y submódulos
 - Hice: dividimos cada módulo en submódulos (D03): Comercial (CRM, Ventas, Postventa), Finanzas (Tesorería, Créditos y Cobranzas, Facturación), Logística (Inventarios, Despacho), Planta (Ingeniería, Producción) y Compartido (Trazabilidad, Seguridad, Notificaciones). Postventa pasa a ser submódulo de Comercial y la evaluación de crédito pasa a Finanzas (D06). El anticipo se registra en Ventas; en la fase A lo confirma Tesorería desde Ventas y en la fase C la confirmación pasa a Finanzas › Tesorería (D17). Tarjetas, dueños, horas y fechas no cambian; se actualizaron los criterios de S1-04, S1-15, S1-36, S1-50 y S1-61.
 - Falló / dudas: hay que editar a mano esos 5 Issues en GitHub, porque ya estaban cargados con el texto anterior.
