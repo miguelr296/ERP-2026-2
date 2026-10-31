@@ -87,14 +87,15 @@ Solo se crea una decisión `Dnn` nueva cuando el tema no estaba decidido antes. 
 **Vigente:** Tarjetas de 1–1,5 h, sesiones de 2–3 h que encadenan tarjetas, WIP de 1 por persona.
 
 ## D09 — Uso de la IA para escribir código
-**Fecha:** 2026-10-28 · **Estado:** Modificada (2026-10-30) · **Ámbito:** Global
+**Fecha:** 2026-10-28 · **Estado:** Modificada (2026-10-31) · **Ámbito:** Global
 **Decisión original:** La IA solo genera código repetitivo (entidades, DTOs, CRUD, configuración de EF Core, semillas, HTML/CSS de tablas y formularios) y siempre pide permiso antes de escribir o ejecutar. Las reglas de negocio y las pruebas las escribe el equipo
 **Alternativas:** Que la IA escriba todo; que no escriba nada.
 **Por qué:** Acelera lo mecánico sin quitarle al equipo lo que debe aprender y defender.
 **Confirmada 2026-10-29** sin cambios (se cambia "HTML/Bootstrap" por "HTML/CSS" por D13).
 **Modificación 2026-10-29 (modo tutor):** Luis y Pablo llegan solo con POO y existe el riesgo de "vibecodear" (pedirle todo a la IA sin entenderlo). Por eso el asistente identifica a la persona al iniciar (`/iniciar`) y, con Luis y Pablo, trabaja en **modo tutor**: (1) antes de escribir, pregunta cómo lo construirían; (2) escribe solo lo repetitivo y las **bases**: clases, propiedades, DTOs, firmas de métodos, configuración y HTML de formularios; (3) el cuerpo de las reglas, las pruebas y la lógica de las pantallas (`fetch`, mostrar resultados) los escribe la persona, a partir de marcas `// TODO (Nombre): …` que describen en palabras qué hacer; (4) si la persona se traba, da pistas graduales (pregunta → concepto → ejemplo de un caso distinto), nunca la solución exacta; (5) al terminar, le pide que explique lo que escribió. Con Miguel se aplica D09 sin modo tutor.
 **Modificación 2026-10-30:** **La IA puede generar código**, incluidas reglas de negocio y pruebas, siempre **sencillo y fácil de entender** (nombres claros, métodos cortos, comentarios donde haga falta, sin patrones avanzados). **Siempre pregunta antes** de escribir o ejecutar. **Regla general: el asistente no crea ni modifica ningún archivo sin preguntar antes.** El **modo tutor queda suspendido**; su descripción se conserva arriba por si el equipo decide volver a él. **Se mantiene** que en `/cierre` cada integrante explique con sus palabras lo que hizo: explicar es fundamental en este proyecto.
-**Vigente:** La IA genera código sencillo, pregunta antes y nunca crea ni modifica archivos sin permiso; cada uno explica su trabajo en /cierre; modo tutor suspendido.
+**Modificación 2026-10-31 (explicar los términos):** el asistente **explica cada término técnico nuevo antes de usarlo**: qué es, para qué sirve y por qué se introduce, en lenguaje sencillo y con lo esencial. Aplica en toda la conversación, no solo en `/cierre`.
+**Vigente:** La IA genera código sencillo, pregunta antes y nunca crea ni modifica archivos sin permiso; cada uno explica su trabajo en /cierre; explica cada término técnico nuevo antes de usarlo; modo tutor suspendido.
 
 ## D10 — Pruebas xUnit por regla de negocio
 **Fecha:** 2026-10-28 · **Estado:** Aprobada · **Ámbito:** Global

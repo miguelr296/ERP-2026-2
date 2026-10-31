@@ -25,7 +25,7 @@ La documentación se lee como un informe, en orden:
 - [Catálogo de reglas de negocio](docs/reglas.md)
 - [Registro de decisiones](docs/decisiones.md)
 - [Glosario](docs/glosario.md)
-- [Contratos de integración entre módulos](docs/contratos/_plantilla.md) · [Comercial](docs/contratos/comercial.md)
+- [Contratos de integración entre módulos](docs/contratos/_plantilla.md) · [Comercial](docs/contratos/comercial.md) · [Finanzas](docs/contratos/finanzas.md) · [Logística](docs/contratos/logistica.md) · [Planta](docs/contratos/planta.md) · [Compartido](docs/contratos/compartido.md)
 - [Fuente: resumen del TO-BE comercial](docs/fuentes/to-be-comercial.md)
 - [Guía: pantalla de acceso y aplicaciones](docs/guias/acceso-aplicaciones.md)
 - [Guía: CI con GitHub Actions](docs/guias/ci.md)
@@ -64,7 +64,7 @@ Los comandos viven en `docs/comandos/` como Markdown, así que sirven con cualqu
 
 ## Ejecución
 
-Interfaz de demostración: abre `src/Erp.Api/wwwroot/index.html` en Chrome o Edge. Por ahora no requiere servidor; cuando exista la Api (S1-04), se abrirá desde ella. Consulta la [guía de la pantalla de acceso](docs/guias/acceso-aplicaciones.md). La API aún no existe.
+La interfaz se abre desde la Api: `dotnet run --project src/Erp.Api` y entra a `http://localhost:5271/`; también se puede abrir `src/Erp.Api/wwwroot/index.html` directamente en Chrome o Edge, sin servidor. La comprobación rápida es `GET /api/salud`. Build y pruebas, desde la raíz: `dotnet build` y `dotnet test`. Consulta la [guía de la pantalla de acceso](docs/guias/acceso-aplicaciones.md).
 
 ## Integrantes
 

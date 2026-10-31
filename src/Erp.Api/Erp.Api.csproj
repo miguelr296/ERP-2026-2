@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Erp.Compartido\Erp.Compartido.csproj" />
+    <ProjectReference Include="..\Erp.Comercial.Crm\Erp.Comercial.Crm.csproj" />
+    <ProjectReference Include="..\Erp.Comercial.Ventas\Erp.Comercial.Ventas.csproj" />
+    <ProjectReference Include="..\Erp.Comercial.Postventa\Erp.Comercial.Postventa.csproj" />
+    <ProjectReference Include="..\Erp.Finanzas.Tesoreria\Erp.Finanzas.Tesoreria.csproj" />
+    <ProjectReference Include="..\Erp.Finanzas.CreditosCobranzas\Erp.Finanzas.CreditosCobranzas.csproj" />
+    <ProjectReference Include="..\Erp.Finanzas.Facturacion\Erp.Finanzas.Facturacion.csproj" />
+    <ProjectReference Include="..\Erp.Logistica.Inventarios\Erp.Logistica.Inventarios.csproj" />
+    <ProjectReference Include="..\Erp.Logistica.Despacho\Erp.Logistica.Despacho.csproj" />
+    <ProjectReference Include="..\Erp.Planta.Ingenieria\Erp.Planta.Ingenieria.csproj" />
+    <ProjectReference Include="..\Erp.Planta.Produccion\Erp.Planta.Produccion.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

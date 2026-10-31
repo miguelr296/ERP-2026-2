@@ -8,9 +8,11 @@
 - Pendiente de confirmar: fecha y fuente de verdad del área Logística.
 
 ## Comandos
-- Front: abrir `src/Erp.Api/wwwroot/index.html` en Chrome o Edge (sin servidor, hasta que exista la Api).
+- Solución: `dotnet build` y `dotnet test` desde la raíz; `Erp.sln` se abre en Visual Studio 2026.
+- Api: `dotnet run --project src/Erp.Api` → http://localhost:5271 (`/` = front de `wwwroot`; `/api/salud` = comprobación).
+- Front sin servidor: abrir `src/Erp.Api/wwwroot/index.html` en Chrome o Edge.
 - Tarjetas: `scripts/crear-tarjetas.sh` (ensayo) y `--ejecutar` (ver `docs/plan/kanban.md` 6.3).
-- (se agregan cuando existan: `dotnet build`, `dotnet test`, cadena de conexión local, cómo levantar la Api)
+- (se agrega cuando exista: cadena de conexión local)
 
 ## Convenciones de código
 - Código sencillo y fácil de explicar: nombres claros, métodos cortos, sin patrones avanzados (D09).
@@ -19,6 +21,7 @@
 - Valores de negocio (IGV, vigencia, % de anticipo, límites, plazos) en configuración, no en el código.
 - Todo cambio de estado pasa por el historial de `Compartido`; todo documento derivado registra su origen (D25).
 - Front: HTML, CSS y JS legibles, sin minificar. Pantallas en `wwwroot/<modulo>/<submodulo>/`; todas usan la ficha común.
+- Cada término técnico nuevo se explica antes de usarlo: qué es, para qué sirve y por qué se introduce (D09).
 
 ## Trampas y lecciones
 - **No crear ni modificar archivos sin preguntar** (regla general, D09).
