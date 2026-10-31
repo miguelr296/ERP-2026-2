@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FAMIHOGAR · ERP</title>
+  <link rel="stylesheet" href="estilos.css">
+  <script src="aplicaciones.js" defer></script>
+</head>
+<body>
+
+  <!-- Acceso simulado (D12): nombre y rol, sin contraseña ni permisos reales -->
+  <section id="acceso" class="acceso" aria-labelledby="titulo-acceso">
+    <div class="presentacion">
+      <a class="marca" href="index.html">F<span>FAMIHOGAR</span></a>
+      <p class="etiqueta">UN EQUIPO. UN MISMO SISTEMA.</p>
+      <h1>Todo empieza<br>por un buen hogar.</h1>
+      <p>Un espacio para organizar el trabajo y conectar las áreas de FAMIHOGAR.</p>
+      <div class="ilustracion" aria-hidden="true">
+        <div class="cuadro"></div>
+        <div class="sofa"></div>
+        <div class="suelo"></div>
+      </div>
+      <small>ERP FAMIHOGAR SAC · Prototipo académico</small>
+    </div>
+
+    <div class="formulario">
+      <div class="tarjeta">
+        <p class="etiqueta">BIENVENIDO A FAMIHOGAR</p>
+        <h2 id="titulo-acceso">Ingresa a tu espacio</h2>
+        <p class="secundario">Elige un rol para recorrer la demostración.</p>
+
+        <form id="formulario-acceso">
+          <label for="nombre">Nombre para la demo</label>
+          <input id="nombre" name="nombre" maxlength="60" autocomplete="nickname" placeholder="Por ejemplo, Luis" required>
+
+          <label for="rol">Rol de la demostración</label>
+          <select id="rol" name="rol" required>
+            <option value="">Selecciona un rol</option>
+            <option>Asesor</option>
+            <option>Jefatura</option>
+            <option>Tesorería</option>
+          </select>
+
+          <p id="error" role="alert"></p>
+          <button class="principal" type="submit">Ingresar al ERP <span aria-hidden="true">→</span></button>
+        </form>
+
+        <div class="aviso">
+          <strong>Acceso simulado</strong>
+          <p>No requiere contraseña. El rol sirve para la demostración; no otorga permisos reales.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Selector de aplicaciones: una tarjeta por área del ERP -->
+  <section id="aplicaciones" hidden aria-labelledby="titulo-aplicaciones">
+    <header>
+      <a class="marca" href="index.html">F<span>FAMIHOGAR</span></a>
+      <div class="sesion">
+        <span id="identidad"></span>
+        <button id="salir" type="button">Salir</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="encabezado">
+        <div>
+          <p class="etiqueta">TU ESPACIO DE TRABAJO</p>
+          <h1 id="titulo-aplicaciones" tabindex="-1">Aplicaciones</h1>
+          <p class="secundario">Cada área, conectada con el mismo propósito.</p>
+        </div>
+        <div>
+          <label for="buscar">Buscar aplicación</label>
+          <input id="buscar" type="search" placeholder="Nombre del área…">
+        </div>
+      </div>
+
+      <p class="nota">Prototipo académico: cada área se habilita aquí cuando sus pantallas se conectan a la API.</p>
+      <div id="modulos" class="modulos"></div>
+      <p id="sin-resultados" hidden role="status">No encontramos aplicaciones con ese nombre.</p>
+      <p id="estado" class="estado" role="status"></p>
+
+      <footer>
+        FAMIHOGAR SAC
+        <span>Prototipo académico · Datos de demostración</span>
+      </footer>
+    </main>
+  </section>
+
+</body>
+</html>

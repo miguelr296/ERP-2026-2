@@ -1,0 +1,15 @@
+# .NET
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+# Configuración local (cadenas de conexión)
+appsettings.Development.json
+appsettings.Local.json
+# Editor y sistema
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
