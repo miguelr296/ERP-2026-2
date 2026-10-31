@@ -2,9 +2,9 @@
 
 ## Estado actual
 - Sprint 1 = TO-BE Comercial completo, 3 semanas (29/10 – 18/11). Demos: 05/11 (fase A), 12/11 (fase B), 19/11 (fase C).
-- Existe en `src/`: solo el front inicial de Luis en `src/Erp.Api/wwwroot` (S1-00). Sin solución .NET todavía.
-- Repositorio en GitHub creado. Tablero, campos, hitos y tarjetas: pendientes (S1-01, Miguel).
-- Siguiente: S1-01 y S1-04 (Miguel, vie 30/10), S1-02 (Luis y Pablo, vie 30/10); revisión de S1-00 con Luis explicando su código.
+- Solución .NET creada (S1-04): 11 proyectos de submódulo + `Erp.Api` + `Erp.Tests`, build y pruebas en verde; el front de Luis se sirve desde la Api en `/`.
+- Tablero, campos, hitos y tarjetas cargados (S1-01, Done). S1-04 en revisión.
+- Siguiente: revisión de S1-00 con Luis explicando su código; S1-05 (Miguel) y S1-02, S1-03, S1-06 (Luis y Pablo).
 - Pendiente de confirmar: fecha y fuente de verdad del área Logística.
 
 ## Comandos

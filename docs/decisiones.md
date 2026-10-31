@@ -225,3 +225,10 @@ Solo se crea una decisión `Dnn` nueva cuando el tema no estaba decidido antes. 
 Vive en `Compartido` (S1-08, S1-09) y en un componente de ficha común (S1-17); la pantalla de trazabilidad (S1-64) reconstruye el flujo completo de cualquier documento.
 **Alternativas:** Registrar solo el estado actual; auditoría solo en aprobaciones.
 **Por qué:** El profesor indicó que la trazabilidad es lo más valioso del sistema. El TO-BE lo exige en sus principios ("toda aprobación queda en el sistema con usuario y hora", "un dato se digita una sola vez") y los indicadores se calculan desde ese historial.
+
+## D26 — Estructura de la solución: un proyecto por submódulo
+**Fecha:** 2026-10-31 · **Estado:** Aprobada · **Ámbito:** Global
+**Decisión:** La solución `Erp.sln` tiene un proyecto `.csproj` por submódulo, con las capas `Api`, `Servicios` y `Datos` como carpetas dentro de cada uno (11 proyectos: Compartido, 3 de Comercial, 3 de Finanzas, 2 de Logística y 2 de Planta), más `Erp.Api` como único host y `Erp.Tests`. `Erp.Api` referencia a todos los submódulos; entre módulos no hay referencias, salvo que todos pueden referenciar `Compartido` (regla 3.4.4). Los ensamblados de `Contratos` se crean en la fase B, con la primera llamada real entre módulos (S1-33 Planta, S1-36 Crédito, S1-38 Stock).
+**Alternativas:** Un proyecto único para todo el ERP; tres proyectos por submódulo, uno por capa (más de 30 proyectos); crear los ensamblados de `Contratos` desde el inicio.
+**Por qué:** El compilador impone la frontera entre módulos que pide D06: si un módulo usa clases de otro sin la referencia declarada, no compila; con un proyecto único la regla sería solo escrita y se rompería sin aviso. Tres proyectos por submódulo multiplican el mantenimiento sin enseñar nada nuevo en tres semanas. Los contratos en la fase B evitan cuatro proyectos vacíos durante días.
+**Vigente:** Un proyecto por submódulo con tres carpetas de capa; `Erp.Api` es el único host; `Contratos` como ensamblados desde la fase B.
