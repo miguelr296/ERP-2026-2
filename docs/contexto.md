@@ -21,18 +21,19 @@
 - Valores de negocio (IGV, vigencia, % de anticipo, límites, plazos) en configuración, no en el código.
 - Todo cambio de estado pasa por el historial de `Compartido`; todo documento derivado registra su origen (D25).
 - Front: HTML, CSS y JS legibles, sin minificar. Pantallas en `wwwroot/<modulo>/<submodulo>/`; todas usan la ficha común.
-- Cada término técnico nuevo se explica antes de usarlo: qué es, para qué sirve y por qué se introduce (D09).
+- Cada término técnico nuevo y cada evento técnico (error, migración, dependencia) se explica antes de usarlo o resolverlo, con un ejemplo concreto del proyecto (D09).
 
 ## Trampas y lecciones
 - **No crear ni modificar archivos sin preguntar** (regla general, D09).
 - Seguir el orden del tablero; trabajo sin tarjeta no se hace (29/10: la pantalla de acceso se adelantó sin tarjeta).
 - Ramas dentro del repo, no forks (D23).
 - Comercial no contiene lógica de otra área: las interfaces son versiones mínimas en su módulo (D06). Submódulos del mismo módulo se usan directo; entre módulos, solo contratos.
-- Un documento sin historial, cadena o ficha no está terminado (D25).
+- Un documento sin historial, cadena o ficha no está terminado (D25). Ningún documento se borra físicamente: se anula con estado y motivo.
 - El asistente no ejecuta Git ni migraciones: guía al equipo.
 - Solo Miguel crea migraciones y toca el `DbContext`.
 - Dinero siempre con `decimal`, nunca `double` ni `float`.
 - Si algo cambia una decisión ya tomada, se modifica esa decisión (D24), no se crea otra.
+- EF Core crea las claves foráneas en cascada por defecto; con varias rutas hacia la misma tabla, SQL Server rechaza la migración ("multiple cascade paths"). Usar `DeleteBehavior.NoAction` y borrado lógico.
 
 ## Pendientes que no son del sprint actual
 - Alcance, fuente y fecha de Logística y de las áreas siguientes; partirán de las versiones mínimas del sprint 1.

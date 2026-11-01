@@ -86,8 +86,11 @@ Se implementan en las fases B y C del sprint 1 (ver [alcance Comercial](alcance/
 
 ## Trazabilidad — transversal (fase A: S1-08, S1-09)
 
+TRZ-04 se implementa en S1-08, junto con el historial.
+
 | ID | Regla | Tipo | Origen | Prueba | Estado |
 |---|---|---|---|---|---|
 | TRZ-01 | Todo cambio de estado y toda aprobación registran estado anterior, estado nuevo, usuario, rol, fecha y hora, y motivo | TO-BE | Sección 2 (principios: "toda aprobación queda en el sistema con usuario y hora"); D25 | `Historial_CambioDeEstado_RegistraUsuarioYFecha` | ⬜ |
 | TRZ-02 | Todo documento derivado guarda su documento de origen | TO-BE | Sección 2 ("un dato se digita una sola vez"); D25 | `CadenaDocumental_DocumentoDerivado_GuardaOrigen` | ⬜ |
 | TRZ-03 | El historial no se borra ni se modifica | SUPUESTO | D25 | `Historial_IntentoDeEditar_EsRechazado` | ⬜ |
+| TRZ-04 | Ningún documento se elimina físicamente: se anula o desactiva con motivo, y su historial y cadena se conservan | SUPUESTO | D25 | `Documento_IntentoDeBorrar_EsRechazado` | ⬜ |

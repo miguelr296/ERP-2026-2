@@ -1,7 +1,14 @@
+using Erp.Api.Datos;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // D05: los controladores viven en la carpeta Api/ de cada subsistema y MVC los descubre solo.
 builder.Services.AddControllers();
+builder.Services.AddDbContext<ErpDbContext>(opciones =>
+    opciones.UseSqlServer(
+        builder.Configuration.GetConnectionString("FamihogarErp")
+        ?? throw new InvalidOperationException("Falta configurar la conexión FamihogarErp.")));
 
 var app = builder.Build();
 
