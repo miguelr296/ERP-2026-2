@@ -2,9 +2,9 @@
 
 ## Estado actual
 - Sprint 1 = TO-BE Comercial completo, 3 semanas (29/10 – 18/11). Demos: 05/11 (fase A), 12/11 (fase B), 19/11 (fase C).
-- Solución .NET creada (S1-04): 11 proyectos de submódulo + `Erp.Api` + `Erp.Tests`, build y pruebas en verde; el front de Luis se sirve desde la Api en `/`.
-- Tablero, campos, hitos y tarjetas cargados (S1-01, Done). S1-04 en revisión.
-- Siguiente: revisión de S1-00 con Luis explicando su código; S1-05 (Miguel) y S1-02, S1-03, S1-06 (Luis y Pablo).
+- Solución .NET y pantalla de acceso en `main` (S1-04, S1-00). S1-05 (entidades, `ErpDbContext`, migración y semilla de Comercial) en revisión con PR.
+- Comercial fase A en curso: faltan S1-08 y S1-09 (historial y cadena, Miguel), S1-10 (Cliente, Luis), S1-11 y S1-13 (precios y cotización, Pablo).
+- Punto de control de la fase A: domingo 01/11 (esqueleto, S1-08 y Cliente en `main`).
 - Pendiente de confirmar: fecha y fuente de verdad del área Logística.
 
 ## Comandos
@@ -12,7 +12,8 @@
 - Api: `dotnet run --project src/Erp.Api` → http://localhost:5271 (`/` = front de `wwwroot`; `/api/salud` = comprobación).
 - Front sin servidor: abrir `src/Erp.Api/wwwroot/index.html` en Chrome o Edge.
 - Tarjetas: `scripts/crear-tarjetas.sh` (ensayo) y `--ejecutar` (ver `docs/plan/kanban.md` 6.3).
-- (se agrega cuando exista: cadena de conexión local)
+- Pruebas: xUnit v3 (`xunit.v3` 4.0.0) con Microsoft.Testing.Platform; requiere `global.json` con `"test": { "runner": "Microsoft.Testing.Platform" }` y `<OutputType>Exe</OutputType>` en `tests/Erp.Tests`. `dotnet test` corre las 15 pruebas.
+- Conexión local: `FamihogarErp` en `src/Erp.Api/appsettings.Development.json` (ignorado por Git); cada integrante usa su instancia.
 
 ## Convenciones de código
 - Código sencillo y fácil de explicar: nombres claros, métodos cortos, sin patrones avanzados (D09).
@@ -34,6 +35,7 @@
 - Dinero siempre con `decimal`, nunca `double` ni `float`.
 - Si algo cambia una decisión ya tomada, se modifica esa decisión (D24), no se crea otra.
 - EF Core crea las claves foráneas en cascada por defecto; con varias rutas hacia la misma tabla, SQL Server rechaza la migración ("multiple cascade paths"). Usar `DeleteBehavior.NoAction` y borrado lógico.
+- xUnit se instala solo en `tests/Erp.Tests`; agregarlo a los proyectos de `src/` hace que el build pida `OutputType Exe` en todos y falle.
 
 ## Pendientes que no son del sprint actual
 - Alcance, fuente y fecha de Logística y de las áreas siguientes; partirán de las versiones mínimas del sprint 1.

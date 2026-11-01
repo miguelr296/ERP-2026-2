@@ -24,6 +24,16 @@ Una entrada por sesión, la más reciente arriba. Tres líneas bastan; el nombre
 
 ## Sesiones
 
+### 2026-11-01 · Miguel · 0,5 h · S1-05
+- Hice: corregí la migración rechazada por SQL Server ("multiple cascade paths") con `DeleteBehavior.NoAction` y borrado lógico (D25); regeneré y apliqué `InicialComercial`; migré las pruebas a xUnit v3 con Microsoft.Testing.Platform (`global.json` y `OutputType Exe` en `Erp.Tests`). Modifiqué D09, D25 y D26, agregué TRZ-04 y actualicé contexto, glosario y reglas.
+- Falló / dudas: el borrado en cascada de EF Core hizo fallar la primera migración; xUnit v3 se instaló por error en los proyectos de `src/`. El PR de S1-05 se fusionó antes de escribir esta documentación, así que va en un PR aparte.
+- Siguiente paso exacto: abrir el PR de documentación del cierre, fusionarlo, mover S1-05 a Done y empezar S1-08 (historial de estados, 1,5 h).
+
+### 2026-10-31 · Miguel · 2 h · S1-05
+- Hice: modelé las entidades de la fase A de Comercial (Cliente, Oportunidad, Mueble, ListaPrecio, Cotizacion, Anticipo, OrdenVenta) y de Compartido (Sede, Usuario, Rol); creé el `ErpDbContext` con un esquema por módulo, la semilla y 3 pruebas; instalé EF Core y `dotnet-ef`.
+- Falló / dudas: la ubicación del contexto dejó abierto cómo encajar los repositorios; se resolvió el 01/11 (interfaz en el módulo, implementación en la Api). Los comandos de migración quedaron para el 01/11.
+- Siguiente paso exacto: generar la migración, aplicarla y verificar la semilla.
+
 ### 2026-10-31 · Miguel · 0,5 h · S1-04 (esqueleto)
 
 - Hice: creé `Erp.sln` con 13 proyectos en `net10.0`: 11 de submódulo (uno por submódulo, con las carpetas `Api/`, `Servicios/` y `Datos/`), `Erp.Api` como único host y `Erp.Tests`. `Erp.Api` referencia a los 11 submódulos, sirve `wwwroot` en `/` y expone `/api/salud`; verificado en vivo (`/` y `estilos.css` en 200), `dotnet build` sin advertencias y `dotnet test` con 12 pruebas en verde. Edité a mano los 5 Issues pendientes. Escribí los borradores de contrato de Finanzas, Logística, Planta y Compartido, corregí la línea de `comercial.md` que trataba a Postventa como módulo, agregué 5 términos al glosario, modifiqué D09 (explicar cada término técnico nuevo) y registré D26 (estructura de la solución). Actualicé comandos y estado actual en `contexto.md`, y el índice y la ejecución del `README.md`.
