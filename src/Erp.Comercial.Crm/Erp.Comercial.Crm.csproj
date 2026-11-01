@@ -9,6 +9,7 @@
   <!-- Los controladores viven en la carpeta Api/ de cada subsistema (D05).
        Esta referencia aporta ControllerBase sin crear un proyecto Api por subsistema. -->
   <ItemGroup>
+    <ProjectReference Include="..\Erp.Compartido\Erp.Compartido.csproj" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 

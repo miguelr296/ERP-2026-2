@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.10.12217.157 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Api", "Api", "{D82C56D6-B2CD-F611-9E31-04638F7EC30E}"
 EndProject
@@ -42,6 +42,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Logistica", "Logistica", "{65F12FDB-A385-F50C-998C-2C661AA40CD4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Planta", "Planta", "{41DC64E5-5ACF-79D8-188B-F2DE0B145BFF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementos de la solución", "Elementos de la solución", "{6508F574-B56F-4048-8423-6F6582D205B3}"
+	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -227,5 +232,8 @@ Global
 		{2756A36D-ADEA-440E-8B1E-D611ACA2058A} = {D82C56D6-B2CD-F611-9E31-04638F7EC30E}
 		{64A6CC46-4700-47B3-85CD-DF0BEEBF9CF9} = {D82C56D6-B2CD-F611-9E31-04638F7EC30E}
 		{25B1C7E3-1FF0-48D0-B2CA-955A2B558916} = {7F94342B-59F1-7B77-1E97-1C96D3BEFA86}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4BA68DAD-315E-4892-9AC6-7AAEF9648E5C}
 	EndGlobalSection
 EndGlobal
