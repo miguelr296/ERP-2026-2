@@ -23,6 +23,7 @@ Nada: `Compartido` no depende de ningún módulo (regla 3.4.4 de la arquitectura
 ## 4. Datos maestros
 - **Historial, cadena, roles, permisos y avisos:** dueño `Compartido`.
 - **Usuario y rol:** datos semilla con los 14 roles del TO-BE (D12).
+- **Sede, Usuario y Rol:** datos semilla creados en S1-05 en `compartido.Sede` y `compartido.Usuario`; Comercial los referencia por proyecto, sin contrato de operaciones.
 
 ## 5. Cambios de estado que otros módulos esperan
 - Todo cambio de estado y todo documento derivado queda registrado aquí; de eso viven las fichas, la pantalla de trazabilidad y los indicadores.

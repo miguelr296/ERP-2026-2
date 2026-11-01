@@ -68,6 +68,7 @@ Todo término nuevo se agrega en la misma sesión en que aparece.
 | fetch | Función de JavaScript con la que la pantalla llama a la API |
 | Front / Back | Pantallas que ve el usuario / API, reglas y base de datos |
 | Trazabilidad | Poder seguir un documento hacia atrás y hacia adelante: quién lo creó, qué estados tuvo, de qué documento viene y qué documentos generó (D25) |
+| Borrado lógico | Marcar un registro como inactivo o anulado en vez de eliminarlo; conserva su historial y su cadena (D25) |
 | Historial de estados | Registro de cada cambio de estado: estado anterior y nuevo, usuario, rol, fecha y hora, motivo |
 | Cadena documental | Enlace entre un documento y el que lo originó (flujo de documentos) |
 | Ficha | Vista de detalle imprimible de un documento con cabecera, detalle, historial y cadena |
