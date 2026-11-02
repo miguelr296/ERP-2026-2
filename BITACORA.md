@@ -24,6 +24,11 @@ Una entrada por sesión, la más reciente arriba. Tres líneas bastan; el nombre
 
 ## Sesiones
 
+### 2026-11-01 · Miguel · 2 h · S1-08
+- Hice: implementé el historial de estados en Compartido: entidad `HistorialEstado`, contrato `IHistorialDeEstados` (carpeta `Contratos/`), servicio con validaciones, repositorio con EF Core, tabla `compartido.HistorialEstado` y su migración; 3 pruebas en verde. Registré las piezas en la Api y dejé TRZ-01 y TRZ-03 en ✅; TRZ-04 sigue pendiente porque la protección del borrado corresponde al módulo dueño de cada documento.
+- Falló / dudas: el punto de control de la fase A (01/11) no se cumplió: Cliente (S1-07/S1-10) sigue en Ready y S1-08 se terminó hoy. La prueba de TRZ-04 solo cubría el servicio, así que se renombró y la regla volvió a pendiente.
+- Siguiente paso exacto: subir el PR de S1-08 y, en la próxima sesión, S1-09 (cadena documental, 1 h).
+
 ### 2026-11-01 · Miguel · 0,5 h · S1-05
 - Hice: corregí la migración rechazada por SQL Server ("multiple cascade paths") con `DeleteBehavior.NoAction` y borrado lógico (D25); regeneré y apliqué `InicialComercial`; migré las pruebas a xUnit v3 con Microsoft.Testing.Platform (`global.json` y `OutputType Exe` en `Erp.Tests`). Modifiqué D09, D25 y D26, agregué TRZ-04 y actualicé contexto, glosario y reglas.
 - Falló / dudas: el borrado en cascada de EF Core hizo fallar la primera migración; xUnit v3 se instaló por error en los proyectos de `src/`. El PR de S1-05 se fusionó antes de escribir esta documentación, así que va en un PR aparte.

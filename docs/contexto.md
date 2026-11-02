@@ -37,6 +37,7 @@
 - Si algo cambia una decisión ya tomada, se modifica esa decisión (D24), no se crea otra.
 - EF Core crea las claves foráneas en cascada por defecto; con varias rutas hacia la misma tabla, SQL Server rechaza la migración ("multiple cascade paths"). Usar `DeleteBehavior.NoAction` y borrado lógico.
 - xUnit se instala solo en `tests/Erp.Tests`; agregarlo a los proyectos de `src/` hace que el build pida `OutputType Exe` en todos y falle.
+- No ejecutar `dotnet build` y `dotnet test` a la vez: compiten por el mismo archivo de `Erp.Api` y fallan con CS2012. Ejecutarlos en orden.
 
 ## Pendientes que no son del sprint actual
 - Alcance, fuente y fecha de Logística y de las áreas siguientes; partirán de las versiones mínimas del sprint 1.

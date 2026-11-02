@@ -61,6 +61,7 @@ Todo término nuevo se agrega en la misma sesión en que aparece.
 | API / endpoint | Servicio web que el front o las pruebas consumen / una URL concreta de la API |
 | xUnit | Librería de pruebas unitarias de .NET |
 | Prueba unitaria | Prueba que verifica una regla sin base de datos ni red |
+| Doble de prueba | Versión falsa de una pieza (por ejemplo, un repositorio que guarda en memoria) para probar una regla sin base de datos |
 | CI | Integración continua: GitHub corre build y pruebas solo en cada PR |
 | GitHub Actions | Servicio de GitHub que ejecuta el CI |
 | Swagger / Scalar | Pantalla web para probar los endpoints de la API |

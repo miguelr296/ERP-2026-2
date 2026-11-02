@@ -70,7 +70,7 @@ Si una tarjeta crea o cambia un documento y no deja historial y cadena, no está
 - **El tablero de GitHub es la fuente de verdad de las tarjetas** (D22). Trabajo sin tarjeta no se hace.
 - `main` siempre funciona; no se hace merge si build o pruebas fallan.
 - Ramas `nombre/tarea` dentro del repo (sin forks, D23), PR revisado por otro integrante (si toca reglas, `Compartido` o migraciones, revisa Miguel), `Closes #N`.
-- **Antes de abrir un PR se corre `/cierre` y el cierre llega hasta que el PR está subido y listo para mergear** (D27): el PR incluye código, pruebas, migración y toda la documentación de la tarjeta ya actualizada; nunca se documenta en un PR posterior.
+- **`/cierre` es el punto final de cambios** (D27): al ejecutarlo, código, pruebas, migraciones y toda la documentación deben estar actualizados e incluidos. Después no se permiten más modificaciones; el PR se abre con esa versión cerrada. Si la revisión requiere cambios, se coordina un nuevo cierre antes de modificarlos.
 - Un archivo, un dueño por semana. Pantallas: cada uno la de su pieza; `index.html`, `aplicaciones.js`, `estilos.css` y la ficha común son de Luis.
 - Commits con prefijo `feat:`, `fix:`, `test:`, `docs:`, `chore:`. Tags semanales `semana-01`, `semana-02`… y `final`.
 
@@ -80,7 +80,6 @@ Si una tarjeta crea o cambia un documento y no deja historial y cadena, no está
 - **Siempre pregunta antes** y nunca crees ni modifiques archivos sin un "sí".
 - Explica lo que generaste en pocas líneas. Luis y Pablo son nuevos en C#: explica conceptos (capas, DI, xUnit, EF Core) cuando aparezcan.
 - **Explicar es fundamental:** en `/cierre`, la persona explica con sus palabras lo que hizo y tú corriges lo que no sea exacto.
-- El **modo tutor** (pistas en vez de soluciones) está suspendido; su descripción sigue en D09 por si el equipo lo reactiva.
 - Una tarjeta a la vez; en sesiones de 2–3 h se encadenan. Respeta el orden del tablero y explica por qué cambias de tarjeta.
 - Comandos: `/iniciar`, `/cierre`, `/retro`, `/planning` (definidos en `docs/comandos/`).
 

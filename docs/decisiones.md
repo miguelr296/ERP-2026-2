@@ -16,7 +16,7 @@ Si algo nuevo contradice o cambia una decisión ya registrada, **no se crea una 
 4. El estado pasa a *Modificada (AAAA-MM-DD)*. Si se modifica varias veces, se agregan bloques en orden de fecha.
 5. Si solo se vuelve a confirmar sin cambios, se agrega una línea **Confirmada AAAA-MM-DD**.
 
-Solo se crea una decisión `Dnn` nueva cuando el tema no estaba decidido antes. Siguiente número libre: **D27**.
+Solo se crea una decisión `Dnn` nueva cuando el tema no estaba decidido antes. Siguiente número libre: **D28**.
 
 ---
 
@@ -237,7 +237,9 @@ Vive en `Compartido` (S1-08, S1-09) y en un componente de ficha común (S1-17); 
 **Vigente:** Un proyecto por submódulo con tres carpetas de capa; `Erp.Api` es el único host; el `ErpDbContext` es único y vive en `Erp.Api/Datos/`; los repositorios son interfaz en el módulo e implementación en la Api; `Contratos` como ensamblados desde la fase B; borrado lógico, no físico, para sede y usuario.
 
 ## D27 — /cierre antes de abrir el PR
-**Fecha:** 2026-11-02 · **Estado:** Aprobada · **Ámbito:** Global
-**Decisión:** `/cierre` abarca el proceso completo hasta dejar el PR subido y listo para mergear. Antes de abrirlo, se actualizan código, pruebas, migración (si toca) y **toda** la documentación de la tarjeta (`docs/reglas.md`, `docs/contratos/`, `docs/decisiones.md`, glosario, bitácora y lo que pida la definición de terminado). Luego se abre el PR con esa versión completa; se atienden las observaciones y se suben las correcciones necesarias hasta que esté listo para mergear. No se abre un PR incompleto ni se deja documentación para un PR posterior.
+**Fecha:** 2026-11-01 · **Estado:** Modificada (2026-11-01) · **Ámbito:** Global
+**Decisión:** `/cierre` es el punto final de cambios. Al ejecutarlo, el código, las pruebas, las migraciones y toda la documentación de la tarjeta deben estar actualizados e incluidos. Después de `/cierre` no se permiten más modificaciones; el PR se abre con esa versión cerrada. Si la revisión del PR requiere cambios, se coordina un nuevo cierre antes de modificarlos.
 **Alternativas:** Abrir el PR al terminar el código y documentar después (lo que pasó con S1-05, que necesitó un PR aparte solo de documentación); documentar solo al final de la fase.
-**Por qué:** Un PR que llega sin su documentación obliga a un segundo PR, deja `main` con reglas sin marcar y rompe la definición de terminado. Hacer el `/cierre` hasta dejar el PR listo para mergear garantiza que quien revisa ve y aprueba la versión completa que se fusionará.
+**Por qué:** Un PR que llega sin su documentación obliga a un segundo PR, deja `main` con reglas sin marcar y rompe la definición de terminado. Cerrar primero asegura que el PR se abre con una versión completa y revisada; cualquier cambio posterior requiere coordinar y ejecutar un nuevo cierre.
+**Modificación 2026-11-01 (una sola ronda de propuestas):** `/cierre` se ejecuta como una sola ronda de propuestas definitivas (bitácora, decisiones, contexto, glosario, reglas y contratos). Se aprueban todas juntas, se aplican y se verifican con build y pruebas; a partir de esa aceptación no se permiten más cambios en la rama y el PR se abre con esa versión. Cualquier ajuste posterior exige coordinar un nuevo `/cierre`. Motivo: al cerrar S1-08 surgieron propuestas sueltas después de empezar el cierre, y eso obligaba a decidir si el cierre ya había terminado.
+**Vigente:** `/cierre` es una sola ronda de propuestas definitivas; se aprueban, se aplican y se verifican juntas, y después no hay más cambios: el PR se abre con esa versión. Cambios posteriores requieren un nuevo `/cierre`.
