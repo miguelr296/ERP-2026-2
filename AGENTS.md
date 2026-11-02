@@ -70,6 +70,7 @@ Si una tarjeta crea o cambia un documento y no deja historial y cadena, no está
 - **El tablero de GitHub es la fuente de verdad de las tarjetas** (D22). Trabajo sin tarjeta no se hace.
 - `main` siempre funciona; no se hace merge si build o pruebas fallan.
 - Ramas `nombre/tarea` dentro del repo (sin forks, D23), PR revisado por otro integrante (si toca reglas, `Compartido` o migraciones, revisa Miguel), `Closes #N`.
+- **Antes de abrir un PR se corre `/cierre` y el cierre llega hasta que el PR está subido y listo para mergear** (D27): el PR incluye código, pruebas, migración y toda la documentación de la tarjeta ya actualizada; nunca se documenta en un PR posterior.
 - Un archivo, un dueño por semana. Pantallas: cada uno la de su pieza; `index.html`, `aplicaciones.js`, `estilos.css` y la ficha común son de Luis.
 - Commits con prefijo `feat:`, `fix:`, `test:`, `docs:`, `chore:`. Tags semanales `semana-01`, `semana-02`… y `final`.
 

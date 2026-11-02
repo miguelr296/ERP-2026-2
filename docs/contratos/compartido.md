@@ -10,12 +10,14 @@ Submódulos **Trazabilidad** (historial de estados y cadena documental), **Segur
 ## 2. Qué expone (interfaz pública en `Contratos`)
 | Operación | Entrada | Salida | Quién la usa | Estado |
 |---|---|---|---|---|
-| `RegistrarCambioDeEstado` | documento, estado anterior y nuevo, usuario, rol, fecha y hora, motivo | entrada de historial (solo se agrega) | Todos los módulos | Fase A (S1-08) |
-| `ObtenerHistorial` | documento | línea de tiempo de estados | Fichas y pantalla de trazabilidad | Fase A (S1-08) |
+| `RegistrarCambioDeEstado` | documento, estado anterior y nuevo, usuario, rol, fecha y hora, motivo | entrada de historial (solo se agrega) | Todos los módulos | Hecho (S1-08) |
+| `ObtenerHistorial` | documento | línea de tiempo de estados | Fichas y pantalla de trazabilidad | Hecho (S1-08) |
 | `RegistrarOrigen` | documento derivado, documento de origen | vínculo de la cadena | Todos los módulos | Fase A (S1-09) |
 | `ObtenerCadena` | documento | antecesores y sucesores | Fichas y pantalla de trazabilidad | Fase A (S1-09) |
 | `ValidarPermiso` | rol, acción | permitido o denegado | Todos los módulos | Fase A (S1-18) |
 | `EnviarAviso` | canal, destinatario, mensaje | registro del envío simulado y aviso en la bandeja | Todos los módulos | Fase B (S1-31) |
+
+**Dónde vive la interfaz:** en `src/Erp.Compartido/Contratos/`. Los demás módulos usan solo esas interfaces; las carpetas `Servicios/` y `Datos/` de Compartido son internas (D06). Los ensamblados separados de `Contratos` llegan en la fase B (D26).
 
 ## 3. Qué consume de otros módulos
 Nada: `Compartido` no depende de ningún módulo (regla 3.4.4 de la arquitectura). Los demás lo usan directamente.

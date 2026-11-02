@@ -1,4 +1,7 @@
 using Erp.Api.Datos;
+using Erp.Compartido.Contratos;
+using Erp.Compartido.Datos;
+using Erp.Compartido.Servicios;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +12,10 @@ builder.Services.AddDbContext<ErpDbContext>(opciones =>
     opciones.UseSqlServer(
         builder.Configuration.GetConnectionString("FamihogarErp")
         ?? throw new InvalidOperationException("Falta configurar la conexión FamihogarErp.")));
+
+// Trazabilidad (D25): el historial se pide por su contrato; la base de datos la resuelve la Api.
+builder.Services.AddScoped<IHistorialEstadoRepositorio, RepositorioHistorial>();
+builder.Services.AddScoped<IHistorialDeEstados, RegistroDeHistorial>();
 
 var app = builder.Build();
 

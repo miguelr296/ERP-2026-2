@@ -1,6 +1,7 @@
 # /cierre — Cierre de sesión: revisar qué guardar
 
 Revisa lo que hicimos en esta sesión y:
+0. **El cierre abarca hasta que el PR esté subido y listo para mergear** (D27): primero actualiza código, pruebas, migración y toda la documentación; luego abre el PR, atiende observaciones y sube las correcciones necesarias. No des por terminada la sesión antes de dejarlo listo para mergear.
 1. Propón la entrada de `BITACORA.md` (`AAAA-MM-DD · Nombre · horas`, y Hice / Falló o dudas / Siguiente paso exacto) con mi nombre y las horas reales.
 2. **Pídeme que explique con mis palabras** qué hace lo que hicimos hoy (dos o tres frases por pieza) y corrígeme si algo no es exacto. Explicar es obligatorio para todos (D09).
 3. Verifica la **definición de terminado** de la tarjeta (`docs/plan/sprints.md` 5.4): PR desde una rama del repo, build y pruebas, regla en el catálogo, **trazabilidad** (historial, cadena y ficha si toca un documento), glosario, migración, prueba manual si es pantalla. Dime qué falta.

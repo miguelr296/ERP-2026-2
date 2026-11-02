@@ -16,7 +16,7 @@ Si algo nuevo contradice o cambia una decisión ya registrada, **no se crea una 
 4. El estado pasa a *Modificada (AAAA-MM-DD)*. Si se modifica varias veces, se agregan bloques en orden de fecha.
 5. Si solo se vuelve a confirmar sin cambios, se agrega una línea **Confirmada AAAA-MM-DD**.
 
-Solo se crea una decisión `Dnn` nueva cuando el tema no estaba decidido antes. Siguiente número libre: **D26**.
+Solo se crea una decisión `Dnn` nueva cuando el tema no estaba decidido antes. Siguiente número libre: **D27**.
 
 ---
 
@@ -235,3 +235,9 @@ Vive en `Compartido` (S1-08, S1-09) y en un componente de ficha común (S1-17); 
 **Por qué:** El compilador impone la frontera entre módulos que pide D06: si un módulo usa clases de otro sin la referencia declarada, no compila; con un proyecto único la regla sería solo escrita y se rompería sin aviso. Tres proyectos por submódulo multiplican el mantenimiento sin enseñar nada nuevo en tres semanas. Los contratos en la fase B evitan cuatro proyectos vacíos durante días.
 **Modificación 2026-10-31:** El acceso a datos usa un `ErpDbContext` único en `src/Erp.Api/Datos/`, con un esquema SQL por módulo y migraciones creadas por Miguel. Como los módulos no pueden referenciar al host, cada submódulo define sus interfaces `I...Repositorio` en su carpeta `Datos/` y la Api aporta las implementaciones con EF, registradas por inyección de dependencias. Los servicios y las pruebas usan solo las interfaces. Las relaciones hacia sede y usuario no borran en cascada: los registros se desactivan (borrado lógico).
 **Vigente:** Un proyecto por submódulo con tres carpetas de capa; `Erp.Api` es el único host; el `ErpDbContext` es único y vive en `Erp.Api/Datos/`; los repositorios son interfaz en el módulo e implementación en la Api; `Contratos` como ensamblados desde la fase B; borrado lógico, no físico, para sede y usuario.
+
+## D27 — /cierre antes de abrir el PR
+**Fecha:** 2026-11-02 · **Estado:** Aprobada · **Ámbito:** Global
+**Decisión:** `/cierre` abarca el proceso completo hasta dejar el PR subido y listo para mergear. Antes de abrirlo, se actualizan código, pruebas, migración (si toca) y **toda** la documentación de la tarjeta (`docs/reglas.md`, `docs/contratos/`, `docs/decisiones.md`, glosario, bitácora y lo que pida la definición de terminado). Luego se abre el PR con esa versión completa; se atienden las observaciones y se suben las correcciones necesarias hasta que esté listo para mergear. No se abre un PR incompleto ni se deja documentación para un PR posterior.
+**Alternativas:** Abrir el PR al terminar el código y documentar después (lo que pasó con S1-05, que necesitó un PR aparte solo de documentación); documentar solo al final de la fase.
+**Por qué:** Un PR que llega sin su documentación obliga a un segundo PR, deja `main` con reglas sin marcar y rompe la definición de terminado. Hacer el `/cierre` hasta dejar el PR listo para mergear garantiza que quien revisa ve y aprueba la versión completa que se fusionará.

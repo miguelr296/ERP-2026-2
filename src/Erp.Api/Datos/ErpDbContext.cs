@@ -9,6 +9,7 @@ public class ErpDbContext(DbContextOptions<ErpDbContext> opciones) : DbContext(o
 {
     public DbSet<Sede> Sedes => Set<Sede>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<HistorialEstado> HistorialEstados => Set<HistorialEstado>();
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<Oportunidad> Oportunidades => Set<Oportunidad>();
     public DbSet<OportunidadProducto> ProductosOportunidad => Set<OportunidadProducto>();
@@ -46,6 +47,22 @@ public class ErpDbContext(DbContextOptions<ErpDbContext> opciones) : DbContext(o
             entidad.Property(usuario => usuario.Nombre).HasMaxLength(120).IsRequired();
             entidad.Property(usuario => usuario.Rol).HasConversion<string>().HasMaxLength(50);
             entidad.HasOne<Sede>().WithMany().HasForeignKey(usuario => usuario.SedeId);
+        });
+
+        modelo.Entity<HistorialEstado>(entidad =>
+        {
+            entidad.ToTable("HistorialEstado", "compartido");
+            entidad.HasKey(entrada => entrada.Id);
+            entidad.Property(entrada => entrada.TipoDocumento).HasMaxLength(30).IsRequired();
+            entidad.Property(entrada => entrada.EstadoAnterior).HasMaxLength(30);
+            entidad.Property(entrada => entrada.EstadoNuevo).HasMaxLength(30).IsRequired();
+            entidad.Property(entrada => entrada.Rol).HasMaxLength(50).IsRequired();
+            entidad.Property(entrada => entrada.Motivo).HasMaxLength(300).IsRequired();
+            entidad.HasIndex(entrada => new { entrada.TipoDocumento, entrada.DocumentoId, entrada.FechaHora });
+            entidad.HasOne<Usuario>()
+                .WithMany()
+                .HasForeignKey(entrada => entrada.UsuarioId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
     }
 

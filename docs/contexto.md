@@ -23,6 +23,7 @@
 - Todo cambio de estado pasa por el historial de `Compartido`; todo documento derivado registra su origen (D25).
 - Front: HTML, CSS y JS legibles, sin minificar. Pantallas en `wwwroot/<modulo>/<submodulo>/`; todas usan la ficha común.
 - Cada término técnico nuevo y cada evento técnico (error, migración, dependencia) se explica antes de usarlo o resolverlo, con un ejemplo concreto del proyecto (D09).
+- Explicar cada paso antes de actuar con palabras sencillas y ejemplos concretos; distinguir qué está hecho y qué falta (D09).
 
 ## Trampas y lecciones
 - **No crear ni modificar archivos sin preguntar** (regla general, D09).
