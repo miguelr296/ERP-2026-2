@@ -35,7 +35,6 @@ public class ArranqueTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
 
         var cuerpo = await respuesta.Content.ReadAsStringAsync();
-        // COM-020: expectativa incorrecta temporal para comprobar el fallo de CI.
-        Assert.Contains("\"estado\":\"fallo controlado COM-020\"", cuerpo);
+        Assert.Contains("\"estado\":\"en marcha\"", cuerpo);
     }
 }

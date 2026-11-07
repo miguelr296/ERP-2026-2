@@ -18,10 +18,10 @@ jobs:
         shell: pwsh
     steps:
       - name: Obtener código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Instalar SDK de global.json
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
 
@@ -62,7 +62,7 @@ jobs:
 
       - name: Conservar resultados de pruebas
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: resultados-pruebas
           path: TestResults/*.trx
