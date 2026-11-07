@@ -10,3 +10,4 @@
 - COM-001 acordó estados de OV y parámetros ficticios (DEC-001). Por acuerdo del equipo, los horarios escalonados no se documentan.
 - Calendario y método: docs/plan/sprints.md. El tablero remoto no ha sido alterado por este reinicio.
 - Existe `Erp.slnx`, API y pruebas de arranque en la máquina de Miguel. Al 2026-11-07 aún no hay base de datos, migraciones ni CI.
+- 2026-11-07 · COM-020: workflow de CI implementado y validado en la rama de Luis, pendiente de revisión e integración. Se comprobaron una ejecución correcta, otra con fallo controlado y la configuración final correcta tras restaurar la expectativa original. Evidencia y enlaces en `docs/guias/ci.md`; preparación local lista para PR. No acredita base de datos ni recorrido comercial, ni cambia protecciones de main. No se declara Done.
