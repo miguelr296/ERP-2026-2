@@ -62,7 +62,7 @@ jobs:
 
       - name: Conservar resultados de pruebas
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: resultados-pruebas
           path: TestResults/*.trx
