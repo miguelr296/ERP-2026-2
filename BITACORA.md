@@ -44,6 +44,22 @@ Completar únicamente con trabajo realizado y comprobado a partir del inicio.
 - Límites: no se verificó SQL Server en la máquina de Luis ni se ejecutaron migraciones. No se modifican las pantallas ni el código de COM-005. El borrador de COM-006 sigue sin commit y fuera del PR.
 - Siguiente paso: actualizar el PR #105 y solicitar nueva revisión de Miguel. No se integra ni se declara Done.
 
+### 2026-11-07 · Luis · 0,25 h reales declaradas · COM-020
+- Hice y evidencia: workflow `.github/workflows/ci.yml` con instalación desde global.json, restore, build y test secuenciales; comprueba pruebas realmente ejecutadas y conserva informes TRX siete días. Validación local en Release: build con 0 advertencias y 0 errores; 2 pruebas superadas, 0 fallidas y 0 omitidas. Ejecución remota correcta [42423143388](https://github.com/miguelr296/ERP-2026-2/actions/runs/42423143388) y fallo controlado [42423257981](https://github.com/miguelr296/ERP-2026-2/actions/runs/42423257981): build pasó, 1 prueba superada y 1 fallida, código de salida 1 e informe conservado. Expectativa original restaurada. Inventario de comandos y evidencia en `docs/guias/ci.md`.
+- Explicación del autor: restore obtiene dependencias, build comprueba compilación y test ejecuta pruebas y verifica resultados; Actions automatiza esas comprobaciones. Un comando correcto sin pruebas ejecutadas no demuestra comportamiento comprobado.
+- Falló / bloqueo: fallo esperado provocado solo en la rama COM-020. Las ejecuciones remotas seleccionaron SDK 10.0.403, permitido por latestFeature; el entorno local seleccionó 10.0.401. Se actualizaron acciones a checkout v5, setup-dotnet v5 y upload-artifact v6 por avisos de Node 20. No se crean migraciones ni se modifican pantallas.
+- Validación final: [ejecución 42423576325](https://github.com/miguelr296/ERP-2026-2/actions/runs/42423576325) correcta con las acciones definitivas y la expectativa restaurada: build con 0 advertencias y 0 errores; test y contador con 2 superadas, 0 fallidas y 0 omitidas; informe conservado. Validación local final en el mismo orden también correcta. Diff sin cambios finales en pruebas ni wwwroot; comprobación de espacios y enlaces locales sin incidencias.
+- Siguiente paso: preparación local lista para PR; obtener revisión de otra persona e integrar tras aceptación. No se declara Done ni se modifica el tablero. Los 15 minutos corresponden al tiempo real comunicado por Luis, no a la disponibilidad inicial de dos horas.
+
+### 2026-11-08 · Luis · Actualización del PR COM-020 tras COM-005 · Horas no declaradas
+- Hice y evidencia: incorporé `upstream/main` (`500174e`, PR #107) a la rama de COM-020 y resolví los conflictos de README, contexto y bitácora conservando los registros de Miguel y Luis. Se conserva la nueva arquitectura y se distingue la evidencia histórica de dos pruebas del resultado actual: build Release con 0 advertencias y 0 errores; test posterior con 8 superadas, 0 fallidas y 0 omitidas.
+- Límites: las seis pruebas nuevas usan EF Core InMemory; no se verificó SQL Server en la máquina de Luis ni se ejecutaron migraciones. El borrador local de COM-006 queda fuera del PR. No se modifica código de COM-005.
+- Siguiente paso: actualizar el PR #106, comprobar CI y solicitar nueva revisión de Miguel. No se integra el PR ni se declara Done.
+
+### 2026-11-08 · Luis · Actualización de COM-020 con main · Horas no declaradas
+- Hice y evidencia: incorporado `upstream/main` (`3ef9764`, integración de COM-003) a COM-020. Conflictos de bitácora y contexto resueltos conservando ambas tareas. Build Release: 0 advertencias y 0 errores; test posterior: 8 superadas, 0 fallidas y 0 omitidas. Esta rama no incorpora las pruebas nuevas de COM-006.
+- Siguiente paso: actualizar el PR #106, comprobar CI y obtener nueva revisión. No se fusiona ni se declara Done.
+
 ## Plantilla de sesión
 Fecha · Persona · Horas reales · Tarjeta
 - Hice y evidencia:
