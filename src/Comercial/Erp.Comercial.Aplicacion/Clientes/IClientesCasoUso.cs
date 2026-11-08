@@ -11,4 +11,8 @@ public interface IClientesCasoUso
         CancellationToken cancelacion = default);
 
     Task<ClienteVista?> BuscarAsync(Guid id, CancellationToken cancelacion = default);
+
+    Task<IReadOnlyList<ClienteVista>> BuscarPorDocumentoAsync(
+        string? documento,
+        CancellationToken cancelacion = default);
 }

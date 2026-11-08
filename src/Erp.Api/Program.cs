@@ -51,6 +51,14 @@ app.MapPost("/api/clientes", (
         return Results.Created($"/api/clientes/{cliente.Id}", cliente);
     }));
 
+// Buscar antes de registrar: devuelve cero o un cliente porque el documento es único.
+app.MapGet("/api/clientes", (
+    string? documento,
+    IClientesCasoUso casoUso,
+    CancellationToken cancelacion) =>
+    PeticionesHttp.EjecutarAsync(async () =>
+        Results.Ok(await casoUso.BuscarPorDocumentoAsync(documento, cancelacion))));
+
 app.MapGet("/api/clientes/{id:guid}", async (
     Guid id,
     IClientesCasoUso casoUso,

@@ -68,4 +68,24 @@ public class ClientesCasoUso : IClientesCasoUso
         var cliente = await _repositorio.BuscarClienteAsync(id, cancelacion);
         return cliente is null ? null : ClienteVista.Desde(cliente);
     }
+
+    public async Task<IReadOnlyList<ClienteVista>> BuscarPorDocumentoAsync(
+        string? documento,
+        CancellationToken cancelacion = default)
+    {
+        if (string.IsNullOrWhiteSpace(documento))
+        {
+            throw new ReglaDeNegocioException("Indique el documento del cliente que desea buscar.");
+        }
+
+        var documentoBuscado = documento.Trim();
+        // Es el límite del campo ya definido en COM-005, no un formato legal de DNI/RUC.
+        if (documentoBuscado.Length > 20)
+        {
+            throw new ReglaDeNegocioException("El documento del cliente admite hasta 20 caracteres.");
+        }
+
+        var cliente = await _repositorio.BuscarClientePorDocumentoAsync(documentoBuscado, cancelacion);
+        return cliente is null ? [] : [ClienteVista.Desde(cliente)];
+    }
 }

@@ -60,6 +60,20 @@ Completar únicamente con trabajo realizado y comprobado a partir del inicio.
 - Hice y evidencia: incorporado `upstream/main` (`3ef9764`, integración de COM-003) a COM-020. Conflictos de bitácora y contexto resueltos conservando ambas tareas. Build Release: 0 advertencias y 0 errores; test posterior: 8 superadas, 0 fallidas y 0 omitidas. Esta rama no incorpora las pruebas nuevas de COM-006.
 - Siguiente paso: actualizar el PR #106, comprobar CI y obtener nueva revisión. No se fusiona ni se declara Done.
 
+### 2026-11-08 · Luis · 20 minutos reales declarados · COM-006
+- Hice y evidencia: búsqueda por documento exacto en `/api/clientes?documento=...`, con recorte de espacios y errores de documento ausente/vacío o mayor al límite de 20 caracteres ya definido en COM-005. Se reutiliza el alta, consulta por ID e historial existentes. Se agregaron 11 casos HTTP con datos aislados; build Release con 0 advertencias y 0 errores, seguido de 19 pruebas superadas, 0 fallidas y 0 omitidas.
+- Hice y evidencia SQL: Luis inició SQL Server y autorizó instalar dotnet-ef temporal y aplicar solo la migración `Inicial` de Miguel a `ErpFamihogarPruebasLuis`. Se comprobaron búsqueda vacía, alta 201, búsqueda del mismo ID, un evento de historial, duplicado 400 y búsqueda vacía 400. Tras reiniciar la API se recuperó el mismo cliente `091cec05-c3e1-4443-ab33-4bb3f2a78743` e historial. No se crearon migraciones ni se modificaron las existentes.
+- Explicación del autor: buscar por documento permite comprobar si el cliente existe y evitar duplicarlo. Recuperar el mismo ID tras reiniciar demuestra que ese registro se conservó y pudo consultarse; no verifica por sí solo toda COM-R01. Luis aprobó esta documentación y la evidencia parcial de la regla, sin marcarla Verificada.
+- Falló / bloqueo: SSPI falló dentro del entorno restringido y funcionó fuera con autorización. La primera comprobación manual contó mal una lista vacía en PowerShell y se detuvo sin crear datos; tras inspeccionar la respuesta y corregir el conteo se repitió correctamente. No se atribuyen esos fallos a la API. COM-R01 mantiene pendiente el recorrido de oportunidad/productos/responsable. Los 20 minutos son tiempo trabajado, no las dos horas disponibles.
+- Validación final: después de documentar se ejecutaron build Release con 0 advertencias y 0 errores y, a continuación, test con 19 superadas, 0 fallidas y 0 omitidas. Enlaces locales y marcadores comprobados, diff sin incidencias. Cierre local validado y preparación lista para PR.
+- Siguiente paso: solicitar revisión de Miguel cuando corresponda y obtener autorización antes de commit/subida. No se abre un tercer PR mientras se mantenga el límite de revisión del equipo; no se modifica el tablero ni se declara Done.
+
+### 2026-11-08 · Luis · Actualización de COM-006 con main · Horas no declaradas
+- Actualización adicional tras integrar COM-020: incorporado `upstream/main` (`7961576`, PR #106). Conflictos de bitácora y contexto resueltos conservando COM-020 y COM-006. Build Release con 0 advertencias y 0 errores; después 19 pruebas superadas, 0 fallidas y 0 omitidas. No se modifica código de clientes ni migraciones.
+- Hice y evidencia: incorporado `upstream/main` (`3ef9764`, integración de COM-003) a la rama de COM-006; conflictos de bitácora, contexto y preparación resueltos conservando la evidencia de ambas tareas. Build Release final: 0 advertencias y 0 errores; test posterior: 19 superadas, 0 fallidas y 0 omitidas.
+- Falló / bloqueo: el primer build falló por DLL bloqueadas por la API de pruebas del puerto 5216. Se verificó y detuvo únicamente ese proceso; después build y test pasaron. SQL Server no se detuvo ni se ejecutaron migraciones.
+- Siguiente paso: actualizar el PR #108 y obtener revisión de Miguel. No se fusiona ni se declara Done.
+
 ## Plantilla de sesión
 Fecha · Persona · Horas reales · Tarjeta
 - Hice y evidencia:
