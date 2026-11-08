@@ -42,6 +42,15 @@ public class ComercialRepositorio : IComercialRepositorio
             .FirstOrDefaultAsync(cliente => cliente.Id == clienteId, cancelacion);
     }
 
+    public Task<Cliente?> BuscarClientePorDocumentoAsync(
+        string documento,
+        CancellationToken cancelacion = default)
+    {
+        return _contexto.Clientes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cliente => cliente.Documento == documento, cancelacion);
+    }
+
     public void AgregarCliente(Cliente cliente)
     {
         _contexto.Clientes.Add(cliente);

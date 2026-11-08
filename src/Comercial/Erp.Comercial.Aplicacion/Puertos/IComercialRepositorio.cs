@@ -14,6 +14,8 @@ public interface IComercialRepositorio
 
     Task<Cliente?> BuscarClienteAsync(Guid clienteId, CancellationToken cancelacion = default);
 
+    Task<Cliente?> BuscarClientePorDocumentoAsync(string documento, CancellationToken cancelacion = default);
+
     void AgregarCliente(Cliente cliente);
 
     void AgregarOportunidad(Oportunidad oportunidad);
