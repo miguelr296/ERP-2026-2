@@ -32,6 +32,18 @@ Completar únicamente con trabajo realizado y comprobado a partir del inicio.
 - Falló / bloqueo: el paquete transitivo `System.Security.Cryptography.Pkcs` 9.0.11 traía dos avisos de vulnerabilidad (NU1902 y NU1903); se fijó la versión 10.0.14 en los tres proyectos y desaparecieron. No hay bloqueo técnico conocido; falta preparar el commit, abrir el PR y obtener revisión de Luis o Pablo. La tarjeta queda lista para PR, no Done.
 - Siguiente paso: Miguel ejecuta el flujo Git indicado en la guía y solicita revisión cruzada.
 
+### 2026-11-07 · Luis · 1 h real declarada · COM-003
+- Hice y evidencia: SDK 10.0.301 y 10.0.401 instalados; selección efectiva 10.0.401. Build correcto con 0 advertencias y 0 errores, seguido de `dotnet test --no-build`: 2 superadas, 0 fallidas y 0 omitidas. API comprobada con HTTP 200 en `/` y respuesta «en marcha» en `/api/estado`. Luis confirmó las pruebas manuales de los tres roles, búsqueda de `logistica`, tarjetas, Salir, recarga de sesión y consulta de estado. Inventario de textos y referencias registrado en `docs/guias/acceso-aplicaciones.md`, sin modificar wwwroot.
+- Explicación del autor: `/api/estado` demuestra respuesta en esa ruta, no base de datos ni flujo comercial completo. Los roles son simulados, sin autenticación ni permisos reales; las tarjetas avisan porque sus pantallas siguen pendientes.
+- Falló / bloqueo: build falló sin diagnóstico útil y test no produjo resultado dentro del entorno restringido del asistente; ambos se validaron fuera con autorización. Las ramas main local, del fork y del principal coincidían en `ddcb0f4` al consultarlas; no se acredita la sincronización de todas las ramas antiguas. Luis declara aproximadamente 2 h disponibles restantes, no horas trabajadas.
+- Validación final del cierre: documentación revisada y `git diff --check` sin incidencias; únicamente cinco documentos modificados, sin cambios en wwwroot. Se repitieron en orden `dotnet build` (0 advertencias y 0 errores) y `dotnet test --no-build` (2 superadas, 0 fallidas y 0 omitidas).
+- Siguiente paso: preparación local lista para PR; preparar una rama del repositorio principal según el flujo del equipo cuando Luis autorice la operación. Sin commits ni subidas autorizados por ahora; revisión por otra persona e integración pendientes. No se declara Done ni se modifica el tablero.
+
+### 2026-11-08 · Luis · Actualización del PR COM-003 tras COM-005 · Horas no declaradas
+- Hice y evidencia: incorporé `upstream/main` (`500174e`, PR #107) a la rama de COM-003; resolví conflictos de bitácora, contexto y preparación conservando las entradas de ambos integrantes, la arquitectura nueva y los resultados históricos de COM-003. Build Release con 0 advertencias y 0 errores, seguido de 8 pruebas superadas, 0 fallidas y 0 omitidas.
+- Límites: no se verificó SQL Server en la máquina de Luis ni se ejecutaron migraciones. No se modifican las pantallas ni el código de COM-005. El borrador de COM-006 sigue sin commit y fuera del PR.
+- Siguiente paso: actualizar el PR #105 y solicitar nueva revisión de Miguel. No se integra ni se declara Done.
+
 ### 2026-11-07 · Luis · 0,25 h reales declaradas · COM-020
 - Hice y evidencia: workflow `.github/workflows/ci.yml` con instalación desde global.json, restore, build y test secuenciales; comprueba pruebas realmente ejecutadas y conserva informes TRX siete días. Validación local en Release: build con 0 advertencias y 0 errores; 2 pruebas superadas, 0 fallidas y 0 omitidas. Ejecución remota correcta [42423143388](https://github.com/miguelr296/ERP-2026-2/actions/runs/42423143388) y fallo controlado [42423257981](https://github.com/miguelr296/ERP-2026-2/actions/runs/42423257981): build pasó, 1 prueba superada y 1 fallida, código de salida 1 e informe conservado. Expectativa original restaurada. Inventario de comandos y evidencia en `docs/guias/ci.md`.
 - Explicación del autor: restore obtiene dependencias, build comprueba compilación y test ejecuta pruebas y verifica resultados; Actions automatiza esas comprobaciones. Un comando correcto sin pruebas ejecutadas no demuestra comportamiento comprobado.
@@ -43,6 +55,10 @@ Completar únicamente con trabajo realizado y comprobado a partir del inicio.
 - Hice y evidencia: incorporé `upstream/main` (`500174e`, PR #107) a la rama de COM-020 y resolví los conflictos de README, contexto y bitácora conservando los registros de Miguel y Luis. Se conserva la nueva arquitectura y se distingue la evidencia histórica de dos pruebas del resultado actual: build Release con 0 advertencias y 0 errores; test posterior con 8 superadas, 0 fallidas y 0 omitidas.
 - Límites: las seis pruebas nuevas usan EF Core InMemory; no se verificó SQL Server en la máquina de Luis ni se ejecutaron migraciones. El borrador local de COM-006 queda fuera del PR. No se modifica código de COM-005.
 - Siguiente paso: actualizar el PR #106, comprobar CI y solicitar nueva revisión de Miguel. No se integra el PR ni se declara Done.
+
+### 2026-11-08 · Luis · Actualización de COM-020 con main · Horas no declaradas
+- Hice y evidencia: incorporado `upstream/main` (`3ef9764`, integración de COM-003) a COM-020. Conflictos de bitácora y contexto resueltos conservando ambas tareas. Build Release: 0 advertencias y 0 errores; test posterior: 8 superadas, 0 fallidas y 0 omitidas. Esta rama no incorpora las pruebas nuevas de COM-006.
+- Siguiente paso: actualizar el PR #106, comprobar CI y obtener nueva revisión. No se fusiona ni se declara Done.
 
 ## Plantilla de sesión
 Fecha · Persona · Horas reales · Tarjeta
