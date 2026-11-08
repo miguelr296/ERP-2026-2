@@ -3,6 +3,7 @@
 [Índice](../../README.md)
 
 No se presupone un tablero configurado ni tarjetas cargadas. La configuración se verifica con el equipo.
+Estado reportado por Miguel el 2026-11-07: COM-001 y COM-002 en Done (PR #104), COM-003 y COM-004 en Ready y COM-005 en In Progress, lista para PR. El tablero remoto no se verificó desde esta sesión; Done requiere revisión e integración comprobadas.
 Borrador aprobado en sprint-NN.md → carga explícitamente autorizada → tablero como fuente del estado real.
 
 ## Columnas y límites

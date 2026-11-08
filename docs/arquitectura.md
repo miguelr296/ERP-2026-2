@@ -2,17 +2,37 @@
 
 [Índice](../README.md)
 
-Diseño para construir durante los sprints; no describe componentes ya existentes.
+Diseño que se construye por módulos, uno por sprint. Al 2026-11-07 existe la estructura completa de Comercial; los demás módulos se crean cuando su tarjeta los necesita.
 
 Monolito modular en C# / ASP.NET Core / EF Core / SQL Server; front HTML, CSS y JavaScript servido por la API.
 Áreas: Comercial (CRM, Ventas, Postventa), Logística (Inventarios, Despacho), Finanzas (Tesorería, Créditos y Cobranzas, Facturación), Planta (Ingeniería, Producción).
 Compartido contiene capacidades transversales, construidas cuando las necesita un área.
 
-Cada módulo mantiene Api → Servicios → Datos. Servicios aplica reglas; Datos persiste; la API adapta HTTP.
-Las pantallas consumen la API y muestran sus errores; no deciden reglas de negocio.
-Entre módulos, solo contratos públicos. No consultar tablas ni usar clases internas ajenas.
+## Capas por módulo
+
+Cada módulo se organiza en tres proyectos con una sola dirección de dependencias:
+
+```
+Api (HTTP, composición)  →  Aplicacion  →  Dominio
+                                 ↑
+                          Infraestructura
+```
+
+- `Dominio` no depende de nadie: entidades, reglas que no necesitan persistencia, estados y tipos del negocio.
+- `Aplicacion` depende de `Dominio`: casos de uso, puertos de persistencia y los modelos que la API expone.
+- `Infraestructura` depende de `Aplicacion`: EF Core, contexto, configuraciones de entidad y migraciones.
+- `Api` compone las capas, adapta HTTP y traduce errores; no contiene reglas de negocio ni consultas.
+- Entre módulos solo se usan los contratos públicos de `Aplicacion`. No se consultan tablas ni se usan clases internas ajenas.
+
+Ejemplo vigente: `src/Comercial/Erp.Comercial.Dominio`, `Erp.Comercial.Aplicacion` y `Erp.Comercial.Infraestructura`.
+
+## Persistencia
+
 Una base con esquema por módulo; propietario explícito de cada dato maestro.
-Miguel define DbContext y migraciones en la tarjeta de base; la estructura concreta de proyectos se decide al crear el esqueleto, sin generar módulos vacíos innecesarios.
+Miguel define el contexto y las migraciones en la tarjeta de base.
+La cadena de conexión vive en configuración local ignorada; el repositorio guarda solo un ejemplo sin secretos.
+
+## Documentos y reglas
 
 Historial y cadena son parte de la misma operación de negocio que registra el documento. Evitar guardar un documento sin su trazabilidad.
 Historial inmutable; documentos anulables con motivo, sin borrado físico. Dinero con decimal.

@@ -2,7 +2,7 @@
 
 [Índice](../../README.md)
 
-Esta guía define tareas de COM-002 a COM-005. Al 2026-11-07, COM-002 está verificada en la máquina de Miguel; no acredita instalación ni funcionamiento en las máquinas de Luis y Pablo.
+Esta guía define tareas de COM-002 a COM-005. Al 2026-11-07, COM-002 está verificada en la máquina de Miguel e integrada en `main` (PR #104); no acredita instalación ni funcionamiento en las máquinas de Luis y Pablo.
 
 1. Cada integrante verifica acceso al repositorio, editor y herramientas. Practicar rama, commit y PR con una tarea real.
 2. Elegir una versión LTS compatible de .NET, fijar su SDK en global.json y documentar la instalación.
@@ -25,3 +25,15 @@ Registro de lo comprobado, no de lo supuesto. No acredita las máquinas de Luis 
 - `dotnet build`: 0 advertencias, 0 errores.
 - `dotnet test`: 2 superadas, 0 con error.
 - No se crearon DbContext ni migraciones; corresponden a COM-005.
+
+2026-11-07 · COM-002 integrada
+- El PR #104, desde la rama `miguel/com-002-solucion-minima`, está mergeado en `main` (`ddcb0f4`).
+- El tablero reporta COM-001 y COM-002 en Done. Base de datos, migraciones y CI siguen pendientes.
+- Comprobación de secretos (Git de solo lectura, 2026-11-07): `git ls-files src/Erp.Api/appsettings.Development.json` no devuelve nada y `git status --porcelain` no lista `bin/`, `obj/` ni archivos locales. La configuración local no está rastreada, así que `.gitignore` la protege y la cadena de conexión puede guardarse ahí o en `appsettings.Local.json`; en el repositorio solo quedará un ejemplo sin secretos.
+
+2026-11-07 · COM-005 (en curso)
+- Tres proyectos por capa: `src/Comercial/Erp.Comercial.Dominio`, `Erp.Comercial.Aplicacion` y `Erp.Comercial.Infraestructura`; `ComercialContext` con esquema propio `Comercial`.
+- Migración `Inicial` creada con `dotnet ef migrations add` y aplicada con `dotnet ef database update` contra la instancia local; base `ErpFamihogar`.
+- Lectura y escritura comprobadas contra SQL Server: alta de cliente y de oportunidad, consulta de historial y rechazo por rol (400). Tras reiniciar el servicio, los datos siguen disponibles.
+- `dotnet build`: 0 advertencias, 0 errores. `dotnet test`: 8 superadas.
+- Las máquinas de Luis y Pablo siguen sin verificación de SQL Server.

@@ -18,7 +18,7 @@ dotnet test Erp.slnx --configuration Release --no-build --no-restore --logger tr
 
 Después de test, incluso si falla, se leen los informes TRX y se muestran los totales reales: ejecutadas, superadas, fallidas y omitidas. La comprobación falla si no hay informes, si no se ejecutó ninguna prueba o si existen pruebas fallidas; no usa una cantidad fija de pruebas como garantía. El fallo de `dotnet test` tampoco se oculta. Los informes se conservan como archivo descargable `resultados-pruebas` durante siete días, incluso tras una prueba fallida.
 
-Las dos pruebas actuales usan `WebApplicationFactory` para comprobar la raíz y `/api/estado`; no necesitan SQL Server ni validan persistencia. Las futuras pruebas de persistencia requerirán preparar su base de datos. Un build correcto no acredita datos persistentes ni flujo comercial completo.
+Tras incorporar COM-005, hay dos pruebas de arranque con `WebApplicationFactory` y seis pruebas de Comercial con EF Core InMemory. Las ocho se ejecutan sin SQL Server. Las pruebas en memoria verifican reglas y comportamiento del modelo, pero no acreditan persistencia en SQL Server; esa comprobación requiere una base preparada. Un build correcto no acredita datos persistentes ni flujo comercial completo.
 
 ## Evidencia comprobada · 2026-11-07
 
@@ -31,6 +31,8 @@ Las dos pruebas actuales usan `WebApplicationFactory` para comprobar la raíz y 
 La expectativa original se restauró después de comprobar el fallo; no hay diferencias finales en las pruebas respecto a main. La configuración final usa checkout v5, setup-dotnet v5 y upload-artifact v6, con Node 24, y su validación remota pasó. No se cambiaron protecciones de `main`.
 
 ## Fuentes técnicas
+
+Actualización 2026-11-08: incorporado `main` con COM-005 (PR #107, `500174e`). Build Release local: 0 advertencias y 0 errores; test posterior: 8 superadas, 0 fallidas y 0 omitidas. Las ejecuciones anteriores conservan sus resultados históricos de dos pruebas; no se reinterpretan como validación de COM-005.
 
 - [Sintaxis oficial de workflows](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax): eventos, pasos, condiciones y permisos.
 - [setup-dotnet v5](https://github.com/actions/setup-dotnet/tree/v5): instalación desde `global.json`.

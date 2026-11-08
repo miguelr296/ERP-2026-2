@@ -52,3 +52,33 @@ Motivo: la guía de preparación exige fijar un SDK LTS y comprobar build y prue
 | Módulos y capas | Se crean cuando una tarjeta los necesite, no antes | Arquitectura |
 
 El cambio de SDK o de formato de solución exige una decisión nueva y repetir build y pruebas.
+
+### DEC-003 · Clean Architecture por módulo
+Fecha: 2026-11-07 · Tarjeta: COM-005 · Estado: Aceptada por Miguel, Luis y Pablo.
+
+Motivo: el equipo pidió seguir Clean Architecture y mantener una sola dirección de dependencias, para que las reglas no queden mezcladas con EF Core ni con HTTP. Se aplica ahora, con el módulo todavía pequeño, porque más adelante el cambio cuesta más.
+
+| Tema | Decisión | Origen |
+|---|---|---|
+| Capas | `Dominio`, `Aplicacion` e `Infraestructura` por módulo; `Api` compone y adapta HTTP | Clean Architecture |
+| Dirección de dependencias | `Aplicacion` → `Dominio`; `Infraestructura` → `Aplicacion`; `Api` → `Aplicacion` + `Infraestructura`; el dominio no depende de nadie | Clean Architecture |
+| Proyectos | Uno por capa y módulo: `src/Comercial/Erp.Comercial.Dominio`, `Erp.Comercial.Aplicacion`, `Erp.Comercial.Infraestructura` | Estructura de la solución |
+| Persistencia | Puertos `IComercialRepositorio` e `IUnidadDeTrabajo` en `Aplicacion`; EF Core los implementa en `Infraestructura` | Puertos y adaptadores |
+| Reglas | Validaciones del dato en el dominio; reglas que necesitan repositorio o usuario en los casos de uso | Prueba de COM-005 |
+| Migraciones | Se conserva el identificador `20261107220349_Inicial` ya aplicado; cambiar de proyecto no exige recrear la base | `dotnet ef migrations list` |
+| Alternativa descartada | Un solo proyecto con carpetas por capa: habría dejado las fronteras solo por convención | Revisión de COM-005 |
+
+`docs/arquitectura.md` describe la estructura vigente; `AGENTS.md` se actualizó con la misma fecha. Cambiar de capas o de dirección de dependencias exige una decisión nueva.
+
+### DEC-004 · Modelo mínimo de relaciones Comerciales
+Fecha: 2026-11-07 · Tarjeta: COM-005 · Estado: Aceptada por Miguel, Luis y Pablo.
+
+Motivo: fijar las relaciones mínimas de cliente, oportunidad e historial antes de continuar el recorrido Comercial y verificar persistencia sin duplicar el modelo en cada pantalla.
+
+| Relación | Decisión | Evidencia |
+|---|---|---|
+| Cliente–Oportunidad | Un cliente puede tener muchas oportunidades; cada oportunidad pertenece a un cliente existente. La base mantiene `ClienteId` como clave foránea. | COM-R01; `La_oportunidad_de_un_cliente_existente_se_guarda_con_historial` |
+| Documento–Historial | Un evento identifica su documento mediante `DocumentoTipo` + `DocumentoId`. Es una relación lógica sin clave foránea polimórfica. | COM-T01/COM-T03; prueba de historial y consulta real tras reiniciar la API |
+| Historial | Se conserva cada evento; no se permite modificarlo ni borrarlo. | COM-T03; `El_historial_no_se_puede_modificar_ni_borrar` |
+
+El diagrama vigente y las entidades se implementan en `src/Comercial/Erp.Comercial.Dominio` y `src/Comercial/Erp.Comercial.Infraestructura`. Cambiar estas relaciones exige una decisión nueva y una migración cuando afecte al esquema.

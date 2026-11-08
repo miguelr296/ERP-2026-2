@@ -18,6 +18,12 @@
 | Historial | Registro inmutable de quién cambió qué, cuándo y por qué |
 | Cadena documental | Relaciones entre un documento, su origen y sus derivados |
 | Migración | Cambio versionado de la estructura de la base de datos |
+| Esquema | Agrupación de tablas dentro de una base de datos; cada módulo usa el suyo |
+| Dominio | Capa con entidades y reglas que no dependen de la persistencia |
+| Aplicación | Capa con casos de uso y puertos; depende del dominio |
+| Infraestructura | Capa que implementa la persistencia y los servicios externos |
+| Caso de uso | Operación del negocio que la API puede invocar |
+| Puerto | Interfaz que define la aplicación y que la infraestructura implementa |
 | SDK | Herramientas para compilar y ejecutar el proyecto |
 | CRM | Gestión de clientes y oportunidades comerciales |
 | OV | Orden de venta |

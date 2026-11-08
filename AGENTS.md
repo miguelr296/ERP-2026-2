@@ -21,7 +21,7 @@ Comercial ocupa el sprint 1, del 5 al 11 de noviembre de 2026. El calendario ún
 ## Diseño permanente
 - C# / ASP.NET Core / EF Core / SQL Server; HTML + CSS + JavaScript en wwwroot.
 - Monolito modular: Comercial, Logística, Finanzas, Planta y Compartido.
-- Api → Servicios → Datos; reglas en Servicios. Entre módulos, solo interfaces públicas en Contratos, sin leer tablas ajenas.
+- Api → Aplicación → Dominio; Infraestructura implementa la persistencia. Reglas en Dominio y Aplicación. Entre módulos, solo los contratos públicos de Aplicación, sin leer tablas ajenas.
 - Historial inmutable y cadena documental en cada documento; ficha imprimible con estado, origen, derivados y responsables.
 - Datos ficticios; rol simulado; banco, SUNAT, correo y WhatsApp simulados.
 - Parámetros del negocio configurables; dinero con decimal. Borrado lógico de documentos.

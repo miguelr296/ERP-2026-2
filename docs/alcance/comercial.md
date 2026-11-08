@@ -4,7 +4,7 @@
 
 **Sprint:** 5–11 de noviembre de 2026. **Capacidad:** 3 h diarias por persona, siete días: 63 h.
 Plan de 42 h, incluida preparación y cierre; 21 h de reserva para aprender, revisar y corregir.
-Estado: plan nuevo, pendiente de ejecutar. COM-001 valida parámetros y ambigüedades; no hay avances ni tareas heredadas.
+Estado al 2026-11-07: COM-001 y COM-002 integradas en `main` (PR #104); COM-003 y COM-004 en Ready; COM-005 en In Progress y lista para PR tras cumplir sus criterios. Cotización y el resto del recorrido siguen pendientes; no hay avances heredados.
 
 ## Objetivo verificable
 Un asesor registra una oportunidad retail MTS, genera una cotización con precio de lista, solicita un descuento auditado, registra la aceptación y el anticipo, y obtiene una OV solo con pago confirmado y reserva comprometida.

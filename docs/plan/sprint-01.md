@@ -2,7 +2,7 @@
 
 [Índice](../../README.md) · [Alcance](../alcance/comercial.md) · [Análisis del PDF](../fuentes/analisis-comercial.md)
 
-**5–11 de noviembre de 2026.** Plan nuevo derivado del PDF. Todas las tarjetas están pendientes. No se presupone preparación técnica ni resultados anteriores.
+**5–11 de noviembre de 2026.** Plan nuevo derivado del PDF. Al 2026-11-07, COM-001 y COM-002 están integradas en `main` (PR #104), COM-003 y COM-004 en Ready y COM-005 en curso; el resto sigue pendiente. No se presupone preparación técnica ni resultados anteriores.
 
 ## Capacidad y reparto
 
