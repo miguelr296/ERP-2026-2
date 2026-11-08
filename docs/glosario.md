@@ -9,6 +9,9 @@
 | API | Entrada del sistema que recibe peticiones de las pantallas |
 | PR | Propuesta de cambios revisada por otra persona antes de integrarse |
 | CI | Comprobaciones automáticas de compilación y pruebas |
+| Workflow | Archivo que define cuándo y cómo GitHub Actions ejecuta las comprobaciones |
+| Runner | Máquina que ejecuta los pasos de un workflow; COM-020 usa Ubuntu 24.04 alojado por GitHub |
+| TRX | Informe XML con los resultados de una ejecución de pruebas .NET |
 | WIP | Cantidad de trabajo abierto al mismo tiempo |
 | Contrato | Acuerdo sobre entradas, resultados y errores entre módulos |
 | Adaptador simulado | Implementación sencilla que imita un servicio aún no disponible |
