@@ -7,7 +7,8 @@ Proyecto académico de Miguel, Luis y Pablo. Un área por sprint de una semana, 
 Solo se conserva el HTML, CSS y JavaScript de src/Erp.Api/wwwroot. Es material inicial de interfaz; no equivale a un módulo implementado.
 El PDF de Comercial se conserva como fuente de requisitos. La solución mínima, API y pruebas de arranque se crearon en COM-002 y están integradas en `main` mediante el PR #104. COM-005 creó el módulo Comercial en tres proyectos —`Dominio`, `Aplicacion` e `Infraestructura`— y la base local `ErpFamihogar` con el esquema `Comercial`; el CI sigue pendiente en el sprint 1.
 La interfaz puede abrirse directamente desde src/Erp.Api/wwwroot/index.html. Sus textos y roles son los del material conservado; su adecuación al nuevo sprint está planificada.
-`dotnet build` y `dotnet test` se ejecutaron con éxito en la máquina de Miguel el 2026-11-06. Esto no acredita la preparación de las máquinas de Luis y Pablo.
+`dotnet build` y `dotnet test` se ejecutaron con éxito en la máquina de Miguel el 2026-11-06; esa ejecución solo acredita su máquina.
+El 2026-11-07 también se verificaron build, pruebas y arranque en la máquina de Luis; Luis confirmó la revisión manual de la interfaz. Evidencia en [preparación técnica](docs/guias/preparacion.md) e inventario en [interfaz inicial](docs/guias/acceso-aplicaciones.md). La máquina de Pablo sigue sin acreditarse.
 
 ## Índice
 - [Guía del equipo](AGENTS.md)

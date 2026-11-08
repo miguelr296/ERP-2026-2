@@ -32,6 +32,18 @@ Completar únicamente con trabajo realizado y comprobado a partir del inicio.
 - Falló / bloqueo: el paquete transitivo `System.Security.Cryptography.Pkcs` 9.0.11 traía dos avisos de vulnerabilidad (NU1902 y NU1903); se fijó la versión 10.0.14 en los tres proyectos y desaparecieron. No hay bloqueo técnico conocido; falta preparar el commit, abrir el PR y obtener revisión de Luis o Pablo. La tarjeta queda lista para PR, no Done.
 - Siguiente paso: Miguel ejecuta el flujo Git indicado en la guía y solicita revisión cruzada.
 
+### 2026-11-07 · Luis · 1 h real declarada · COM-003
+- Hice y evidencia: SDK 10.0.301 y 10.0.401 instalados; selección efectiva 10.0.401. Build correcto con 0 advertencias y 0 errores, seguido de `dotnet test --no-build`: 2 superadas, 0 fallidas y 0 omitidas. API comprobada con HTTP 200 en `/` y respuesta «en marcha» en `/api/estado`. Luis confirmó las pruebas manuales de los tres roles, búsqueda de `logistica`, tarjetas, Salir, recarga de sesión y consulta de estado. Inventario de textos y referencias registrado en `docs/guias/acceso-aplicaciones.md`, sin modificar wwwroot.
+- Explicación del autor: `/api/estado` demuestra respuesta en esa ruta, no base de datos ni flujo comercial completo. Los roles son simulados, sin autenticación ni permisos reales; las tarjetas avisan porque sus pantallas siguen pendientes.
+- Falló / bloqueo: build falló sin diagnóstico útil y test no produjo resultado dentro del entorno restringido del asistente; ambos se validaron fuera con autorización. Las ramas main local, del fork y del principal coincidían en `ddcb0f4` al consultarlas; no se acredita la sincronización de todas las ramas antiguas. Luis declara aproximadamente 2 h disponibles restantes, no horas trabajadas.
+- Validación final del cierre: documentación revisada y `git diff --check` sin incidencias; únicamente cinco documentos modificados, sin cambios en wwwroot. Se repitieron en orden `dotnet build` (0 advertencias y 0 errores) y `dotnet test --no-build` (2 superadas, 0 fallidas y 0 omitidas).
+- Siguiente paso: preparación local lista para PR; preparar una rama del repositorio principal según el flujo del equipo cuando Luis autorice la operación. Sin commits ni subidas autorizados por ahora; revisión por otra persona e integración pendientes. No se declara Done ni se modifica el tablero.
+
+### 2026-11-08 · Luis · Actualización del PR COM-003 tras COM-005 · Horas no declaradas
+- Hice y evidencia: incorporé `upstream/main` (`500174e`, PR #107) a la rama de COM-003; resolví conflictos de bitácora, contexto y preparación conservando las entradas de ambos integrantes, la arquitectura nueva y los resultados históricos de COM-003. Build Release con 0 advertencias y 0 errores, seguido de 8 pruebas superadas, 0 fallidas y 0 omitidas.
+- Límites: no se verificó SQL Server en la máquina de Luis ni se ejecutaron migraciones. No se modifican las pantallas ni el código de COM-005. El borrador de COM-006 sigue sin commit y fuera del PR.
+- Siguiente paso: actualizar el PR #105 y solicitar nueva revisión de Miguel. No se integra ni se declara Done.
+
 ### 2026-11-08 · Luis · 20 minutos reales declarados · COM-006
 - Hice y evidencia: búsqueda por documento exacto en `/api/clientes?documento=...`, con recorte de espacios y errores de documento ausente/vacío o mayor al límite de 20 caracteres ya definido en COM-005. Se reutiliza el alta, consulta por ID e historial existentes. Se agregaron 11 casos HTTP con datos aislados; build Release con 0 advertencias y 0 errores, seguido de 19 pruebas superadas, 0 fallidas y 0 omitidas.
 - Hice y evidencia SQL: Luis inició SQL Server y autorizó instalar dotnet-ef temporal y aplicar solo la migración `Inicial` de Miguel a `ErpFamihogarPruebasLuis`. Se comprobaron búsqueda vacía, alta 201, búsqueda del mismo ID, un evento de historial, duplicado 400 y búsqueda vacía 400. Tras reiniciar la API se recuperó el mismo cliente `091cec05-c3e1-4443-ab33-4bb3f2a78743` e historial. No se crearon migraciones ni se modificaron las existentes.
@@ -39,6 +51,11 @@ Completar únicamente con trabajo realizado y comprobado a partir del inicio.
 - Falló / bloqueo: SSPI falló dentro del entorno restringido y funcionó fuera con autorización. La primera comprobación manual contó mal una lista vacía en PowerShell y se detuvo sin crear datos; tras inspeccionar la respuesta y corregir el conteo se repitió correctamente. No se atribuyen esos fallos a la API. COM-R01 mantiene pendiente el recorrido de oportunidad/productos/responsable. Los 20 minutos son tiempo trabajado, no las dos horas disponibles.
 - Validación final: después de documentar se ejecutaron build Release con 0 advertencias y 0 errores y, a continuación, test con 19 superadas, 0 fallidas y 0 omitidas. Enlaces locales y marcadores comprobados, diff sin incidencias. Cierre local validado y preparación lista para PR.
 - Siguiente paso: solicitar revisión de Miguel cuando corresponda y obtener autorización antes de commit/subida. No se abre un tercer PR mientras se mantenga el límite de revisión del equipo; no se modifica el tablero ni se declara Done.
+
+### 2026-11-08 · Luis · Actualización de COM-006 con main · Horas no declaradas
+- Hice y evidencia: incorporado `upstream/main` (`3ef9764`, integración de COM-003) a la rama de COM-006; conflictos de bitácora, contexto y preparación resueltos conservando la evidencia de ambas tareas. Build Release final: 0 advertencias y 0 errores; test posterior: 19 superadas, 0 fallidas y 0 omitidas.
+- Falló / bloqueo: el primer build falló por DLL bloqueadas por la API de pruebas del puerto 5216. Se verificó y detuvo únicamente ese proceso; después build y test pasaron. SQL Server no se detuvo ni se ejecutaron migraciones.
+- Siguiente paso: actualizar el PR #108 y obtener revisión de Miguel. No se fusiona ni se declara Done.
 
 ## Plantilla de sesión
 Fecha · Persona · Horas reales · Tarjeta
