@@ -1,0 +1,150 @@
+.catalogo-main {
+  max-width: 1100px;
+}
+
+.volver {
+  color: #225747;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.catalogo-main h1 {
+  margin: 12px 0;
+  font-size: 36px;
+  letter-spacing: -1px;
+}
+
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr)) auto auto;
+  align-items: end;
+  gap: 16px;
+  margin: 32px 0 20px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #dce3dc;
+  border-radius: 12px;
+}
+
+.filtros label {
+  margin-top: 0;
+}
+
+.filtros .principal,
+.secundario-boton {
+  width: auto;
+  min-height: 48px;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 7px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.secundario-boton {
+  color: #225747;
+  background: white;
+  border: 1px solid #b7c5bd;
+}
+
+.secundario-boton:hover {
+  background: #eaf0e7;
+}
+
+.estado-catalogo {
+  min-height: 24px;
+  margin: 12px 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.catalogo-main h2 {
+  margin: 30px 0 14px;
+  font-size: 22px;
+}
+
+.tabla-contenedor {
+  overflow-x: auto;
+  background: white;
+  border: 1px solid #dce3dc;
+  border-radius: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+th,
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e4e9e4;
+  white-space: nowrap;
+}
+
+th {
+  color: #52645a;
+  font-size: 12px;
+  letter-spacing: .03em;
+}
+
+td:nth-child(3) {
+  font-weight: 700;
+  color: #173f36;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.aviso-caso {
+  margin-top: 24px;
+  padding: 18px 20px;
+  border-left: 4px solid #899d74;
+  background: #eaf0e7;
+  border-radius: 4px 9px 9px 4px;
+}
+
+.aviso-caso p {
+  margin: 8px 0 0;
+  color: #52645a;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.catalogo-main footer {
+  margin-top: 55px;
+}
+
+@media (max-width: 900px) {
+  .filtros {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .catalogo-main {
+    padding-top: 32px;
+  }
+
+  .catalogo-main h1 {
+    font-size: 30px;
+  }
+
+  .filtros {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .filtros .principal,
+  .secundario-boton {
+    width: 100%;
+  }
+}
