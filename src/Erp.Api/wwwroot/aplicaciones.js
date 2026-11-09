@@ -1,15 +1,14 @@
 "use strict";
 
 // Catálogo de áreas del ERP (un área por sprint, D07).
-// "ruta" es la pantalla del área; mientras sea null, la tarjeta solo avisa que está pendiente.
-// Comercial: "comercial/index.html" se crea en S1-18 (Luis). Agregar áreas solo cuando el equipo acuerde su alcance.
+// "ruta" es la pantalla disponible; mientras sea null, la tarjeta avisa que está pendiente.
 const catalogo = [
   {
     nombre: "Comercial",
-    descripcion: "Clientes, cotizaciones, anticipos y órdenes de venta",
+    descripcion: "Catálogo de productos y precios de demostración",
     icono: "↗",
-    etapa: "Sprint 1 · demos 05/11 a 19/11",
-    ruta: null
+    etapa: "Selector conectado a la API",
+    ruta: "comercial/catalogo.html"
   },
   {
     nombre: "Logística",

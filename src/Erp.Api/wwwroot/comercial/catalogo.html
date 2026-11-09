@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catálogo comercial · FAMIHOGAR</title>
+  <link rel="stylesheet" href="../estilos.css">
+  <link rel="stylesheet" href="catalogo.css">
+  <script src="catalogo.js" defer></script>
+</head>
+<body>
+  <header>
+    <a class="marca" href="../index.html">F<span>FAMIHOGAR</span></a>
+    <a class="volver" href="../index.html">Volver a Aplicaciones</a>
+  </header>
+
+  <main class="catalogo-main">
+    <p class="etiqueta">COMERCIAL · DATOS DE DEMOSTRACIÓN</p>
+    <h1>Catálogo de productos</h1>
+    <p class="secundario">Consulta qué productos y precios corresponden a cada canal y tipo de cliente.</p>
+
+    <form id="selector-catalogo" class="filtros">
+      <div>
+        <label for="canal">Canal de venta</label>
+        <select id="canal" name="canal">
+          <option value="Tienda">Tienda</option>
+          <option value="Web">Web</option>
+        </select>
+      </div>
+      <div>
+        <label for="tipo-cliente">Tipo de cliente</label>
+        <select id="tipo-cliente" name="tipoCliente">
+          <option value="Retail">Retail</option>
+          <option value="Empresarial">Empresarial</option>
+        </select>
+      </div>
+      <button class="principal" type="submit">Consultar catálogo <span aria-hidden="true">→</span></button>
+      <button id="probar-sin-lista" class="secundario-boton" type="button">Preparar caso sin lista</button>
+    </form>
+
+    <p id="estado-catalogo" class="estado-catalogo" role="status" aria-live="polite"></p>
+
+    <section aria-labelledby="titulo-resultados">
+      <h2 id="titulo-resultados">Productos y precios</h2>
+      <div class="tabla-contenedor">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Código</th>
+              <th scope="col">Producto</th>
+              <th scope="col">Precio de lista</th>
+              <th scope="col">Lista</th>
+              <th scope="col">Vigencia configurada</th>
+            </tr>
+          </thead>
+          <tbody id="productos-catalogo"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="aviso-caso" aria-labelledby="titulo-caso">
+      <strong id="titulo-caso">Caso preparado: combinación sin lista configurada</strong>
+      <p>Usa “Preparar caso sin lista” para consultar Tienda + Empresarial. La API debe devolver una lista vacía. Esto prepara el escenario; la validación de listas vencidas corresponde a una tarjeta posterior.</p>
+    </aside>
+
+    <footer>
+      FAMIHOGAR SAC
+      <span>Prototipo académico · Datos de demostración</span>
+    </footer>
+  </main>
+</body>
+</html>
