@@ -61,6 +61,28 @@ public class ComercialRepositorio : IComercialRepositorio
         _contexto.Oportunidades.Add(oportunidad);
     }
 
+    public Task<bool> ExisteOportunidadActivaAsync(
+        Guid oportunidadId,
+        CancellationToken cancelacion = default)
+    {
+        return _contexto.Oportunidades
+            .AnyAsync(oportunidad => oportunidad.Id == oportunidadId && oportunidad.Activo, cancelacion);
+    }
+
+    public void AgregarReserva(ReservaSimulada reserva)
+    {
+        _contexto.Reservas.Add(reserva);
+    }
+
+    public Task<ReservaSimulada?> BuscarReservaAsync(
+        Guid id,
+        CancellationToken cancelacion = default)
+    {
+        return _contexto.Reservas
+            .AsNoTracking()
+            .FirstOrDefaultAsync(reserva => reserva.Id == id, cancelacion);
+    }
+
     public void AgregarHistorial(HistorialEvento evento)
     {
         _contexto.Historial.Add(evento);

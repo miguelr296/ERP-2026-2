@@ -28,6 +28,9 @@ public class Oportunidad
 
     public string CreadoPor { get; private set; } = string.Empty;
 
+    /// <summary>Reservas de stock comprometidas para esta oportunidad.</summary>
+    public List<ReservaSimulada> Reservas { get; private set; } = new();
+
     /// <summary>Constructor que usa la capa de persistencia al leer la base de datos.</summary>
     private Oportunidad()
     {

@@ -39,13 +39,14 @@ Los bloques de 2–3 h se dividen en pasos de 30–90 minutos dentro de la misma
 | COM-021 | Validar, demostrar y explicar el recorrido completo | pruebas | Miguel, Luis, Pablo | Miguel 1 / Luis 1 / Pablo 1 | Núcleo | P0 | M | 3 | 2026-11-11 | 2026-11-11 | COM-019, COM-020 | Comercial 2026-11-05 | Dos ventas en pantalla/API, rechazos y reinicio con datos persistentes; cada integrante explica su parte. |
 | COM-022 | Documentar evidencia y preparar revisión final | docs | Miguel, Luis, Pablo | Miguel 0,5 / Luis 0,5 / Pablo 0,5 | Núcleo | P0 | S | 1,5 | 2026-11-11 | 2026-11-11 | COM-021 | Comercial 2026-11-05 | Bitácora, reglas y capítulo con resultados reales; cierre antes de commit/PR; revisión por compañero. |
 | COM-023 | Realizar retro y preparar planning del área siguiente | docs | Miguel, Luis, Pablo | Miguel 0,5 / Luis 0,5 / Pablo 0,5 | Núcleo | P0 | S | 1,5 | 2026-11-11 | 2026-11-11 | COM-022 | Comercial 2026-11-05 | Horas reales, resultado del núcleo y aprendizaje; no trasladar automáticamente tarjetas comerciales. |
+| COM-024 | Rechazar con 400 el documento de cliente mayor a 20 caracteres | codigo | Luis | Luis 0,5 | Si alcanza | P1 | S | 0,5 | 2026-11-09 | 2026-11-09 | COM-005, COM-006 | Comercial 2026-11-05 | Defecto de COM-008: alta con 21 caracteres responde 400 sin guardar; límite único en dominio; prueba HTTP. |
 
 ## Horas por persona
 
 | Persona | Planificadas | Reserva | Total máximo |
 |---|---|---|---|
 | Miguel | 15 | 6 | 21 |
-| Luis | 14.5 | 6.5 | 21 |
+| Luis | 15 | 6 | 21 |
 | Pablo | 12.5 | 8.5 | 21 |
 
 ## Plan diario

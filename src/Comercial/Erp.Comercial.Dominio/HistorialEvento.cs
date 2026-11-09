@@ -37,7 +37,8 @@ public class HistorialEvento
         Guid documentoId,
         string accion,
         string estadoNuevo,
-        UsuarioSimulado usuario)
+        UsuarioSimulado usuario,
+        string? motivo = null)
     {
         return new HistorialEvento
         {
@@ -49,7 +50,7 @@ public class HistorialEvento
             EstadoNuevo = estadoNuevo,
             Usuario = usuario.Nombre,
             Rol = usuario.Rol,
-            Motivo = null,
+            Motivo = motivo,
             OcurridoEn = DateTimeOffset.UtcNow
         };
     }

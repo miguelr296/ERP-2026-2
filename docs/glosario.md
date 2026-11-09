@@ -15,6 +15,7 @@
 | WIP | Cantidad de trabajo abierto al mismo tiempo |
 | Contrato | Acuerdo sobre entradas, resultados y errores entre módulos |
 | Adaptador simulado | Implementación sencilla que imita un servicio aún no disponible |
+| Reserva simulada | Compromiso de stock respondido por el proveedor simulado de Logística; conserva identificador, estado y vigencia, y no es stock real |
 | Historial | Registro inmutable de quién cambió qué, cuándo y por qué |
 | Cadena documental | Relaciones entre un documento, su origen y sus derivados |
 | Migración | Cambio versionado de la estructura de la base de datos |

@@ -8,4 +8,5 @@ public static class TiposDocumento
 {
     public const string Cliente = "Cliente";
     public const string Oportunidad = "Oportunidad";
+    public const string Reserva = "Reserva";
 }
