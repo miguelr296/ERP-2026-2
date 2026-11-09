@@ -153,4 +153,41 @@ public class ClientesApiTests
         using var alcance = fabrica.Services.CreateScope();
         Assert.Equal(0, await alcance.ServiceProvider.GetRequiredService<ComercialContext>().Clientes.CountAsync());
     }
+
+    /// <summary>
+    /// COM-024: el límite de 20 caracteres también se aplica al alta. Antes respondía 500
+    /// porque SQL Server truncaba el valor; el dominio debe rechazarlo antes de guardar.
+    /// </summary>
+    [Fact]
+    public async Task Un_alta_con_documento_de_21_caracteres_se_rechaza_sin_guardar()
+    {
+        using var fabrica = new FabricaClientes();
+        using var api = fabrica.CreateClient();
+        var respuesta = await api.PostAsJsonAsync("/api/clientes", Datos("123456789012345678901"));
+        Assert.Equal(HttpStatusCode.BadRequest, respuesta.StatusCode);
+        var problema = await respuesta.Content.ReadFromJsonAsync<Microsoft.AspNetCore.Mvc.ProblemDetails>();
+        Assert.Equal("Regla de negocio", problema?.Title);
+        Assert.Contains("20 caracteres", problema?.Detail);
+
+        using var alcance = fabrica.Services.CreateScope();
+        var contexto = alcance.ServiceProvider.GetRequiredService<ComercialContext>();
+        Assert.Equal(0, await contexto.Clientes.CountAsync());
+        Assert.Equal(0, await contexto.Historial.CountAsync());
+    }
+
+    [Fact]
+    public async Task El_documento_de_20_caracteres_es_el_limite_aceptado()
+    {
+        using var fabrica = new FabricaClientes();
+        using var api = fabrica.CreateClient();
+        var documento = "12345678901234567890";
+
+        var alta = await api.PostAsJsonAsync("/api/clientes", Datos(documento));
+        Assert.Equal(HttpStatusCode.Created, alta.StatusCode);
+
+        // Los espacios se recortan antes de medir: el mismo valor con relleno sigue siendo válido.
+        var encontrados = await api.GetFromJsonAsync<ClienteVista[]>(
+            $"/api/clientes?documento=%20{documento}%20");
+        Assert.Equal(documento, Assert.Single(Assert.IsType<ClienteVista[]>(encontrados)).Documento);
+    }
 }

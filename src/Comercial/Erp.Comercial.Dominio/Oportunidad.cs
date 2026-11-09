@@ -28,6 +28,9 @@ public class Oportunidad
 
     public string CreadoPor { get; private set; } = string.Empty;
 
+    /// <summary>Productos que el asesor ofreció en esta oportunidad.</summary>
+    public List<ProductoDeOportunidad> Productos { get; private set; } = new();
+
     /// <summary>Reservas de stock comprometidas para esta oportunidad.</summary>
     public List<ReservaSimulada> Reservas { get; private set; } = new();
 
@@ -42,6 +45,7 @@ public class Oportunidad
         string canal,
         string sede,
         string responsable,
+        IReadOnlyList<ProductoSeleccionado> productos,
         UsuarioSimulado usuario)
     {
         if (clienteId == Guid.Empty)
@@ -58,9 +62,36 @@ public class Oportunidad
                 "La descripción, el canal, la sede y el responsable son obligatorios.");
         }
 
-        return new Oportunidad
+        if (productos is null || productos.Count == 0)
         {
-            Id = Guid.NewGuid(),
+            throw new ReglaDeNegocioException("La oportunidad necesita al menos un producto.");
+        }
+
+        var id = Guid.NewGuid();
+
+        // Primero se valida cada producto; si alguno es inválido, no queda una oportunidad a medias.
+        var productosRegistrados = productos
+            .Select(producto => ProductoDeOportunidad.Registrar(
+                id,
+                producto.Codigo,
+                producto.Nombre,
+                producto.Cantidad))
+            .ToList();
+
+        var codigosDistintos = productosRegistrados
+            .Select(producto => producto.Codigo)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Count();
+
+        if (codigosDistintos != productosRegistrados.Count)
+        {
+            throw new ReglaDeNegocioException(
+                "La oportunidad no puede repetir el mismo producto; ajuste la cantidad.");
+        }
+
+        var oportunidad = new Oportunidad
+        {
+            Id = id,
             ClienteId = clienteId,
             Descripcion = descripcion.Trim(),
             Canal = canal.Trim(),
@@ -71,6 +102,10 @@ public class Oportunidad
             CreadoEn = DateTimeOffset.UtcNow,
             CreadoPor = usuario.Nombre
         };
+
+        oportunidad.Productos.AddRange(productosRegistrados);
+
+        return oportunidad;
     }
 
     /// <summary>Borrado lógico de la oportunidad.</summary>

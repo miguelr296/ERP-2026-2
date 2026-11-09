@@ -53,7 +53,8 @@ public class ReservasApiTests
                 "Compra de 2 sofás",
                 "Tienda",
                 "Lima Centro",
-                "asesor.demo"));
+                "asesor.demo",
+                [new NuevoProductoDeOportunidad("MUE-001", 2)]));
         altaOportunidad.EnsureSuccessStatusCode();
         var oportunidad = await altaOportunidad.Content.ReadFromJsonAsync<OportunidadVista>();
 

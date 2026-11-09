@@ -2,7 +2,9 @@
 
 [Índice](../../README.md) · [Alcance](../alcance/comercial.md) · [Análisis del PDF](../fuentes/analisis-comercial.md)
 
-**5–11 de noviembre de 2026.** Plan nuevo derivado del PDF. Al 2026-11-07, COM-001 y COM-002 están integradas en `main` (PR #104), COM-003 y COM-004 en Ready y COM-005 en curso; el resto sigue pendiente. No se presupone preparación técnica ni resultados anteriores.
+**5–11 de noviembre de 2026.** Plan nuevo derivado del PDF. Los estados de trabajo se consultan en el tablero; este plan conserva los criterios y las estimaciones, no sustituye la evidencia de ejecución.
+
+Actualización autorizada el 2026-11-09: COM-009 y COM-024 pasan a Miguel porque Luis no podía tomarlas. COM-009 se limita a API y ficha inicial sin pantalla propia; COM-010 construye el selector y COM-013 lo conecta con la API. El tablero es la fuente del estado actual.
 
 ## Capacidad y reparto
 
@@ -25,7 +27,7 @@ Los bloques de 2–3 h se dividen en pasos de 30–90 minutos dentro de la misma
 | COM-007 | Preparar catálogo y lista de precios ficticios | codigo | Pablo | Pablo 1,5 | Núcleo | P0 | L | 1,5 | 2026-11-06 | 2026-11-06 | COM-005 | Comercial 2026-11-05 | Productos y lista por canal/tipo definidos como datos de demo; consulta y prueba sencilla. |
 | COM-020 | Crear CI mínimo con el SDK y pruebas elegidos | configuracion | Luis | Luis 0,5 | Núcleo | P0 | S | 0,5 | 2026-11-06 | 2026-11-06 | COM-002 | Comercial 2026-11-05 | Workflow de build/test secuenciales, validado con éxito y fallo controlado; no simular resultados. |
 | COM-008 | Implementar adaptadores y consistencia de la cadena | codigo | Miguel | Miguel 2 | Núcleo | P0 | XL | 2 | 2026-11-07 | 2026-11-07 | COM-005 | Comercial 2026-11-05 | Contratos simulados de reserva/pago con rechazo; documento e historial consistentes; COM-T01/T03. |
-| COM-009 | Implementar oportunidad y su pantalla básica | codigo | Luis | Luis 2 | Núcleo | P0 | XL | 2 | 2026-11-07 | 2026-11-07 | COM-006, COM-007, COM-008 | Comercial 2026-11-05 | Cliente, productos, sede y vendedor relacionados; alta y consulta con ficha inicial; COM-R01. |
+| COM-009 | Implementar oportunidad y su ficha básica por API | codigo | Miguel | Miguel 2 | Núcleo | P0 | XL | 2 | 2026-11-07 | 2026-11-07 | COM-006, COM-007, COM-008 | Comercial 2026-11-05 | Cliente activo, productos válidos del catálogo del canal, sede y responsable relacionados; alta y consulta de ficha inicial por API; historial; COM-R01. Sin pantalla propia: selector en COM-010 y conexión en COM-013. |
 | COM-010 | Validar catálogo y construir su selector | codigo | Pablo | Pablo 1,5 | Núcleo | P0 | L | 1,5 | 2026-11-07 | 2026-11-07 | COM-007 | Comercial 2026-11-05 | Consulta desde pantalla; productos y precio de lista visibles; caso sin lista vigente preparado. |
 | COM-012 | Crear cotización y cálculo desde oportunidad | codigo | Luis | Luis 2,5 | Núcleo | P0 | XL | 2,5 | 2026-11-08 | 2026-11-08 | COM-009, COM-010 | Comercial 2026-11-05 | COM-R02/R04: líneas y precios protegidos; correlativo, vigencia, impuesto y plazo; pruebas y pantalla mínima. |
 | COM-011 | Implementar solicitud y aprobación de descuento | codigo | Miguel | Miguel 2 | Núcleo | P0 | XL | 2 | 2026-11-08 | 2026-11-08 | COM-012, COM-008 | Comercial 2026-11-05 | COM-R03/R09: motivo, límites configurables, rol y aprobación/rechazo con historial. |
@@ -39,7 +41,7 @@ Los bloques de 2–3 h se dividen en pasos de 30–90 minutos dentro de la misma
 | COM-021 | Validar, demostrar y explicar el recorrido completo | pruebas | Miguel, Luis, Pablo | Miguel 1 / Luis 1 / Pablo 1 | Núcleo | P0 | M | 3 | 2026-11-11 | 2026-11-11 | COM-019, COM-020 | Comercial 2026-11-05 | Dos ventas en pantalla/API, rechazos y reinicio con datos persistentes; cada integrante explica su parte. |
 | COM-022 | Documentar evidencia y preparar revisión final | docs | Miguel, Luis, Pablo | Miguel 0,5 / Luis 0,5 / Pablo 0,5 | Núcleo | P0 | S | 1,5 | 2026-11-11 | 2026-11-11 | COM-021 | Comercial 2026-11-05 | Bitácora, reglas y capítulo con resultados reales; cierre antes de commit/PR; revisión por compañero. |
 | COM-023 | Realizar retro y preparar planning del área siguiente | docs | Miguel, Luis, Pablo | Miguel 0,5 / Luis 0,5 / Pablo 0,5 | Núcleo | P0 | S | 1,5 | 2026-11-11 | 2026-11-11 | COM-022 | Comercial 2026-11-05 | Horas reales, resultado del núcleo y aprendizaje; no trasladar automáticamente tarjetas comerciales. |
-| COM-024 | Rechazar con 400 el documento de cliente mayor a 20 caracteres | codigo | Luis | Luis 0,5 | Si alcanza | P1 | S | 0,5 | 2026-11-09 | 2026-11-09 | COM-005, COM-006 | Comercial 2026-11-05 | Defecto de COM-008: alta con 21 caracteres responde 400 sin guardar; límite único en dominio; prueba HTTP. |
+| COM-024 | Rechazar con 400 el documento de cliente mayor a 20 caracteres | codigo | Miguel | Miguel 0,5 | Si alcanza | P1 | S | 0,5 | 2026-11-09 | 2026-11-09 | COM-005, COM-006 | Comercial 2026-11-05 | Defecto de COM-008: alta con 21 caracteres responde 400 sin guardar; límite único en dominio y compartido con búsqueda; prueba HTTP. |
 
 ## Horas por persona
 

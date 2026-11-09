@@ -79,10 +79,11 @@ public class ClientesCasoUso : IClientesCasoUso
         }
 
         var documentoBuscado = documento.Trim();
-        // Es el límite del campo ya definido en COM-005, no un formato legal de DNI/RUC.
-        if (documentoBuscado.Length > 20)
+        // Mismo límite que el alta: se toma de la entidad para no repetir el número.
+        if (documentoBuscado.Length > Cliente.LongitudMaximaDocumento)
         {
-            throw new ReglaDeNegocioException("El documento del cliente admite hasta 20 caracteres.");
+            throw new ReglaDeNegocioException(
+                $"El documento del cliente admite hasta {Cliente.LongitudMaximaDocumento} caracteres.");
         }
 
         var cliente = await _repositorio.BuscarClientePorDocumentoAsync(documentoBuscado, cancelacion);

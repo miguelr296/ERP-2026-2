@@ -7,7 +7,7 @@ Una regla se marca Verificada solo tras ejecutar su prueba y registrar evidencia
 
 | ID | Regla | Fuente | Prueba prevista | Estado |
 |---|---|---|---|---|
-| COM-R01 | Buscar cliente existente antes de crear y vincular oportunidad a cliente/productos/responsable | p. 15, PO.02.P01.SP01.A01 | Crear oportunidad y recuperar relaciones | Parcial: cliente comprobado en COM-006; recorrido completo pendiente |
+| COM-R01 | Buscar cliente existente antes de crear y vincular oportunidad a cliente/productos/responsable | p. 15, PO.02.P01.SP01.A01 | Crear oportunidad y recuperar relaciones | Verificada: COM-006 + COM-009; ficha y persistencia SQL comprobadas |
 | COM-R02 | Usar lista vigente y rechazar cambio manual de precio | p. 22, PO.02.P02.SP01.A01 | Lista vencida y precio manipulado rechazados | Pendiente |
 | COM-R03 | Descuento exige motivo; fuera de límite requiere aprobación auditada | pp. 4, 23, PO.02.P02.SP01.A02 | Aprobación, rechazo y rol inválido | Pendiente |
 | COM-R04 | Cotización deriva de oportunidad y tiene correlativo, vigencia, impuesto y plazo | p. 25, PO.02.P02.SP02.A01 | Origen y cálculo con parámetros de prueba | Pendiente |
@@ -28,7 +28,11 @@ COM-006 agrega búsqueda exacta por documento y reutiliza el alta/consulta por I
 
 La comprobación real en SQL Server de Luis, base `ErpFamihogarPruebasLuis`, recuperó por ID y búsqueda el cliente `091cec05-c3e1-4443-ab33-4bb3f2a78743` después de reiniciar la API, con un único evento de alta. [Detalle y límites](borradores/com-006-preparacion.md).
 
-La vinculación completa de oportunidad, productos y responsable no fue comprobada en COM-006 y corresponde al recorrido de COM-009. COM-R01 no se marca Verificada. La búsqueda por documento y su límite de 20 caracteres son decisiones técnicas compatibles con el modelo de COM-005, no nuevos formatos legales atribuidos al PDF.
+La evidencia de COM-006 cubre la búsqueda por documento; la de COM-009 completa la relación con cliente, productos, sede y responsable. La búsqueda por documento y su límite de 20 caracteres son decisiones técnicas compatibles con el modelo de COM-005, no nuevos formatos legales atribuidos al PDF.
+
+## Evidencia de COM-R01 · 2026-11-09
+
+`OportunidadesApiTests` crea un cliente y una oportunidad por HTTP, consulta su ficha y verifica cliente, documento, productos del catálogo, cantidades, sede, responsable e historial. También comprueba el rechazo de producto desconocido, canal sin catálogo, cantidad inválida, oportunidad sin productos y rol no autorizado, sin persistir oportunidades inválidas. En SQL Server (`ErpFamihogar`), la oportunidad `d8fbc99d-f123-44e8-8432-d048d7a9a260` se recuperó después de reiniciar la API con dos productos y un evento de historial. La migración `20261109181126_OportunidadConProductos` está aplicada. Validación automatizada final: build Release con 0 advertencias y 0 errores; 47 pruebas superadas, 0 fallidas y 0 omitidas. La pantalla no se implementó en COM-009; COM-010/COM-013 cubren el selector y su integración.
 
 ## Evidencia parcial de COM-T01 · 2026-11-09
 

@@ -20,6 +20,10 @@ public interface IComercialRepositorio
 
     void AgregarOportunidad(Oportunidad oportunidad);
 
+    Task<Oportunidad?> BuscarOportunidadAsync(
+        Guid oportunidadId,
+        CancellationToken cancelacion = default);
+
     Task<bool> ExisteOportunidadActivaAsync(
         Guid oportunidadId,
         CancellationToken cancelacion = default);

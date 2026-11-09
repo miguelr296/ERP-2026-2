@@ -4,4 +4,10 @@ namespace Erp.Comercial.Aplicacion.Productos;
 public interface ICatalogoCasoUso
 {
     IReadOnlyList<ProductoPrecioVista> Consultar(string? canal, string? tipoCliente);
+
+    /// <summary>
+    /// Busca un producto por código dentro de un canal. Sirve para comprobar que la
+    /// oportunidad solo ofrece productos que la lista del canal contiene.
+    /// </summary>
+    ProductoPrecioVista? Buscar(string codigo, string canal);
 }
