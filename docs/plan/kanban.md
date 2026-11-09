@@ -3,7 +3,7 @@
 [Índice](../../README.md)
 
 No se presupone un tablero configurado ni tarjetas cargadas. La configuración se verifica con el equipo.
-Estado reportado por Miguel el 2026-11-07: COM-001 y COM-002 en Done (PR #104), COM-003 y COM-004 en Ready y COM-005 en In Progress, lista para PR. El tablero remoto no se verificó desde esta sesión; Done requiere revisión e integración comprobadas.
+Estado verificado el 2026-11-09 con `gh project item-list` en solo lectura: 8 tarjetas en Done (COM-001 a COM-007 y COM-020), COM-008 en In progress, COM-010 en Ready y el resto en Backlog. No se ejecutó ninguna escritura en el tablero desde esa verificación salvo el movimiento autorizado de COM-008 y COM-010. Done requiere revisión e integración comprobadas.
 Borrador aprobado en sprint-NN.md → carga explícitamente autorizada → tablero como fuente del estado real.
 
 ## Columnas y límites

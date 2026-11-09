@@ -74,6 +74,13 @@ Completar únicamente con trabajo realizado y comprobado a partir del inicio.
 - Falló / bloqueo: el primer build falló por DLL bloqueadas por la API de pruebas del puerto 5216. Se verificó y detuvo únicamente ese proceso; después build y test pasaron. SQL Server no se detuvo ni se ejecutaron migraciones.
 - Siguiente paso: actualizar el PR #108 y obtener revisión de Miguel. No se fusiona ni se declara Done.
 
+### 2026-11-09 · Miguel · 2 h · COM-008
+- Hice y evidencia: contratos `IReservaDeStock` e `IPagoDeTesoreria` en `Aplicacion`, con respuesta tipada que incluye identificador, fecha, estado, vigencia, motivo y referencia. Adaptadores simulados en `Infraestructura/Simulaciones`: Logística rechaza por encima del stock configurado (`SimulacionLogistica`, 999 unidades y 48 h de vigencia según DEC-001) y Tesorería rechaza sin comprobante o con monto inválido. Documento `ReservaSimulada` con historial propio, rutas `POST /api/oportunidades/{id}/reservas` y `GET /api/reservas/{id}`, y migración `20261109165802_ReservaSimulada` creada. `dotnet build -c Release`: 0 advertencias y 0 errores; `dotnet test --no-build`: 33 superadas, 0 fallidas y 0 omitidas. `dotnet ef migrations has-pending-model-changes`: sin cambios pendientes.
+- Explicación del autor: la reserva se pide al proveedor antes de agregar el documento a la unidad de trabajo; si el proveedor rechaza, no queda reserva ni evento. El identificador del proveedor se guarda porque será la evidencia que consuma la orden de venta. Los adaptadores son de demostración y se sustituyen sin cambiar el contrato.
+- Falló / bloqueo: la migración no se aplicó a la base local y no hay comprobación SQL de esta tarjeta; las pruebas usan el proveedor en memoria. Sin commit, push ni PR: los comandos Git los ejecuta Miguel. Revisión e integración pendientes; no se declara Done.
+- Tablero: verificado con `gh project item-list` (solo lectura). COM-008 pasó de Backlog a In progress y COM-010 a Ready; COM-009 permanece en Backlog porque depende de COM-008.
+
+
 ## Plantilla de sesión
 Fecha · Persona · Horas reales · Tarjeta
 - Hice y evidencia:

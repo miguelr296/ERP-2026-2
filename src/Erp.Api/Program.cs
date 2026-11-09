@@ -3,7 +3,10 @@ using Erp.Comercial.Aplicacion.Clientes;
 using Erp.Comercial.Aplicacion.Historial;
 using Erp.Comercial.Aplicacion.Oportunidades;
 using Erp.Comercial.Aplicacion.Productos;
+using Erp.Comercial.Aplicacion.Puertos;
+using Erp.Comercial.Aplicacion.Reservas;
 using Erp.Comercial.Infraestructura;
+using Erp.Comercial.Infraestructura.Simulaciones;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +25,15 @@ builder.Services.AddScoped<IOportunidadesCasoUso, OportunidadesCasoUso>();
 builder.Services.AddScoped<IHistorialCasoUso, HistorialCasoUso>();
 var productosDemo = builder.Configuration.GetSection("CatalogoDemo").Get<ProductoPrecioVista[]>() ?? [];
 builder.Services.AddSingleton<ICatalogoCasoUso>(new CatalogoCasoUso(productosDemo));
+
+// COM-008: dependencias externas simuladas. Comercial solo conoce sus contratos; los
+// valores de demostración viven en configuración y se sustituyen en el sprint del proveedor.
+var opcionesReserva = builder.Configuration
+    .GetSection("SimulacionLogistica")
+    .Get<OpcionesDeReservaSimulada>() ?? new OpcionesDeReservaSimulada();
+builder.Services.AddSingleton<IReservaDeStock>(new ReservaDeStockSimulada(opcionesReserva));
+builder.Services.AddSingleton<IPagoDeTesoreria, PagoDeTesoreriaSimulado>();
+builder.Services.AddScoped<IReservasCasoUso, ReservasCasoUso>();
 
 var app = builder.Build();
 
@@ -95,6 +107,33 @@ app.MapGet("/api/historial/{tipo}/{id:guid}", async (
 {
     var eventos = await casoUso.ConsultarAsync(tipo, id, cancelacion);
     return Results.Ok(eventos);
+});
+
+// COM-008: reserva simulada de stock. El rechazo devuelve 400 y no deja documento.
+app.MapPost("/api/oportunidades/{id:guid}/reservas", (
+    Guid id,
+    NuevaReserva datos,
+    HttpRequest peticion,
+    IReservasCasoUso casoUso,
+    CancellationToken cancelacion) =>
+    PeticionesHttp.EjecutarAsync(async () =>
+    {
+        var reserva = await casoUso.RegistrarAsync(
+            id,
+            datos,
+            PeticionesHttp.LeerUsuario(peticion),
+            cancelacion);
+
+        return Results.Created($"/api/reservas/{reserva.Id}", reserva);
+    }));
+
+app.MapGet("/api/reservas/{id:guid}", async (
+    Guid id,
+    IReservasCasoUso casoUso,
+    CancellationToken cancelacion) =>
+{
+    var reserva = await casoUso.BuscarAsync(id, cancelacion);
+    return reserva is null ? Results.NotFound() : Results.Ok(reserva);
 });
 
 // Catálogo ficticio: la pantalla podrá elegir por canal y tipo de cliente (COM-007).

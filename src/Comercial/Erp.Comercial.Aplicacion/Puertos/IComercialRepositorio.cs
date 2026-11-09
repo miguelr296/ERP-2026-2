@@ -20,6 +20,16 @@ public interface IComercialRepositorio
 
     void AgregarOportunidad(Oportunidad oportunidad);
 
+    Task<bool> ExisteOportunidadActivaAsync(
+        Guid oportunidadId,
+        CancellationToken cancelacion = default);
+
+    void AgregarReserva(ReservaSimulada reserva);
+
+    Task<ReservaSimulada?> BuscarReservaAsync(
+        Guid id,
+        CancellationToken cancelacion = default);
+
     void AgregarHistorial(HistorialEvento evento);
 
     Task<IReadOnlyList<HistorialEvento>> ConsultarHistorialAsync(

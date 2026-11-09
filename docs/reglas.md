@@ -16,7 +16,7 @@ Una regla se marca Verificada solo tras ejecutar su prueba y registrar evidencia
 | COM-R07 | Sin pago confirmado no hay OV; copiar cliente, líneas y precios sin redigitar | pp. 27, 34–35, PO.02.P04.SP01.A01 | Bloqueo sin pago y copia exacta | Pendiente |
 | COM-R08 | La reserva debe poder comprometerse antes de liberar la OV | pp. 18, 34–35 | Reserva vencida bloquea liberación | Pendiente |
 | COM-R09 | Aprobaciones registran responsable y momento | p. 4, principios | Recuperar aprobador, rol y fecha | Pendiente |
-| COM-T01 | Guardar documento, origen e historial como operación consistente | Diseño del prototipo | Fallo no deja documento sin trazabilidad | Pendiente |
+| COM-T01 | Guardar documento, origen e historial como operación consistente | Diseño del prototipo | Fallo no deja documento sin trazabilidad | Parcial: rechazo de reserva no deja documento ni historial (COM-008) |
 | COM-T02 | Repetir conversión no duplica OV ni despacho | Diseño del prototipo | Misma solicitud produce una OV | Pendiente |
 | COM-T03 | Historial inmutable y navegación de relaciones preservadas | Diseño del prototipo | Cambio y borrado de historial rechazados | Pendiente |
 
@@ -29,3 +29,9 @@ COM-006 agrega búsqueda exacta por documento y reutiliza el alta/consulta por I
 La comprobación real en SQL Server de Luis, base `ErpFamihogarPruebasLuis`, recuperó por ID y búsqueda el cliente `091cec05-c3e1-4443-ab33-4bb3f2a78743` después de reiniciar la API, con un único evento de alta. [Detalle y límites](borradores/com-006-preparacion.md).
 
 La vinculación completa de oportunidad, productos y responsable no fue comprobada en COM-006 y corresponde al recorrido de COM-009. COM-R01 no se marca Verificada. La búsqueda por documento y su límite de 20 caracteres son decisiones técnicas compatibles con el modelo de COM-005, no nuevos formatos legales atribuidos al PDF.
+
+## Evidencia parcial de COM-T01 · 2026-11-09
+
+COM-008 agrega los contratos simulados `IReservaDeStock` e `IPagoDeTesoreria` y sus adaptadores de demostración. La reserva se pide al proveedor **antes** de agregar nada a la unidad de trabajo: si Logística simulada rechaza, no se guarda reserva ni historial. `ReservasApiTests` comprueba reserva aceptada con identificador, vigencia e historial, y rechazo por stock con 400, cero reservas y sin evento nuevo. `SimulacionesTests` comprueba aceptación, rechazo por stock, pago confirmado con comprobante y rechazos por comprobante ausente o monto inválido. Total ejecutado: 33 superadas, 0 fallidas y 0 omitidas.
+
+Límites: las pruebas usan el proveedor en memoria, que no demuestra la clave foránea ni el comportamiento de SQL Server; la migración `20261109165802_ReservaSimulada` está creada y pendiente de aplicar y comprobar en la base local de Miguel. COM-R06 sigue Pendiente porque la compuerta de pago y el rol Tesorería se implementan en COM-014; COM-R08 sigue Pendiente porque la liberación de la OV se prueba en COM-017. El adaptador de pago existe y rechaza, pero todavía no lo consume un documento de anticipo.
