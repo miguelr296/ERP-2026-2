@@ -26,6 +26,9 @@
 | Puerto | Interfaz que define la aplicación y que la infraestructura implementa |
 | SDK | Herramientas para compilar y ejecutar el proyecto |
 | CRM | Gestión de clientes y oportunidades comerciales |
+| Catálogo comercial | Datos de los productos que se ofrecen para cotizar |
+| Lista de precios | Precios de productos aplicables a un canal y tipo de cliente durante una vigencia |
+| Tipo de cliente | Clasificación usada para consultar la lista de precios aplicable |
 | OV | Orden de venta |
 | TO-BE | Descripción del proceso de negocio propuesto |
 | EF Core | Herramienta de acceso a datos para .NET |
