@@ -2,6 +2,7 @@ using Erp.Api.Http;
 using Erp.Comercial.Aplicacion.Clientes;
 using Erp.Comercial.Aplicacion.Historial;
 using Erp.Comercial.Aplicacion.Oportunidades;
+using Erp.Comercial.Aplicacion.Productos;
 using Erp.Comercial.Infraestructura;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,8 @@ builder.Services.AgregarInfraestructuraDeComercial(cadenaComercial);
 builder.Services.AddScoped<IClientesCasoUso, ClientesCasoUso>();
 builder.Services.AddScoped<IOportunidadesCasoUso, OportunidadesCasoUso>();
 builder.Services.AddScoped<IHistorialCasoUso, HistorialCasoUso>();
+var productosDemo = builder.Configuration.GetSection("CatalogoDemo").Get<ProductoPrecioVista[]>() ?? [];
+builder.Services.AddSingleton<ICatalogoCasoUso>(new CatalogoCasoUso(productosDemo));
 
 var app = builder.Build();
 
@@ -93,6 +96,13 @@ app.MapGet("/api/historial/{tipo}/{id:guid}", async (
     var eventos = await casoUso.ConsultarAsync(tipo, id, cancelacion);
     return Results.Ok(eventos);
 });
+
+// Catálogo ficticio: la pantalla podrá elegir por canal y tipo de cliente (COM-007).
+app.MapGet("/api/catalogo", (
+    string? canal,
+    string? tipoCliente,
+    ICatalogoCasoUso casoUso) =>
+    Results.Ok(casoUso.Consultar(canal, tipoCliente)));
 
 app.Run();
 
