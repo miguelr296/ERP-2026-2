@@ -1,6 +1,7 @@
 using Erp.Comercial.Aplicacion.Clientes;
 using Erp.Comercial.Aplicacion.Historial;
 using Erp.Comercial.Aplicacion.Oportunidades;
+using Erp.Comercial.Aplicacion.Productos;
 using Erp.Comercial.Dominio;
 using Erp.Comercial.Infraestructura;
 using Microsoft.EntityFrameworkCore;
@@ -41,8 +42,40 @@ public class ComercialPersistenciaTests
 
         return (
             new ClientesCasoUso(repositorio, unidadDeTrabajo),
-            new OportunidadesCasoUso(repositorio, unidadDeTrabajo),
+            new OportunidadesCasoUso(repositorio, unidadDeTrabajo, CatalogoDePrueba()),
             new HistorialCasoUso(repositorio));
+    }
+
+    /// <summary>
+    /// Catálogo mínimo equivalente al de la demo: un producto en dos canales y otro solo
+    /// en Web, para poder probar un código que no pertenece al canal elegido.
+    /// </summary>
+    private static ICatalogoCasoUso CatalogoDePrueba()
+    {
+        return new CatalogoCasoUso(
+        [
+            new ProductoPrecioVista
+            {
+                Codigo = "MUE-001",
+                Nombre = "Sofá Nube 2 cuerpos",
+                Canal = "Tienda",
+                TipoCliente = "Retail"
+            },
+            new ProductoPrecioVista
+            {
+                Codigo = "MUE-002",
+                Nombre = "Comedor Luma 4 sillas",
+                Canal = "Tienda",
+                TipoCliente = "Retail"
+            },
+            new ProductoPrecioVista
+            {
+                Codigo = "MUE-001",
+                Nombre = "Sofá Nube 2 cuerpos",
+                Canal = "Web",
+                TipoCliente = "Retail"
+            }
+        ]);
     }
 
     [Fact]
@@ -107,7 +140,13 @@ public class ComercialPersistenciaTests
 
         await Assert.ThrowsAsync<ReglaDeNegocioException>(
             () => oportunidades.RegistrarAsync(
-                new NuevaOportunidad(Guid.NewGuid(), "Compra de 20 unidades", "Tienda", "Lima Centro", "asesor.demo"),
+                new NuevaOportunidad(
+                    Guid.NewGuid(),
+                    "Compra de 20 unidades",
+                    "Tienda",
+                    "Lima Centro",
+                    "asesor.demo",
+                    [new NuevoProductoDeOportunidad("MUE-001", 20)]),
                 Asesor));
 
         Assert.Equal(0, await contexto.Oportunidades.CountAsync());
@@ -125,7 +164,13 @@ public class ComercialPersistenciaTests
             Asesor);
 
         var oportunidad = await oportunidades.RegistrarAsync(
-            new NuevaOportunidad(cliente.Id, "Compra de 20 unidades", "Tienda", "Lima Centro", "asesor.demo"),
+            new NuevaOportunidad(
+                cliente.Id,
+                "Compra de 20 unidades",
+                "Tienda",
+                "Lima Centro",
+                "asesor.demo",
+                [new NuevoProductoDeOportunidad("MUE-001", 20)]),
             Asesor);
 
         Assert.Equal(EstadosOportunidad.Nueva, oportunidad.Estado);
@@ -135,6 +180,132 @@ public class ComercialPersistenciaTests
         var evento = Assert.Single(eventos);
         Assert.Equal("Alta de oportunidad", evento.Accion);
         Assert.Equal("Nueva", evento.EstadoNuevo);
+    }
+
+    /// <summary>
+    /// COM-009 / COM-R01: la oportunidad guarda el cliente, los productos, la sede y el
+    /// responsable, y su ficha los devuelve juntos.
+    /// </summary>
+    [Fact]
+    public async Task La_ficha_inicial_recupera_cliente_sede_responsable_y_productos()
+    {
+        await using var contexto = CrearContexto(nameof(La_ficha_inicial_recupera_cliente_sede_responsable_y_productos));
+        var (clientes, oportunidades, _) = CrearCasosDeUso(contexto);
+
+        var cliente = await clientes.RegistrarAsync(
+            new NuevoCliente("Comercial Andina SAC", "20512345678", null, null),
+            Asesor);
+
+        var registrada = await oportunidades.RegistrarAsync(
+            new NuevaOportunidad(
+                cliente.Id,
+                "Amoblado de sala y comedor",
+                "Tienda",
+                "Lima Centro",
+                "asesor.demo",
+                [
+                    new NuevoProductoDeOportunidad("MUE-002", 1),
+                    new NuevoProductoDeOportunidad("MUE-001", 2)
+                ]),
+            Asesor);
+
+        var ficha = await oportunidades.BuscarAsync(registrada.Id);
+
+        Assert.NotNull(ficha);
+        Assert.Equal("Comercial Andina SAC", ficha.ClienteNombre);
+        Assert.Equal("20512345678", ficha.ClienteDocumento);
+        Assert.Equal("Lima Centro", ficha.Sede);
+        Assert.Equal("asesor.demo", ficha.Responsable);
+        Assert.Equal("asesor.demo", ficha.CreadoPor);
+        Assert.Collection(
+            ficha.Productos,
+            primero =>
+            {
+                Assert.Equal("MUE-001", primero.Codigo);
+                Assert.Equal("Sofá Nube 2 cuerpos", primero.Nombre);
+                Assert.Equal(2, primero.Cantidad);
+            },
+            segundo =>
+            {
+                Assert.Equal("MUE-002", segundo.Codigo);
+                Assert.Equal("Comedor Luma 4 sillas", segundo.Nombre);
+                Assert.Equal(1, segundo.Cantidad);
+            });
+
+        // El alta guardó dos productos en la misma operación que el documento.
+        Assert.Equal(2, await contexto.ProductosDeOportunidad.CountAsync());
+    }
+
+    [Fact]
+    public async Task Una_oportunidad_sin_productos_no_se_guarda()
+    {
+        await using var contexto = CrearContexto(nameof(Una_oportunidad_sin_productos_no_se_guarda));
+        var (clientes, oportunidades, _) = CrearCasosDeUso(contexto);
+
+        var cliente = await clientes.RegistrarAsync(
+            new NuevoCliente("Comercial Andina SAC", "20512345678", null, null),
+            Asesor);
+
+        var error = await Assert.ThrowsAsync<ReglaDeNegocioException>(
+            () => oportunidades.RegistrarAsync(
+                new NuevaOportunidad(cliente.Id, "Sin detalle", "Tienda", "Lima Centro", "asesor.demo", []),
+                Asesor));
+
+        Assert.Contains("al menos un producto", error.Message);
+        Assert.Equal(0, await contexto.Oportunidades.CountAsync());
+        Assert.Equal(0, await contexto.ProductosDeOportunidad.CountAsync());
+    }
+
+    [Fact]
+    public async Task Un_producto_que_no_pertenece_al_canal_de_la_oportunidad_se_rechaza()
+    {
+        await using var contexto = CrearContexto(nameof(Un_producto_que_no_pertenece_al_canal_de_la_oportunidad_se_rechaza));
+        var (clientes, oportunidades, _) = CrearCasosDeUso(contexto);
+
+        var cliente = await clientes.RegistrarAsync(
+            new NuevoCliente("Comercial Andina SAC", "20512345678", null, null),
+            Asesor);
+
+        // MUE-001 existe en Web y Tienda; en Empresarial no hay catálogo de demostración.
+        var error = await Assert.ThrowsAsync<ReglaDeNegocioException>(
+            () => oportunidades.RegistrarAsync(
+                new NuevaOportunidad(
+                    cliente.Id,
+                    "Venta empresarial",
+                    "Empresarial",
+                    "Lima Centro",
+                    "asesor.demo",
+                    [new NuevoProductoDeOportunidad("MUE-001", 1)]),
+                Asesor));
+
+        Assert.Contains("MUE-001", error.Message);
+        Assert.Contains("Empresarial", error.Message);
+        Assert.Equal(0, await contexto.Oportunidades.CountAsync());
+    }
+
+    [Fact]
+    public async Task Una_cantidad_invalida_no_guarda_la_oportunidad()
+    {
+        await using var contexto = CrearContexto(nameof(Una_cantidad_invalida_no_guarda_la_oportunidad));
+        var (clientes, oportunidades, _) = CrearCasosDeUso(contexto);
+
+        var cliente = await clientes.RegistrarAsync(
+            new NuevoCliente("Comercial Andina SAC", "20512345678", null, null),
+            Asesor);
+
+        await Assert.ThrowsAsync<ReglaDeNegocioException>(
+            () => oportunidades.RegistrarAsync(
+                new NuevaOportunidad(
+                    cliente.Id,
+                    "Compra sin cantidad",
+                    "Tienda",
+                    "Lima Centro",
+                    "asesor.demo",
+                    [new NuevoProductoDeOportunidad("MUE-001", 0)]),
+                Asesor));
+
+        Assert.Equal(0, await contexto.Oportunidades.CountAsync());
+        Assert.Equal(0, await contexto.ProductosDeOportunidad.CountAsync());
     }
 
     [Fact]

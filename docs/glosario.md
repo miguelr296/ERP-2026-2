@@ -29,6 +29,7 @@
 | CRM | Gestión de clientes y oportunidades comerciales |
 | Catálogo comercial | Datos de los productos que se ofrecen para cotizar |
 | Lista de precios | Precios de productos aplicables a un canal y tipo de cliente durante una vigencia |
+| Producto de oportunidad | Producto elegido para una venta potencial; guarda código, nombre de catálogo y cantidad, no el precio de cotización |
 | Tipo de cliente | Clasificación usada para consultar la lista de precios aplicable |
 | Selector de catálogo | Pantalla que consulta productos y precios por canal y tipo de cliente |
 | OV | Orden de venta |

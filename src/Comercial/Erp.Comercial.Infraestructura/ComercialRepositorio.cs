@@ -61,6 +61,18 @@ public class ComercialRepositorio : IComercialRepositorio
         _contexto.Oportunidades.Add(oportunidad);
     }
 
+    public Task<Oportunidad?> BuscarOportunidadAsync(
+        Guid oportunidadId,
+        CancellationToken cancelacion = default)
+    {
+        // La ficha inicial muestra el cliente y los productos; se cargan en la misma consulta.
+        return _contexto.Oportunidades
+            .AsNoTracking()
+            .Include(oportunidad => oportunidad.Cliente)
+            .Include(oportunidad => oportunidad.Productos)
+            .FirstOrDefaultAsync(oportunidad => oportunidad.Id == oportunidadId, cancelacion);
+    }
+
     public Task<bool> ExisteOportunidadActivaAsync(
         Guid oportunidadId,
         CancellationToken cancelacion = default)

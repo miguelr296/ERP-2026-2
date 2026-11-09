@@ -98,6 +98,16 @@ app.MapPost("/api/oportunidades", (
         return Results.Created($"/api/oportunidades/{oportunidad.Id}", oportunidad);
     }));
 
+// Ficha inicial: datos, cliente, productos, sede y responsable en una sola respuesta.
+app.MapGet("/api/oportunidades/{id:guid}", async (
+    Guid id,
+    IOportunidadesCasoUso casoUso,
+    CancellationToken cancelacion) =>
+{
+    var oportunidad = await casoUso.BuscarAsync(id, cancelacion);
+    return oportunidad is null ? Results.NotFound() : Results.Ok(oportunidad);
+});
+
 // Historial de un documento: es la base de la ficha imprimible de las tarjetas siguientes.
 app.MapGet("/api/historial/{tipo}/{id:guid}", async (
     string tipo,

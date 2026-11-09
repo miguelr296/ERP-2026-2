@@ -20,6 +20,8 @@ public class ComercialContext : DbContext
 
     public DbSet<Oportunidad> Oportunidades => Set<Oportunidad>();
 
+    public DbSet<ProductoDeOportunidad> ProductosDeOportunidad => Set<ProductoDeOportunidad>();
+
     public DbSet<ReservaSimulada> Reservas => Set<ReservaSimulada>();
 
     public DbSet<HistorialEvento> Historial => Set<HistorialEvento>();

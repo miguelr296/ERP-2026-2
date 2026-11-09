@@ -9,4 +9,9 @@ public interface IOportunidadesCasoUso
         NuevaOportunidad datos,
         UsuarioSimulado usuario,
         CancellationToken cancelacion = default);
+
+    /// <summary>Devuelve la ficha de la oportunidad o null si no existe.</summary>
+    Task<OportunidadVista?> BuscarAsync(
+        Guid id,
+        CancellationToken cancelacion = default);
 }

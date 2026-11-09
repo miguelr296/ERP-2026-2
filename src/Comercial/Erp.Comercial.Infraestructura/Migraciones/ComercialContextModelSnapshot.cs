@@ -169,6 +169,36 @@ namespace Erp.Comercial.Infraestructura.Migraciones
                     b.ToTable("Oportunidad", "Comercial");
                 });
 
+            modelBuilder.Entity("Erp.Comercial.Dominio.ProductoDeOportunidad", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("OportunidadId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OportunidadId", "Codigo")
+                        .IsUnique();
+
+                    b.ToTable("OportunidadProducto", "Comercial");
+                });
+
             modelBuilder.Entity("Erp.Comercial.Dominio.ReservaSimulada", b =>
                 {
                     b.Property<Guid>("Id")
@@ -225,6 +255,17 @@ namespace Erp.Comercial.Infraestructura.Migraciones
                     b.Navigation("Cliente");
                 });
 
+            modelBuilder.Entity("Erp.Comercial.Dominio.ProductoDeOportunidad", b =>
+                {
+                    b.HasOne("Erp.Comercial.Dominio.Oportunidad", "Oportunidad")
+                        .WithMany("Productos")
+                        .HasForeignKey("OportunidadId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Oportunidad");
+                });
+
             modelBuilder.Entity("Erp.Comercial.Dominio.ReservaSimulada", b =>
                 {
                     b.HasOne("Erp.Comercial.Dominio.Oportunidad", "Oportunidad")
@@ -243,6 +284,8 @@ namespace Erp.Comercial.Infraestructura.Migraciones
 
             modelBuilder.Entity("Erp.Comercial.Dominio.Oportunidad", b =>
                 {
+                    b.Navigation("Productos");
+
                     b.Navigation("Reservas");
                 });
 #pragma warning restore 612, 618

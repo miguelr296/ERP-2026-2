@@ -17,4 +17,11 @@ public sealed class CatalogoCasoUso : ICatalogoCasoUso
             .OrderBy(producto => producto.Codigo)
             .ToArray();
     }
+
+    public ProductoPrecioVista? Buscar(string codigo, string canal)
+    {
+        return _productos.FirstOrDefault(producto =>
+            string.Equals(producto.Codigo, codigo, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(producto.Canal, canal, StringComparison.OrdinalIgnoreCase));
+    }
 }

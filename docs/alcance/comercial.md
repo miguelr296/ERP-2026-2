@@ -4,7 +4,7 @@
 
 **Sprint:** 5–11 de noviembre de 2026. **Capacidad:** 3 h diarias por persona, siete días: 63 h.
 Plan de 42 h, incluida preparación y cierre; 21 h de reserva para aprender, revisar y corregir.
-Estado al 2026-11-07: COM-001 y COM-002 integradas en `main` (PR #104); COM-003 y COM-004 en Ready; COM-005 en In Progress y lista para PR tras cumplir sus criterios. Cotización y el resto del recorrido siguen pendientes; no hay avances heredados.
+Estado verificado el 2026-11-09: COM-001 a COM-008 y COM-020 están en Done en el tablero. COM-009 (API y ficha de oportunidad), COM-010 y COM-024 están en In progress. COM-009 y COM-024 tienen implementación local y evidencia de SQL, pendiente de Git y revisión. COM-009 y COM-024 están ambas asignadas a Miguel, lo que excede el límite de WIP de una tarjeta en curso por persona. Cotización y el resto del recorrido siguen pendientes. No se atribuyen avances solo por el plan.
 
 ## Objetivo verificable
 Un asesor registra una oportunidad retail MTS, genera una cotización con precio de lista, solicita un descuento auditado, registra la aceptación y el anticipo, y obtiene una OV solo con pago confirmado y reserva comprometida.
