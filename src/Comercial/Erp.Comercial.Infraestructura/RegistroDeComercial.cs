@@ -17,6 +17,8 @@ public static class RegistroDeComercial
         servicios.AddDbContext<ComercialContext>(opciones => opciones.UseSqlServer(cadenaDeConexion));
         servicios.AddScoped<IComercialRepositorio, ComercialRepositorio>();
         servicios.AddScoped<IUnidadDeTrabajo, UnidadDeTrabajo>();
+        servicios.AddScoped<ICotizacionesRepositorio, CotizacionesRepositorio>();
+        servicios.AddScoped<INumeradorCotizaciones, NumeradorCotizaciones>();
 
         return servicios;
     }

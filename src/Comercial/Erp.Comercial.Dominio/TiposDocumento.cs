@@ -6,6 +6,7 @@ namespace Erp.Comercial.Dominio;
 /// </summary>
 public static class TiposDocumento
 {
+    public const string Cotizacion = "Cotizacion";
     public const string Cliente = "Cliente";
     public const string Oportunidad = "Oportunidad";
     public const string Reserva = "Reserva";

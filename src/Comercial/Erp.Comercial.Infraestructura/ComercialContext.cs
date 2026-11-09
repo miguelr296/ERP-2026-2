@@ -26,9 +26,12 @@ public class ComercialContext : DbContext
 
     public DbSet<HistorialEvento> Historial => Set<HistorialEvento>();
 
+    public DbSet<Cotizacion> Cotizaciones => Set<Cotizacion>();
+
     protected override void OnModelCreating(ModelBuilder modelo)
     {
         modelo.HasDefaultSchema(Esquema);
+        modelo.HasSequence<long>("NumeroCotizacion", Esquema).StartsAt(1).IncrementsBy(1);
 
         // Cada entidad tiene su clase de configuración en la carpeta Configuraciones.
         modelo.ApplyConfigurationsFromAssembly(typeof(ComercialContext).Assembly);

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calcular cotización · FAMIHOGAR</title>
+  <link rel="stylesheet" href="../estilos.css">
+  <link rel="stylesheet" href="catalogo.css">
+  <script src="calculo-cotizacion.js" defer></script>
+</head>
+<body>
+  <header>
+    <a class="marca" href="../index.html">F<span>FAMIHOGAR</span></a>
+    <a href="catalogo.html">Volver al catálogo</a>
+  </header>
+  <main class="catalogo-main">
+    <p class="etiqueta">COMERCIAL · DATOS DE DEMOSTRACIÓN</p>
+    <h1>Calcular cotización desde oportunidad</h1>
+    <p>Calcula con la lista vigente y guarda la cotización cuando hayas revisado los datos.</p>
+    <form id="formulario-calculo" class="filtros">
+      <div>
+        <label for="oportunidad">ID de oportunidad existente</label>
+        <input id="oportunidad" required maxlength="36" pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+      </div>
+      <div>
+        <label for="tipo-cliente">Tipo de cliente</label>
+        <select id="tipo-cliente"><option>Retail</option><option>Empresarial</option></select>
+      </div>
+      <button class="principal" id="calcular" type="submit">Calcular borrador</button>
+    </form>
+    <p id="estado-calculo" role="status" aria-live="polite"></p>
+    <section id="resultado" hidden aria-labelledby="titulo-resultado">
+      <h2 id="titulo-resultado" tabindex="-1">Resultado del cálculo</h2>
+      <p id="origen"></p>
+      <p id="condiciones"></p>
+      <div class="tabla-contenedor">
+        <table>
+          <caption>Precios obtenidos del servidor; líneas y cantidades de la oportunidad</caption>
+          <thead><tr><th scope="col">Código</th><th scope="col">Producto</th><th scope="col">Cantidad</th><th scope="col">Precio unitario</th><th scope="col">Importe</th></tr></thead>
+          <tbody id="lineas"></tbody>
+        </table>
+      </div>
+      <p id="totales"></p>
+      <a id="ver-oportunidad">Consultar oportunidad de origen por API</a>
+      <p><button class="principal" id="guardar" type="button" hidden>Guardar cotización</button></p>
+      <section id="ficha-guardada" hidden aria-labelledby="titulo-ficha">
+        <h3 id="titulo-ficha">Cotización guardada</h3>
+        <p id="identificacion-ficha"></p>
+        <p id="responsables-ficha"></p>
+        <p><a id="enlace-ficha">Enlace para volver a consultar esta ficha</a></p>
+        <p><a id="enlace-cliente">Consultar cliente de origen por API</a></p>
+        <p>Esta ficha no muestra documentos derivados; el recorrido posterior aún está pendiente.</p>
+        <h4>Historial</h4>
+        <ul id="historial-ficha"></ul>
+        <button id="imprimir" type="button">Imprimir ficha</button>
+        <button id="otra-cotizacion" type="button">Preparar otra cotización</button>
+      </section>
+    </section>
+    <aside class="aviso-caso">
+      <strong>Alcance de esta previsualización</strong>
+      <p>Calcular no guarda ni reserva precios. Al guardar, el servidor vuelve a validar la lista y crea un documento en estado Borrador con su correlativo e historial. El envío y la aceptación se realizan en una etapa posterior.</p>
+    </aside>
+  </main>
+</body>
+</html>

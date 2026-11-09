@@ -1,4 +1,5 @@
 using Erp.Api.Http;
+using Erp.Comercial.Aplicacion.Cotizaciones;
 using Erp.Comercial.Aplicacion.Clientes;
 using Erp.Comercial.Aplicacion.Historial;
 using Erp.Comercial.Aplicacion.Oportunidades;
@@ -23,6 +24,11 @@ builder.Services.AgregarInfraestructuraDeComercial(cadenaComercial);
 builder.Services.AddScoped<IClientesCasoUso, ClientesCasoUso>();
 builder.Services.AddScoped<IOportunidadesCasoUso, OportunidadesCasoUso>();
 builder.Services.AddScoped<IHistorialCasoUso, HistorialCasoUso>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton(builder.Configuration.GetSection("CotizacionDemo")
+    .Get<ParametrosCotizacion>() ?? new ParametrosCotizacion());
+builder.Services.AddScoped<CalculoCotizacionCasoUso>();
+builder.Services.AddScoped<CotizacionesCasoUso>();
 var productosDemo = builder.Configuration.GetSection("CatalogoDemo").Get<ProductoPrecioVista[]>() ?? [];
 builder.Services.AddSingleton<ICatalogoCasoUso>(new CatalogoCasoUso(productosDemo));
 
@@ -106,6 +112,36 @@ app.MapGet("/api/oportunidades/{id:guid}", async (
 {
     var oportunidad = await casoUso.BuscarAsync(id, cancelacion);
     return oportunidad is null ? Results.NotFound() : Results.Ok(oportunidad);
+});
+
+// Previsualiza con precios del servidor. No emite ni persiste una cotización.
+app.MapPost("/api/oportunidades/{id:guid}/calculo-cotizacion", (
+    Guid id, CalcularCotizacion datos, HttpRequest peticion,
+    CalculoCotizacionCasoUso casoUso, CancellationToken cancelacion) =>
+    PeticionesHttp.EjecutarAsync(async () =>
+    {
+        var calculo = await casoUso.CalcularAsync(id, datos, PeticionesHttp.LeerUsuario(peticion), cancelacion);
+        return calculo is null ? Results.NotFound() : Results.Ok(calculo);
+    }));
+
+// Emisión persistida: referencia de solicitud para reintentar sin duplicar.
+app.MapPost("/api/oportunidades/{id:guid}/cotizaciones", (
+    Guid id, NuevaCotizacion datos, HttpRequest peticion,
+    CotizacionesCasoUso casoUso, CancellationToken cancelacion) =>
+    PeticionesHttp.EjecutarAsync(async () =>
+    {
+        var resultado = await casoUso.EmitirAsync(id, datos, PeticionesHttp.LeerUsuario(peticion), cancelacion);
+        if (resultado is null) return Results.NotFound();
+        return resultado.Creada
+            ? Results.Created($"/api/cotizaciones/{resultado.Ficha.Id}", resultado.Ficha)
+            : Results.Ok(resultado.Ficha);
+    }));
+
+app.MapGet("/api/cotizaciones/{id:guid}", async (
+    Guid id, CotizacionesCasoUso casoUso, CancellationToken cancelacion) =>
+{
+    var ficha = await casoUso.BuscarAsync(id, cancelacion);
+    return ficha is null ? Results.NotFound() : Results.Ok(ficha);
 });
 
 // Historial de un documento: es la base de la ficha imprimible de las tarjetas siguientes.
