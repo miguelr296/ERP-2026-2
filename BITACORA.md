@@ -90,6 +90,13 @@ Completar únicamente con trabajo realizado y comprobado a partir del inicio.
 - Tablero y límites: en la verificación inicial, `gh project item-list` mostró COM-008 en Done, COM-009 en Ready (Miguel), COM-010 y COM-024 en In progress. Durante el cierre, Miguel movió COM-009 a In progress; una consulta de solo lectura confirmó que COM-009 y COM-024 quedan ambas en curso y asignadas a Miguel, excediendo el límite WIP de una tarjeta por persona. No ejecuté Git por instrucción del usuario; no hay commit ni PR preparado por este agente. COM-009 y COM-024 no se declaran Done: falta commit, PR, revisión e integración. COM-R01 queda Verificada con la evidencia combinada de COM-006 y COM-009; COM-R02 sigue pendiente.
 - Siguiente paso: Miguel ejecuta los comandos Git guiados para preparar los cambios y solicita revisión cruzada. No declarar ambas tarjetas Done antes de la integración.
 
+### 2026-11-09 · Miguel · Horas reales no declaradas · Revisión de modelo COM-012
+- Hice y evidencia: por decisión de Miguel (DEC-005), quité `ClienteId` de la entidad persistida `Cotizacion`; la ficha de API obtiene ese dato desde la oportunidad de origen. Añadí una prueba que exige claves y FK simples en el modelo y comprueba que Cotizacion no mapea `ClienteId`; la prueba HTTP verifica el cliente derivado desde la oportunidad. Documenté la regla y el glosario de clave subrogada/compuesta.
+- Validación: build Release con 0 advertencias y 0 errores; después, 80 pruebas superadas, 0 fallidas y 0 omitidas.
+- Migración: generé `20261110005543_CotizacionConLineas`, con tablas de cotización/líneas, secuencia y FK simple a Oportunidad, sin columna `ClienteId` en Cotizacion. `dotnet ef migrations has-pending-model-changes` confirmó que no quedan cambios del modelo pendientes.
+- Límites: no apliqué la migración; SQL Server y la persistencia real de cotizaciones siguen pendientes. Los índices compuestos existentes y de COM-012 se conservan. No se hizo commit ni PR.
+- Siguiente paso: obtener autorización explícita para aplicar la migración a `ErpFamihogarPruebasLuis`; después validar SQL y navegador con Luis.
+
 
 ## Plantilla de sesión
 Fecha · Persona · Horas reales · Tarjeta

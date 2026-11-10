@@ -48,7 +48,7 @@ public sealed class CotizacionesCasoUso(
             throw new ReglaDeNegocioException("La oportunidad y el cliente deben estar activos para emitir.");
 
         var numero = await numerador.SiguienteAsync(cancelacion);
-        var documento = Cotizacion.Emitir(datos.SolicitudId, numero, oportunidadId, calculo.ClienteId,
+        var documento = Cotizacion.Emitir(datos.SolicitudId, numero, oportunidadId,
             tipo, calculo.ListaPrecio, calculo.Moneda, calculo.FechaCalculo, calculo.VigenteHasta,
             calculo.PlazoEntregaDias, calculo.TasaIgv, calculo.PreciosIncluyenIgv,
             parametros.Redondeo, calculo.Calculo, usuario);
@@ -75,7 +75,7 @@ public sealed class CotizacionesCasoUso(
             ?? throw new InvalidOperationException("La cotización no tiene oportunidad consultable.");
         var eventos = await historial.ConsultarAsync(TiposDocumento.Cotizacion, documento.Id, cancelacion);
         return new CotizacionVista(documento.Id, documento.SolicitudId, documento.Correlativo,
-            documento.OportunidadId, documento.ClienteId, documento.TipoCliente, documento.ListaPrecio,
+            documento.OportunidadId, origen.ClienteId, documento.TipoCliente, documento.ListaPrecio,
             documento.Moneda, documento.Estado, documento.EmitidaEn, documento.VigenteHasta,
             documento.PlazoEntregaDias, documento.TasaIgv, documento.PreciosIncluyenIgv, documento.Redondeo,
             documento.Subtotal, documento.Igv, documento.Total, documento.CreadoPor, documento.Rol,

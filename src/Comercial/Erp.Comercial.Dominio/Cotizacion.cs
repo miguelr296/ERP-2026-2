@@ -10,7 +10,6 @@ public class Cotizacion
     public string Correlativo { get; private set; } = string.Empty;
     public Guid OportunidadId { get; private set; }
     public Oportunidad? Oportunidad { get; private set; }
-    public Guid ClienteId { get; private set; }
     public string TipoCliente { get; private set; } = string.Empty;
     public string ListaPrecio { get; private set; } = string.Empty;
     public string Moneda { get; private set; } = string.Empty;
@@ -32,13 +31,13 @@ public class Cotizacion
     private Cotizacion() { }
 
     public static Cotizacion Emitir(
-        Guid solicitudId, long numero, Guid oportunidadId, Guid clienteId,
+        Guid solicitudId, long numero, Guid oportunidadId,
         string tipoCliente, string listaPrecio, string moneda,
         DateOnly fecha, DateOnly hasta, int plazo, decimal tasaIgv,
         bool preciosIncluyenIgv, MidpointRounding redondeo,
         CalculoCotizacion calculo, UsuarioSimulado usuario)
     {
-        if (solicitudId == Guid.Empty || oportunidadId == Guid.Empty || clienteId == Guid.Empty || numero <= 0)
+        if (solicitudId == Guid.Empty || oportunidadId == Guid.Empty || numero <= 0)
             throw new ReglaDeNegocioException("La cotización requiere solicitud, origen y número válidos.");
         if (!usuario.PuedeRegistrarDocumentos || string.IsNullOrWhiteSpace(usuario.Nombre) || usuario.Nombre.Length > 100)
             throw new ReglaDeNegocioException("Indique un Asesor o Jefatura válido para emitir.");
@@ -49,7 +48,7 @@ public class Cotizacion
         {
             Id = Guid.NewGuid(), SolicitudId = solicitudId,
             Correlativo = $"COT-{fecha.Year}-{numero.ToString("D5", CultureInfo.InvariantCulture)}",
-            OportunidadId = oportunidadId, ClienteId = clienteId, TipoCliente = tipoCliente,
+            OportunidadId = oportunidadId, TipoCliente = tipoCliente,
             ListaPrecio = listaPrecio, Moneda = moneda, EmitidaEn = fecha, VigenteHasta = hasta,
             PlazoEntregaDias = plazo, TasaIgv = tasaIgv, PreciosIncluyenIgv = preciosIncluyenIgv,
             Redondeo = redondeo.ToString(), Subtotal = calculo.Subtotal, Igv = calculo.Igv,

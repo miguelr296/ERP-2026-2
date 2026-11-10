@@ -82,3 +82,16 @@ Motivo: fijar las relaciones mínimas de cliente, oportunidad e historial antes 
 | Historial | Se conserva cada evento; no se permite modificarlo ni borrarlo. | COM-T03; `El_historial_no_se_puede_modificar_ni_borrar` |
 
 El diagrama vigente y las entidades se implementan en `src/Comercial/Erp.Comercial.Dominio` y `src/Comercial/Erp.Comercial.Infraestructura`. Cambiar estas relaciones exige una decisión nueva y una migración cuando afecte al esquema.
+
+### DEC-005 · Claves simples e integridad de cotización
+Fecha: 2026-11-09 · Tarjeta: COM-012 y criterio transversal · Estado: Aceptada por Miguel.
+
+Motivo: evitar la complejidad de propagar claves compuestas en el ERP y conservar integridad referencial mediante identificadores estables y relaciones simples. La decisión se tomó al revisar el modelo de COM-012.
+
+| Tema | Decisión | Origen y prueba |
+|---|---|---|
+| Identidad | Claves primarias, alternas y foráneas de una columna; preferir identificadores subrogados. No usar claves compuestas. | Acuerdo explícito de Miguel durante la revisión del modelo de COM-012, 2026-11-09; prueba `El_modelo_usa_claves_simples_y_no_duplica_cliente_en_cotizacion` ejecutada dentro de una suite de 80 pruebas superadas |
+| Índices | Se permiten índices compuestos, incluidos los únicos, si el modelo necesita búsqueda o unicidad por varias columnas. No se consideran claves compuestas en este acuerdo. | Índices existentes de productos de oportunidad e historial; prueba del modelo citada arriba |
+| Cotización–cliente | `Cotizacion` conserva solo `OportunidadId`; el cliente se obtiene a través de `Oportunidad.ClienteId`, que referencia `Cliente.Id`. No duplicar `ClienteId` en cotización. | COM-012; prueba de modelo y `Emite_consulta_y_reintenta_sin_duplicar_ni_recalcular_el_documento`, ambas superadas en la suite de 80 pruebas |
+
+La relación documental se mantiene con FK simple a la oportunidad y la relación existente de esta con el cliente. Los cambios de entidad se incorporan a la base mediante una migración creada por Miguel.

@@ -23,6 +23,8 @@ namespace Erp.Comercial.Infraestructura.Migraciones
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.HasSequence("NumeroCotizacion", "Comercial");
+
             modelBuilder.Entity("Erp.Comercial.Dominio.Cliente", b =>
                 {
                     b.Property<Guid>("Id")
@@ -64,6 +66,102 @@ namespace Erp.Comercial.Infraestructura.Migraciones
                         .IsUnique();
 
                     b.ToTable("Cliente", "Comercial");
+                });
+
+            modelBuilder.Entity("Erp.Comercial.Dominio.Cotizacion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Correlativo")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("CreadoPor")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateOnly>("EmitidaEn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("Igv")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ListaPrecio")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Moneda")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<Guid>("OportunidadId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("PlazoEntregaDias")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("PreciosIncluyenIgv")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Redondeo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Rol")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid>("SolicitudId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TasaIgv")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
+
+                    b.Property<string>("TipoCliente")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateOnly>("VigenteHasta")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Correlativo")
+                        .IsUnique();
+
+                    b.HasIndex("OportunidadId");
+
+                    b.HasIndex("SolicitudId")
+                        .IsUnique();
+
+                    b.ToTable("Cotizacion", "Comercial");
                 });
 
             modelBuilder.Entity("Erp.Comercial.Dominio.HistorialEvento", b =>
@@ -115,6 +213,44 @@ namespace Erp.Comercial.Infraestructura.Migraciones
                     b.HasIndex("DocumentoTipo", "DocumentoId");
 
                     b.ToTable("HistorialEvento", "Comercial");
+                });
+
+            modelBuilder.Entity("Erp.Comercial.Dominio.LineaDeCotizacion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid>("CotizacionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Importe")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("PrecioUnitario")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CotizacionId", "Codigo")
+                        .IsUnique();
+
+                    b.ToTable("CotizacionLinea", "Comercial");
                 });
 
             modelBuilder.Entity("Erp.Comercial.Dominio.Oportunidad", b =>
@@ -244,6 +380,26 @@ namespace Erp.Comercial.Infraestructura.Migraciones
                     b.ToTable("Reserva", "Comercial");
                 });
 
+            modelBuilder.Entity("Erp.Comercial.Dominio.Cotizacion", b =>
+                {
+                    b.HasOne("Erp.Comercial.Dominio.Oportunidad", "Oportunidad")
+                        .WithMany()
+                        .HasForeignKey("OportunidadId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Oportunidad");
+                });
+
+            modelBuilder.Entity("Erp.Comercial.Dominio.LineaDeCotizacion", b =>
+                {
+                    b.HasOne("Erp.Comercial.Dominio.Cotizacion", null)
+                        .WithMany("Lineas")
+                        .HasForeignKey("CotizacionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Erp.Comercial.Dominio.Oportunidad", b =>
                 {
                     b.HasOne("Erp.Comercial.Dominio.Cliente", "Cliente")
@@ -280,6 +436,11 @@ namespace Erp.Comercial.Infraestructura.Migraciones
             modelBuilder.Entity("Erp.Comercial.Dominio.Cliente", b =>
                 {
                     b.Navigation("Oportunidades");
+                });
+
+            modelBuilder.Entity("Erp.Comercial.Dominio.Cotizacion", b =>
+                {
+                    b.Navigation("Lineas");
                 });
 
             modelBuilder.Entity("Erp.Comercial.Dominio.Oportunidad", b =>

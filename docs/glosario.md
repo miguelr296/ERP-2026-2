@@ -35,3 +35,5 @@
 | OV | Orden de venta |
 | TO-BE | Descripción del proceso de negocio propuesto |
 | EF Core | Herramienta de acceso a datos para .NET |
+| Clave subrogada | Identificador técnico generado para distinguir una fila, independiente de los datos del negocio; se usa como clave simple para relacionar entidades |
+| Clave compuesta | Clave formada por varias columnas; el modelo no la usa como clave primaria, alterna o foránea. Los índices compuestos sí están permitidos por DEC-005 |

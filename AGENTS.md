@@ -23,6 +23,7 @@ Comercial ocupa el sprint 1, del 5 al 11 de noviembre de 2026. El calendario ún
 - Monolito modular: Comercial, Logística, Finanzas, Planta y Compartido.
 - Api → Aplicación → Dominio; Infraestructura implementa la persistencia. Reglas en Dominio y Aplicación. Entre módulos, solo los contratos públicos de Aplicación, sin leer tablas ajenas.
 - Historial inmutable y cadena documental en cada documento; ficha imprimible con estado, origen, derivados y responsables.
+- Claves primarias, alternas y foráneas simples; preferir identificadores subrogados. No usar claves compuestas; los índices compuestos sí se permiten cuando hacen falta (DEC-005).
 - Datos ficticios; rol simulado; banco, SUNAT, correo y WhatsApp simulados.
 - Parámetros del negocio configurables; dinero con decimal. Borrado lógico de documentos.
 - Código sencillo, nombres claros, métodos cortos y explicación comprensible para quien aprende.

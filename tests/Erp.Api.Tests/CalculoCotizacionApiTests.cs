@@ -193,6 +193,7 @@ public class CalculoCotizacionApiTests
         Assert.Equal("COT-2026-00001", creada.Correlativo);
         Assert.Equal("Borrador", creada.Estado);
         Assert.Equal(origen, creada.Origen.Id);
+        Assert.Equal(creada.Origen.ClienteId, creada.ClienteId);
         Assert.Equal(4129.65m, creada.Total);
         Assert.Equal(2, creada.Lineas.Count);
         Assert.Equal("Emisión de cotización", Assert.Single(creada.Historial).Accion);

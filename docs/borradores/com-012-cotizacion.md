@@ -85,8 +85,8 @@ Esto acredita previsualización desde una oportunidad persistida y funcionamient
 
 Luis comunicó que Miguel aprobó la propuesta de modelo, estado Borrador, secuencia SQL con posibles saltos, guardado junto con historial, copia de precios y referencia única para reintentos. La aprobación fue comunicada en esta conversación; no se atribuye a una revisión de código o PR todavía inexistente.
 
-- Dominio: Cotizacion y LineaDeCotizacion conservan oportunidad, cliente, tipo, lista, moneda, fecha, vencimiento, plazo, parámetros de impuesto/redondeo, estado, actor, totales y líneas de la emisión. Borrado lógico con Activo; no hay ruta de borrado.
-- Infraestructura: DbSets y configuraciones preparados, sin modificar las migraciones existentes ni crear nuevas. Índices únicos de SolicitudId, Correlativo y código por cotización; relación con oportunidad y líneas sin borrado en cascada. Importe/totales decimal(18,2), precio unitario decimal(18,4) y tasa decimal(9,6).
+- Dominio: Cotizacion conserva la oportunidad, tipo, lista, moneda, fecha, vencimiento, plazo, parámetros de impuesto/redondeo, estado, actor y totales; LineaDeCotizacion conserva las líneas de la emisión. El cliente se obtiene desde la oportunidad y `ClienteId` no se duplica en Cotizacion. Borrado lógico con Activo; no hay ruta de borrado.
+- Infraestructura: DbSets y configuraciones preparados, sin modificar las migraciones existentes ni crear nuevas. Índices únicos de SolicitudId, Correlativo y código por cotización; relación con oportunidad y líneas sin borrado en cascada. Se usan claves simples y no claves compuestas; los índices compuestos están permitidos (DEC-005). Importe/totales decimal(18,2), precio unitario decimal(18,4) y tasa decimal(9,6).
 - Numerador SQL: secuencia Comercial.NumeroCotizacion de tipo bigint, inicio 1 e incremento 1; global, sin reinicio anual automático. El prefijo usa el año de emisión, por ejemplo COT-2026-00001. Se admiten saltos si una operación consume número y luego falla. Miguel debe revisar esta configuración al crear la migración.
 - Persistencia: CotizacionesRepositorio agrega documento, líneas y evento «Emisión de cotización» y confirma con la unidad de trabajo en un único SaveChanges. En SQL Server corresponde a una transacción. Si otra operación gana la inserción de la misma SolicitudId, se recupera el documento existente después del error de unicidad; no se ignoran otros errores.
 - Aplicación: vuelve a validar catálogo al emitir, exige oportunidad y cliente activos y rol Asesor/Jefatura. No acepta precios ni totales del cliente. Un reintento de la misma solicitud y operación devuelve el documento original, incluso si después cambió la lista; reutilizar la referencia para otra oportunidad o tipo se rechaza.
@@ -98,6 +98,12 @@ POST /api/oportunidades/{id}/cotizaciones acepta solo SolicitudId (Guid no vací
 La pantalla conserva la previsualización y agrega Guardar cotización. Mantiene una referencia de solicitud en sessionStorage y memoria para reintentar sin duplicar, bloquea controles durante la petición y recupera la ficha mediante GET. La ficha muestra estado, correlativo, fechas, vendedor y actor, líneas, totales e historial, con enlaces a origen/cliente y opción de imprimir. Su enlace con ?cotizacion={id} permite volver a consultar. Preparar otra cotización inicia deliberadamente otra solicitud.
 
 La relación de cliente, sede y vendedor se consulta desde la oportunidad de origen. Los precios, cantidades y parámetros guardados no se sustituyen por el catálogo al consultar una cotización ya emitida. No hay transiciones de envío o aceptación en esta tarjeta.
+
+### Revisión del modelo por Miguel · 2026-11-09
+
+`Cotizacion` ya no persiste `ClienteId`: conserva la FK simple `OportunidadId` y el cliente se expone en la ficha desde la oportunidad de origen. Las claves primarias, alternas y foráneas del modelo deben ser simples; se permiten índices compuestos, también únicos (DEC-005). La prueba de modelo comprueba estas reglas y la prueba HTTP comprueba que la ficha expone el mismo cliente que el origen.
+
+Build Release: 0 advertencias y 0 errores. Después, `dotnet test Erp.slnx --configuration Release --no-build`: 80 superadas, 0 fallidas y 0 omitidas. En esa validación inicial todavía no se había generado ni aplicado la migración; no hubo validación SQL. La generación posterior se registra abajo.
 
 ### Validación comprobada de esta etapa
 
@@ -113,13 +119,9 @@ No se ejecutó todavía guardado real de cotización ni su pantalla nueva contra
 
 Luis autorizó crear un commit de trabajo y subir luis/com-012-cotizacion al repositorio principal para compartir el modelo con Miguel. Esta entrega no es el PR final de COM-012 y no incluye el borrador local de COM-009 ni la conexión de desarrollo ignorada por Git. Las menciones anteriores de trabajo sin commit corresponden a las etapas previas a esta autorización.
 
-Sobre esta versión en luis/com-012-cotizacion, Miguel debe revisar las configuraciones y crear la migración; no debe generarla desde un main que aún no contiene el modelo de cotización. El siguiente comando es guía para Miguel, no fue ejecutado por el asistente:
+Sobre esta versión en `luis/com-012-cotizacion`, Miguel revisó el modelo y generó `20261110005543_CotizacionConLineas`. Crea `Cotizacion`, `CotizacionLinea` y la secuencia `Comercial.NumeroCotizacion`; `Cotizacion` conserva solo la FK simple `OportunidadId`, sin columna `ClienteId`. Incluye los índices únicos previstos y no modifica tablas existentes. `dotnet ef migrations has-pending-model-changes` confirmó que el snapshot coincide con el modelo.
 
-```powershell
-dotnet ef migrations add CotizacionConLineas --project src/Comercial/Erp.Comercial.Infraestructura --startup-project src/Erp.Api --configuration Release
-```
-
-La migración debe incluir Cotizacion, CotizacionLinea, la secuencia NumeroCotizacion, índices únicos y relaciones; no recrear ni borrar tablas existentes. Su aplicación requiere autorización explícita y apuntar a ErpFamihogarPruebasLuis al probar en el equipo de Luis.
+La migración todavía no se aplicó a ninguna base. Aplicarla requiere autorización explícita y, para las pruebas del equipo de Luis, debe apuntar a `ErpFamihogarPruebasLuis`.
 
 Después de aplicar la migración creada por Miguel, comprobar:
 

@@ -31,6 +31,7 @@ Ejemplo vigente: `src/Comercial/Erp.Comercial.Dominio`, `Erp.Comercial.Aplicacio
 Una base con esquema por módulo; propietario explícito de cada dato maestro.
 Miguel define el contexto y las migraciones en la tarjeta de base.
 La cadena de conexión vive en configuración local ignorada; el repositorio guarda solo un ejemplo sin secretos.
+Las claves primarias, alternas y foráneas son de una sola columna; se prefieren identificadores subrogados. No se usan claves compuestas. Los índices compuestos, también únicos, sí se permiten cuando el modelo los necesita (DEC-005; prueba `El_modelo_usa_claves_simples_y_no_duplica_cliente_en_cotizacion`).
 
 ## Documentos y reglas
 

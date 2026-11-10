@@ -28,6 +28,32 @@ public class ComercialPersistenciaTests
         return new ComercialContext(opciones);
     }
 
+    [Fact]
+    public void El_modelo_usa_claves_simples_y_no_duplica_cliente_en_cotizacion()
+    {
+        using var contexto = CrearContexto(nameof(El_modelo_usa_claves_simples_y_no_duplica_cliente_en_cotizacion));
+        var cotizacion = contexto.Model.FindEntityType(typeof(Cotizacion));
+
+        Assert.NotNull(cotizacion);
+        Assert.Null(cotizacion.FindProperty("ClienteId"));
+
+        foreach (var entidad in contexto.Model.GetEntityTypes())
+        {
+            foreach (var clave in entidad.GetKeys())
+                Assert.Single(clave.Properties);
+
+            foreach (var relacion in entidad.GetForeignKeys())
+                Assert.Single(relacion.Properties);
+        }
+
+        var productos = contexto.Model.FindEntityType(typeof(ProductoDeOportunidad));
+        Assert.NotNull(productos);
+        Assert.Contains(productos.GetIndexes(), indice => indice.IsUnique
+            && indice.Properties.Count == 2
+            && indice.Properties[0].Name == "OportunidadId"
+            && indice.Properties[1].Name == "Codigo");
+    }
+
     /// <summary>
     /// Arma el módulo como lo hace la API: repositorio, unidad de trabajo y casos de uso
     /// sobre el mismo contexto. Así la prueba recorre las mismas capas que la aplicación.
