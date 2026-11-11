@@ -18,7 +18,9 @@ Aplicaciones → Comercial → Clientes y productos revisados → Oportunidades 
 
 Aplicaciones → Logística/Compras/Despachos → Necesidades → Ofertas y OC → Recepción/calidad → Inventario → Reserva/picking/embalaje → Salida/entrega. Incluye inspección parcial, reparación/reinspección/bajas, administración de almacenes/ubicaciones, reubicaciones, retornos, traslados, conteos por calidad, cotejo de factura, evaluación e indicadores. [Guion por rol y límites](docs/pantallas/logistica.md) · [Reglas](docs/reglas-logisticas.md) · [Contratos](docs/contratos/integracion-logistica.md).
 
-Comercial (#116) se integró mediante el [PR #117](https://github.com/miguelr296/ERP-2026-2/pull/117) y la primera entrega de Logística (#118) mediante el [PR #119](https://github.com/miguelr296/ERP-2026-2/pull/119). El [pulido de Logística](docs/borradores/logistica-pulido.md), [tarjeta #120](https://github.com/miguelr296/ERP-2026-2/issues/120), tiene implementación y pruebas automatizadas completas; Luis verificó administración de almacenes/ubicaciones y Miguel ayudará con los otros cuatro cambios. Revisión e integración pendientes. Cobros/pagos, comprobantes y asientos siguen a cargo de sus áreas.
+En **Logística → Kardex valorizado**, el botón **Ejecutar escenario de evaluación** muestra una corrida temporal de compra a distinto costo y salida para observar el promedio móvil. El escenario no altera los datos guardados. [Detalle y tarjeta #122](docs/borradores/evaluacion-kardex-valorizado.md).
+
+Comercial (#116) se integró mediante el [PR #117](https://github.com/miguelr296/ERP-2026-2/pull/117) y Logística (#118/#120) mediante los [PR #119](https://github.com/miguelr296/ERP-2026-2/pull/119) y [#121](https://github.com/miguelr296/ERP-2026-2/pull/121). El pulido de #120 está integrado; sus comprobaciones manuales pendientes siguen descritas en su tarjeta. El [test de funcionamiento del Kardex valorizado](docs/borradores/evaluacion-kardex-valorizado.md) presenta un escenario temporal sin alterar datos reales. Cobros/pagos, comprobantes y asientos siguen a cargo de sus áreas.
 
 ## Cómo leer este repositorio
 

@@ -68,6 +68,16 @@ Registrar aquí solo actividades realizadas y comprobadas durante esta nueva eta
 - Luis solicitó el PR. Se creó la [tarjeta #120](https://github.com/miguelr296/ERP-2026-2/issues/120), asignada a LuisInfinito, con implementación automatizada comprobada y revisión manual parcial explícita. Se comprobó permiso write en el principal, ausencia de PR abiertos/tarjeta duplicada y main sin novedades sobre `dc0fc80`.
 - Verificación previa al commit: **123/123 pruebas de reglas**, 0 fallidas/omitidas; conserva evidencia de navegador sobre el código funcional sin cambios posteriores. El PR incluirá `Closes #120` y revisión solicitada a Miguel, sin fusión automática ni Done. COM-009, configuración local e informes TRX anteriores se conservan fuera del commit.
 
+- Actualización posterior comprobada en GitHub: el PR #121 se integró en `main` (`6bb4fb7`) y la tarjeta #120 figura cerrada. Su cuerpo conserva sin marcar cuatro comprobaciones manuales y la revisión personal de Miguel; el cierre del sistema no cambia esa evidencia pendiente.
+
+### 2026-11-11 · Luis · Test de funcionamiento del Kardex valorizado · 1 h real declarada
+
+- Tiempo: Luis indicó registrar **1 hora real** para esta implementación.
+- Implementación: desde Logística → Kardex valorizado se podrá ejecutar un escenario de evaluación temporal. Recorre necesidad y aprobación, dos ofertas, orden de compra, recepción/inspección, cotejo de factura, cotización/pedido aprobado, reserva, salida y entrega. Usa las reglas reales dentro de una copia en memoria y no escribe en el almacenamiento normal.
+- Evidencia: `node --test --test-isolation=none tests/interfaz/kardex-evaluacion.test.cjs`: **2 superadas, 0 fallidas** (recorrido de reglas y conexión de la vista). El cálculo produjo salida a S/ 1,061.54, con saldo posterior de 12 unidades y S/ 12,738.46. El generador produce vista HTML/JSON para revisión local.
+- Límites: Jefatura, proveedor, factura y constancia son simulados; no se registran pagos ni operaciones reales. Revisión visual manual de Luis y revisión de Miguel pendientes; no se afirma una prueba de navegador. Evaluar con Contabilidad ajustes, traslados, devoluciones, reparación y bajas.
+- Publicación: se creó la [tarjeta #122](https://github.com/miguelr296/ERP-2026-2/issues/122) y una rama de test desde el `main` actualizado después de integrar #121. El PR incluirá `Closes #122`, pedirá revisión a Miguel y no se fusionará ni marcará Done.
+
 ### Plantilla
 
 Fecha · Persona · Trabajo realizado

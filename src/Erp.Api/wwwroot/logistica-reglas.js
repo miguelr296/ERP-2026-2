@@ -111,6 +111,52 @@ window.LogisticaReglas = (() => {
     })));
   }
 
+  function kardexValorizado(datos, productos, sede) {
+    const movimientos = datos.movimientos.slice().sort((a, b) =>
+      a.fecha.localeCompare(b.fecha) || (a.ocurridoEn || "").localeCompare(b.ocurridoEn || "") || a.numero.localeCompare(b.numero)
+    );
+    const saldos = new Map();
+    const costosInternos = new Map();
+    const salidasTraslado = new Map();
+    const costosDespacho = new Map();
+    const clavesInternasSalida = new Set(["Inspección", "Salida por tratamiento", "Salida de reparación", "Salida por reubicación", "Salida por traslado", "Resolución de cuarentena"]);
+    const clavesInternasEntrada = new Set(["Liberación a inventario", "No conformidad", "Ingreso a reparación", "Deterioro documentado", "Reinspección", "Entrada por reubicación", "Entrada por traslado", "Resolución de cuarentena"]);
+    return movimientos.map(m => {
+      const clave = `${m.sede}|${m.codigo}`;
+      const saldoInicialCantidad = saldos.get(clave)?.cantidad || 0;
+      const saldoInicial = saldos.get(clave)?.valor || 0;
+      const cantidad = m.cantidad;
+      const promedioPrevio = saldoInicialCantidad > 0 ? Math.round(saldoInicial / saldoInicialCantidad) : m.coste;
+      const referenciaProducto = `${m.referencia}|${m.codigo}`;
+      let costoUnitarioMovimiento = cantidad < 0 ? promedioPrevio : m.coste;
+      if (cantidad < 0 && clavesInternasSalida.has(m.tipo)) costosInternos.set(referenciaProducto, promedioPrevio);
+      if (cantidad > 0 && clavesInternasEntrada.has(m.tipo) && costosInternos.has(referenciaProducto)) costoUnitarioMovimiento = costosInternos.get(referenciaProducto);
+      if (cantidad > 0 && m.tipo === "Ajuste de inventario" && saldoInicialCantidad > 0) costoUnitarioMovimiento = promedioPrevio;
+      if (cantidad < 0 && m.tipo === "Salida por traslado") salidasTraslado.set(referenciaProducto, promedioPrevio);
+      if (cantidad > 0 && m.tipo === "Entrada por traslado" && salidasTraslado.has(referenciaProducto)) costoUnitarioMovimiento = salidasTraslado.get(referenciaProducto);
+      if (cantidad < 0 && m.tipo === "Salida por venta") costosDespacho.set(referenciaProducto, promedioPrevio);
+      if (cantidad > 0 && m.tipo === "Retorno no entregado") {
+        const retorno = datos.retornos.find(r => r.numero === m.referencia), despacho = datos.despachos.find(d => d.id === retorno?.despachoId);
+        costoUnitarioMovimiento = costosDespacho.get(`${despacho?.numero}|${m.codigo}`) ?? m.coste;
+      }
+      const importeMovimiento = cantidad * costoUnitarioMovimiento;
+      const saldoFinalCantidad = saldoInicialCantidad + cantidad;
+      const saldoFinal = saldoInicial + importeMovimiento;
+      saldos.set(clave, { cantidad: saldoFinalCantidad, valor: saldoFinalCantidad === 0 ? 0 : saldoFinal });
+      return {
+        ...m,
+        saldoInicialCantidad,
+        saldoInicial,
+        costoUnitarioMovimiento,
+        importeMovimiento,
+        saldoFinalCantidad,
+        saldoFinal: saldoFinalCantidad === 0 ? 0 : saldoFinal,
+        costoUnitarioFinal: saldoFinalCantidad > 0 ? Math.round(saldoFinal / saldoFinalCantidad) : 0,
+        nombreProducto: productos.find(p => p.codigo === m.codigo)?.nombre || m.codigo
+      };
+    }).filter(m => m.sede === sede);
+  }
+
   function configurarReposicion(datos, entrada, actor) {
     permitir(actor, ["Jefatura"]); almacenDe(datos, entrada.almacen, actor);
     exigir(Number.isSafeInteger(entrada.minimo) && entrada.minimo >= 0 && entero(entrada.objetivo) && entrada.objetivo >= entrada.minimo, "El objetivo debe ser mayor o igual al mínimo.");
@@ -199,5 +245,5 @@ window.LogisticaReglas = (() => {
     accion.estado = estado; accion.historial.push(evento(actor, `${estado}: ${evidencia}`));
   }
 
-  return { exigir, copiar, permitir, motivo, entero, dinero, fechaValida, independiente, evento, numerar, obtener, crear, inicializar, almacenDe, ubicacionDe, mismaPosicion, posicionProtegida, saldo, reservado, retenido, disponible, registrarMovimiento, lotesDisponibles, validarLineas, existencias, configurarReposicion, registrarPrevision, planificar, crearConteo, aprobarConteo, crearAccion, avanzarAccion };
+  return { exigir, copiar, permitir, motivo, entero, dinero, fechaValida, independiente, evento, numerar, obtener, crear, inicializar, almacenDe, ubicacionDe, mismaPosicion, posicionProtegida, saldo, reservado, retenido, disponible, registrarMovimiento, lotesDisponibles, validarLineas, existencias, kardexValorizado, configurarReposicion, registrarPrevision, planificar, crearConteo, aprobarConteo, crearAccion, avanzarAccion };
 })();

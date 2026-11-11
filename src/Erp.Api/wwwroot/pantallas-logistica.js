@@ -7,7 +7,7 @@ window.PantallasLogistica = c => {
   const compra = () => ["Compras", "Jefatura"].includes(actor()?.rol);
   const almacen = () => ["Almacén", "Jefatura"].includes(actor()?.rol);
   const transporte = () => ["Transporte", "Jefatura"].includes(actor()?.rol);
-  let modulo = "logistica", vistaActual = "resumen";
+  let modulo = "logistica", vistaActual = "resumen", productoKardex = "", evaluacionKardex = null;
   const permitir = roles => roles.includes(actor()?.rol);
   const b = (titulo, comando, id = "", clase = "boton") => `<button type="button" class="${clase}" data-log-accion="${comando}" data-id="${e(id)}">${e(titulo)}</button>`;
   const enlace = (titulo, destino) => `<button type="button" class="enlace-boton" data-log-vista="${e(destino)}">${e(titulo)}</button>`;
@@ -31,7 +31,7 @@ window.PantallasLogistica = c => {
   const secciones = {
     resumen: ["Inicio", "Inicio", ["Asesor", "Compras", "Almacén", "Transporte", "Jefatura"]],
     planificacion: ["Planificación", "Planificación", ["Compras", "Jefatura"]],
-    requisiciones: ["Necesidades", "Compras", ["Asesor", "Compras", "Almacén", "Jefatura"]],
+    requisiciones: ["Solicitudes de pedido", "Compras", ["Asesor", "Compras", "Almacén", "Jefatura"]],
     proveedores: ["Proveedores", "Compras", ["Compras", "Jefatura"]],
     peticionesOferta: ["Peticiones de oferta", "Compras", ["Compras", "Jefatura"]],
     ofertas: ["Comparación de ofertas", "Compras", ["Compras", "Jefatura"]],
@@ -39,15 +39,15 @@ window.PantallasLogistica = c => {
     ordenes: ["Órdenes de compra", "Compras", ["Compras", "Jefatura"]],
     facturas: ["Verificación de facturas", "Compras", ["Compras", "Jefatura"]],
     evaluaciones: ["Evaluación de proveedores", "Control", ["Compras", "Jefatura"]],
-    recepciones: ["Recepción y calidad", "Recepción", ["Almacén", "Jefatura"]],
+    recepciones: ["Órdenes de ingreso", "Recepción", ["Almacén", "Jefatura"]],
     tratamientos: ["Deterioro, reparación y bajas", "Recepción", ["Almacén", "Jefatura"]],
-    inventario: ["Existencias y movimientos", "Almacenes", ["Almacén", "Compras", "Jefatura"]],
+    inventario: ["Kardex valorizado", "Almacenes", ["Almacén", "Compras", "Jefatura"]],
     almacenes: ["Almacenes", "Almacenes", ["Almacén", "Compras", "Jefatura"]],
     ubicaciones: ["Ubicaciones", "Almacenes", ["Almacén", "Compras", "Jefatura"]],
     reubicaciones: ["Reubicaciones internas", "Almacenes", ["Almacén", "Jefatura"]],
     reservas: ["Reservas", "Distribución", ["Almacén", "Jefatura"]],
     picking: ["Picking y embalaje", "Distribución", ["Almacén", "Jefatura"]],
-    despachos: ["Despachos y entregas", "Distribución", ["Almacén", "Transporte", "Jefatura"]],
+    despachos: ["Órdenes de salida", "Distribución", ["Almacén", "Transporte", "Jefatura"]],
     retornos: ["Retornos y devoluciones", "Recepción", ["Almacén", "Jefatura"]],
     traslados: ["Traslados entre sedes", "Almacenes", ["Almacén", "Compras", "Jefatura"]],
     conteos: ["Inventario físico", "Almacenes", ["Almacén", "Jefatura"]],
@@ -97,12 +97,12 @@ window.PantallasLogistica = c => {
     const d = datos(), filas = propios(d[vista] || [], vista === "traslados");
     const nuevos = {
       proveedores: compra() ? b("+ Nuevo proveedor", "proveedor", "", "boton primario") : "",
-      requisiciones: b("+ Nueva necesidad", "requisicion", "", "boton primario"),
+      requisiciones: b("+ Nueva solicitud de pedido", "requisicion", "", "boton primario"),
       peticionesOferta: compra() ? b("+ Pedir ofertas", "peticion", "", "boton primario") : "",
       ofertas: compra() ? b("+ Registrar oferta", "oferta", "", "boton primario") : "",
       acuerdos: compra() ? b("+ Nuevo acuerdo", "acuerdo", "", "boton primario") : "",
-      ordenes: compra() ? b("+ Preparar orden", "orden", "", "boton primario") : "",
-      recepciones: almacen() ? b("+ Recibir mercancía", "recepcion", "", "boton primario") : "",
+      ordenes: compra() ? b("+ Preparar orden de compra", "orden", "", "boton primario") : "",
+      recepciones: almacen() ? b("+ Crear orden de ingreso", "recepcion", "", "boton primario") : "",
       tratamientos: almacen() ? b("+ Solicitar tratamiento", "tratamiento", "", "boton primario") : "",
       almacenes: jefatura() ? b("+ Nuevo almacén", "almacen", "", "boton primario") : "",
       ubicaciones: jefatura() ? b("+ Nueva ubicación", "ubicacion", "", "boton primario") : "",
@@ -110,7 +110,7 @@ window.PantallasLogistica = c => {
       facturas: compra() ? b("+ Verificar factura", "factura", "", "boton primario") : "",
       reservas: almacen() ? b("+ Reservar pedido", "reserva", "", "boton primario") : "",
       picking: almacen() ? b("+ Generar picking", "picking", "", "boton primario") : "",
-      despachos: almacen() ? b("+ Preparar despacho", "despacho", "", "boton primario") : "",
+      despachos: almacen() ? b("+ Crear orden de salida", "despacho", "", "boton primario") : "",
       retornos: almacen() ? b("+ Recibir devolución", "devolucion", "", "boton primario") : "",
       traslados: b("+ Solicitar traslado", "traslado", "", "boton primario"),
       conteos: b("+ Registrar conteo", "conteo", "", "boton primario"),
@@ -126,18 +126,32 @@ window.PantallasLogistica = c => {
 
   function resumen() {
     const d = datos();
-    const valores = [["Necesidades pendientes", propios(d.requisiciones).filter(r => r.estado === "Pendiente").length], ["Órdenes vigentes", propios(d.ordenes).filter(o => !["Anulada", "Rechazada"].includes(o.estado)).length], ["Recepciones por inspeccionar", propios(d.recepciones).filter(r => r.lineas.some(l => C.pendienteInspeccion(l) > 0)).length], ["Entregas en ruta", propios(d.despachos).filter(d => d.estado === "En ruta").length]];
+    const valores = [["Solicitudes de pedido pendientes", propios(d.requisiciones).filter(r => r.estado === "Pendiente").length], ["Órdenes vigentes", propios(d.ordenes).filter(o => !["Anulada", "Rechazada"].includes(o.estado)).length], ["Órdenes de ingreso por inspeccionar", propios(d.recepciones).filter(r => r.lineas.some(l => C.pendienteInspeccion(l) > 0)).length], ["Entregas en ruta", propios(d.despachos).filter(d => d.estado === "En ruta").length]];
     const grupos = Object.entries(secciones).filter(([id, s]) => id !== "resumen" && permitir(s[2]));
-    return cabecera("Panel logístico", "Necesidades, abastecimiento y operaciones de almacén conectadas con la venta.") + `<div class="indicadores">${valores.map(([titulo, cantidad]) => `<div class="tarjeta indicador"><small>${titulo}</small><strong>${cantidad}</strong></div>`).join("")}</div><div class="grupos">${[...new Set(grupos.map(([, s]) => s[1]))].map(grupo => `<section class="tarjeta grupo"><h2>${grupo}</h2>${grupos.filter(([, s]) => s[1] === grupo).map(([id, s]) => `<button type="button" data-log-vista="${id}">${s[0]} <span>→</span></button>`).join("")}</section>`).join("")}</div>`;
+    return cabecera("Panel logístico", "Solicitudes de pedido, compras e inventario conectados con las órdenes de salida.") + `<div class="indicadores">${valores.map(([titulo, cantidad]) => `<div class="tarjeta indicador"><small>${titulo}</small><strong>${cantidad}</strong></div>`).join("")}</div><div class="grupos">${[...new Set(grupos.map(([, s]) => s[1]))].map(grupo => `<section class="tarjeta grupo"><h2>${grupo}</h2>${grupos.filter(([, s]) => s[1] === grupo).map(([id, s]) => `<button type="button" data-log-vista="${id}">${s[0]} <span>→</span></button>`).join("")}</section>`).join("")}</div>`;
   }
 
   function inventario() {
-    const d = datos(), saldos = L.existencias(d, productos(), actor().sede);
+    if (evaluacionKardex) return vistaEvaluacionKardex();
+    const d = datos(), saldos = L.existencias(d, productos(), actor().sede), productosAprobados = productos().filter(p => p.estado === "Aprobado");
     const tabla = c.tabla("Existencias por almacén", ["Almacén", "Producto", "Físico", "Reservado", "Retenido por calidad", "Disponible", "Cuarentena", "Dañado", "En reparación"], saldos.map(s => `<tr><td>${e(nombreAlmacen(s.almacen))}</td><td>${e(nombreProducto(s.codigo))}</td><td>${s.fisico}</td><td>${s.reservado}</td><td>${s.retenido}</td><td>${s.disponible}</td><td>${s.cuarentena}</td><td>${s.danado}</td><td>${s.enReparacion}</td></tr>`));
-    const movimientos = propios(d.movimientos).slice().reverse();
-    return cabecera("Almacenes e inventarios", "Existencia disponible separada de reservas y calidad.", jefatura() ? b("Resolver cuarentena", "cuarentena") : "") + tabla + '<div class="separador-vista"></div>' + c.tabla("Kardex de movimientos", ["Movimiento", "Fecha", "Producto", "Ubicación / lote", "Estado", "Cantidad", "Referencia"], movimientos.map(m => `<tr><td>${e(m.numero)}<small>${e(m.tipo)}</small></td><td>${c.fechaCorta(m.fecha)}</td><td>${e(nombreProducto(m.codigo))}</td><td>${e(m.ubicacion)} / ${e(m.lote)}</td><td>${e(m.calidad)}</td><td>${m.cantidad > 0 ? "+" : ""}${m.cantidad}</td><td>${e(m.referencia)}</td></tr>`), false);
+    if (!productosAprobados.some(p => p.codigo === productoKardex)) productoKardex = productosAprobados[0]?.codigo || "";
+    const selector = campo("Producto de la tarjeta", "kardexProducto", select("kardexProducto", productosAprobados.map(p => [p.codigo, `${p.codigo} · ${p.nombre}`]), productoKardex, 'data-kardex-producto'));
+    const kardex = L.kardexValorizado(d, productos(), actor().sede).filter(m => m.codigo === productoKardex).slice().reverse();
+    const botones = (jefatura() ? b("Resolver cuarentena", "cuarentena") : "") + b("Ejecutar escenario de evaluación", "evaluacion-kardex");
+    return cabecera("Kardex valorizado", "Existencias por almacén y tarjeta cronológica del producto seleccionado.", botones) + tabla + '<div class="separador-vista"></div>' + `<section class="tarjeta"><div class="barra-tabla"><h2>Kardex valorizado</h2>${selector}</div><p class="texto-suave">Método aplicado: promedio ponderado móvil por producto y sede.</p><div class="tabla-desplazable"><table class="kardex-valorizado"><thead><tr><th scope="col" rowspan="2">Fecha</th><th scope="col" rowspan="2">Tipo de movimiento</th><th scope="colgroup" colspan="3">Entradas</th><th scope="colgroup" colspan="3">Salidas</th><th scope="colgroup" colspan="3">Saldos finales</th><th scope="col" rowspan="2">Almacén</th><th scope="col" rowspan="2">Ubicación / lote</th><th scope="col" rowspan="2">Estado</th><th scope="col" rowspan="2">Documento</th></tr><tr><th scope="col">Cantidad</th><th scope="col">Costo unitario</th><th scope="col">Costo total</th><th scope="col">Cantidad</th><th scope="col">Costo unitario</th><th scope="col">Costo total</th><th scope="col">Cantidad</th><th scope="col">Costo unitario</th><th scope="col">Costo total</th></tr></thead><tbody>${kardex.map(m => `<tr><td>${c.fechaCorta(m.fecha)}</td><td>${e(m.tipo)}</td>${m.cantidad > 0 ? `<td>${m.cantidad}</td><td class="numero">${monedas(m.costoUnitarioMovimiento)}</td><td class="numero">${monedas(m.importeMovimiento)}</td><td>—</td><td>—</td><td>—</td>` : `<td>—</td><td>—</td><td>—</td><td>${Math.abs(m.cantidad)}</td><td class="numero">${monedas(m.costoUnitarioMovimiento)}</td><td class="numero">${monedas(Math.abs(m.importeMovimiento))}</td>`}<td>${m.saldoFinalCantidad}</td><td class="numero">${monedas(m.costoUnitarioFinal)}</td><td class="numero">${monedas(m.saldoFinal)}</td><td>${e(nombreAlmacen(m.almacen))}</td><td>${e(m.ubicacion)} / ${e(m.lote)}</td><td>${e(m.calidad)}</td><td>${e(m.referencia || m.numero)}</td></tr>`).join("") || '<tr><td colspan="15" class="vacio">No hay movimientos para este producto en la sede.</td></tr>'}</tbody></table></div></section>`;
   }
 
+  function vistaEvaluacionKardex() {
+    const r = evaluacionKardex, resumen = r.salida;
+    const filas = r.movimientos.map(m => `<tr><td>${c.fechaCorta(m.fecha)}</td><td>${e(m.tipo)}</td>${m.cantidad > 0 ? `<td>${m.cantidad}</td><td class="numero">${monedas(m.costoUnitarioMovimiento)}</td><td class="numero">${monedas(m.importeMovimiento)}</td><td>—</td><td>—</td><td>—</td>` : `<td>—</td><td>—</td><td>—</td><td>${Math.abs(m.cantidad)}</td><td class="numero">${monedas(m.costoUnitarioMovimiento)}</td><td class="numero">${monedas(Math.abs(m.importeMovimiento))}</td>`}<td>${m.saldoFinalCantidad}</td><td class="numero">${monedas(m.costoUnitarioFinal)}</td><td class="numero">${monedas(m.saldoFinal)}</td><td>${e(m.almacen)}</td><td>${e(m.ubicacion)} / ${e(m.lote)}</td><td>${e(m.calidad)}</td><td>${e(m.referencia)}</td></tr>`).join("");
+    const documentos = r.documentos;
+    return cabecera("Escenario de evaluación del Kardex", "Recorrido ficticio ejecutado con las reglas del ERP. No se guarda en tus operaciones.", b("Volver al Kardex de la aplicación", "cerrar-evaluacion-kardex")) +
+      `<div class="aviso-evaluacion"><strong>Datos temporales de evaluación.</strong> Las aprobaciones, oferta, factura, pedido y constancia son ficticios. Esta vista no modifica inventario ni localStorage de la aplicación.</div>
+      <div class="indicadores"><div class="tarjeta indicador"><small>Método</small><strong>${e(r.metodo)}</strong></div><div class="tarjeta indicador"><small>Saldo inicial</small><strong>12 · ${monedas(1260000)}</strong></div><div class="tarjeta indicador"><small>Costo unitario de salida</small><strong>${monedas(resumen.costoUnitarioMovimiento)}</strong></div><div class="tarjeta indicador"><small>Saldo final</small><strong>${resumen.saldoFinalCantidad} · ${monedas(resumen.saldoFinal)}</strong></div></div>
+      <section class="tarjeta"><h2>Movimientos de ${e(r.producto)} · ${e(r.sede)}</h2><div class="tabla-desplazable"><table class="kardex-valorizado"><thead><tr><th rowspan="2">Fecha</th><th rowspan="2">Tipo de movimiento</th><th colspan="3">Entradas</th><th colspan="3">Salidas</th><th colspan="3">Saldos finales</th><th rowspan="2">Almacén</th><th rowspan="2">Ubicación / lote</th><th rowspan="2">Estado</th><th rowspan="2">Documento</th></tr><tr><th>Cantidad</th><th>Costo unitario</th><th>Costo total</th><th>Cantidad</th><th>Costo unitario</th><th>Costo total</th><th>Cantidad</th><th>Costo unitario</th><th>Costo total</th></tr></thead><tbody>${filas}</tbody></table></div></section>
+      <section class="tarjeta"><h2>Trazabilidad de la evaluación</h2><ol>${r.trazabilidad.map(x => `<li>${e(x)}</li>`).join("")}</ol><p class="texto-suave">Referencia clave de la salida: ${e(resumen.numero)} → ${e(documentos.despacho.numero)}. La factura quedó verificada, sin registrar pago.</p><p class="texto-suave">Prueba este mismo escenario otra vez con el botón del Kardex; cada ejecución crea una copia temporal separada.</p></section>`;
+  }
   function planificacion() {
     const d = datos(), periodo = hoy().slice(0, 7);
     const plan = L.planificar(d, productos(), A.pedidos(actor().sede), A.config, actor().sede, periodo);
@@ -219,7 +233,7 @@ window.PantallasLogistica = c => {
     }
     if (vista === "proveedores" && compra() && r.estado === "Aprobado" && !r.propuesta) html += b("Proponer actualización", "proveedor", r.id);
     if (vista === "proveedores" && jefatura() && (r.estado === "Pendiente" || r.propuesta)) html += b("Aprobar", "aprobar-proveedor", r.id) + b("Rechazar", "rechazar-proveedor", r.id);
-    if (vista === "requisiciones" && jefatura() && r.estado === "Pendiente") html += b("Aprobar necesidad", "aprobar-requisicion", r.id) + b("Rechazar", "rechazar-requisicion", r.id);
+    if (vista === "requisiciones" && jefatura() && r.estado === "Pendiente") html += b("Aprobar solicitud de pedido", "aprobar-requisicion", r.id) + b("Rechazar", "rechazar-requisicion", r.id);
     if (vista === "ofertas" && jefatura() && r.estado === "Recibida") html += b("Adjudicar proveedor", "adjudicar", r.id);
     if (vista === "acuerdos" && jefatura() && r.estado === "Pendiente") html += b("Aprobar acuerdo", "aprobar-acuerdo", r.id) + b("Rechazar", "rechazar-acuerdo", r.id);
     if (vista === "ordenes") {
@@ -288,7 +302,7 @@ window.PantallasLogistica = c => {
 
   function requisicionFormulario(precarga) {
     const lineas = precarga?.lineas || [];
-    formulario("Nueva necesidad", `<div class="campos">${campo("Almacén receptor", "almacen", selectorAlmacen())}${campo("Fecha requerida", "requerida", fecha("requerida", c.sumarDias(hoy(), 7)))}</div>${razon}${filasProducto(lineas)}`, (d, s, f) => C.crearRequisicion(d, { almacen: f.get("almacen"), requerida: f.get("requerida"), motivo: f.get("motivo"), origenPedido: precarga?.pedidoId || null, lineas: leerLineas(f) }, actor(), s.productos), "requisiciones");
+    formulario("Nueva solicitud de pedido", `<div class="campos">${campo("Almacén receptor", "almacen", selectorAlmacen())}${campo("Fecha requerida", "requerida", fecha("requerida", c.sumarDias(hoy(), 7)))}</div>${razon}${filasProducto(lineas)}`, (d, s, f) => C.crearRequisicion(d, { almacen: f.get("almacen"), requerida: f.get("requerida"), motivo: f.get("motivo"), origenPedido: precarga?.pedidoId || null, lineas: leerLineas(f) }, actor(), s.productos), "requisiciones");
   }
 
   function peticionFormulario() {
@@ -316,7 +330,7 @@ window.PantallasLogistica = c => {
 
   function recepcionFormulario() {
     const d = datos();
-    formulario("Recepción de mercancía", `<div class="campos">${campo("Orden de compra", "ordenId", selectDocumento("ordenId", d.ordenes, o => ["Emitida", "Confirmada", "Parcialmente recibida", "Recibida"].includes(o.estado)))}${campo("Documento de proveedor", "documento", input("documento"))}${campo("Fecha", "fecha", fecha("fecha"))}${campo("Lote / identificación", "lote", input("lote"))}</div><div id="log-detalle"></div>`, (actuales, s, f) => C.recibir(actuales, { ordenId: f.get("ordenId"), documento: f.get("documento").trim(), fecha: f.get("fecha"), lote: f.get("lote").trim(), lineas: leerLineas(f) }, actor(), s.config), "recepciones");
+    formulario("Orden de ingreso", `<div class="campos">${campo("Orden de compra", "ordenId", selectDocumento("ordenId", d.ordenes, o => ["Emitida", "Confirmada", "Parcialmente recibida", "Recibida"].includes(o.estado)))}${campo("Documento de proveedor", "documento", input("documento"))}${campo("Fecha", "fecha", fecha("fecha"))}${campo("Lote / identificación", "lote", input("lote"))}</div><div id="log-detalle"></div>`, (actuales, s, f) => C.recibir(actuales, { ordenId: f.get("ordenId"), documento: f.get("documento").trim(), fecha: f.get("fecha"), lote: f.get("lote").trim(), lineas: leerLineas(f) }, actor(), s.config), "recepciones");
     enlazarDetalle("ordenId", id => { const o = d.ordenes.find(o => o.id === id); c.$("#log-detalle").innerHTML = o ? filasProducto(o.lineas.map(l => ({ ...l, cantidad: l.cantidad - C.recibido(d, o.id, l.codigo) })).filter(l => l.cantidad > 0), false, true, true) : ""; });
   }
 
@@ -358,7 +372,7 @@ window.PantallasLogistica = c => {
 
   function despachoFormulario() {
     const d = datos();
-    formulario("Preparar despacho y salida", campo("Picking embalado", "pickingId", selectDocumento("pickingId", d.picking, p => p.estado === "Embalado")) + `<div class="campos">${campo("Fecha de salida", "fecha", fecha("fecha"))}${campo("Transportista / conductor", "transportista", input("transportista"))}${campo("Placa de vehículo", "placa", input("placa", "", 'maxlength="15" required'))}${campo("Destino del pedido", "destino", input("destino", "", "readonly required"))}</div>`, (actuales, s, f) => D.crearDespacho(actuales, Object.fromEntries(f), actor(), s.pedidos, s.config), "despachos");
+    formulario("Orden de salida", campo("Picking embalado", "pickingId", selectDocumento("pickingId", d.picking, p => p.estado === "Embalado")) + `<div class="campos">${campo("Fecha de salida", "fecha", fecha("fecha"))}${campo("Transportista / conductor", "transportista", input("transportista"))}${campo("Placa de vehículo", "placa", input("placa", "", 'maxlength="15" required'))}${campo("Destino del pedido", "destino", input("destino", "", "readonly required"))}</div>`, (actuales, s, f) => D.crearDespacho(actuales, Object.fromEntries(f), actor(), s.pedidos, s.config), "despachos");
     enlazarDetalle("pickingId", id => { const p = d.picking.find(p => p.id === id); c.$("#log-destino").value = A.pedidos(actor().sede).find(pedido => pedido.id === p?.pedidoId)?.cliente.direccion || ""; });
   }
 
@@ -452,6 +466,8 @@ window.PantallasLogistica = c => {
     };
     if (decisiones[nombre]) { const [col, resolver] = decisiones[nombre]; decidir("Revisión logística", col, id, resolver); return; }
     const comandos = { proveedor: () => proveedorFormulario(id), requisicion: () => requisicionFormulario(), peticion: peticionFormulario, oferta: ofertaFormulario, acuerdo: acuerdoFormulario, orden: ordenFormulario, recepcion: recepcionFormulario, inspeccion: () => inspeccionFormulario(id), factura: facturaFormulario,
+      "evaluacion-kardex": () => { evaluacionKardex = window.EvaluacionKardex.ejecutar(hoy()); ir("inventario"); },
+      "cerrar-evaluacion-kardex": () => { evaluacionKardex = null; ir("inventario"); },
       imprimir: () => window.print(), "emitir-orden": () => { ejecutar(d => C.emitirOrden(d, id, actor(), hoy())); ir(`ordenes/${id}`); },
       "revalidar-factura": () => { ejecutar((d, s) => C.revalidarFactura(d, id, actor(), s.config)); ir(`facturas/${id}`); },
       "agregar-linea": () => { const lista = c.$("#log-lineas"); lista.insertAdjacentHTML("beforeend", filaProducto({}, lista.dataset.precios === "true", false)); },
@@ -471,6 +487,10 @@ window.PantallasLogistica = c => {
 
   const formulariosAlmacen = window.FormulariosAlmacen({ c, A, L, M, actor, datos, e, campo, input, fecha, select, selectSimple, selectorAlmacen, selectorUbicacion, formulario, razon, enlazarCalidad, opcion, nombreProducto, opcionesUbicacion });
 
+  document.addEventListener("change", evento => {
+    const selector = evento.target.closest("[data-kardex-producto]"); if (!selector) return;
+    productoKardex = selector.value; c.navegar(`${modulo}/inventario`);
+  });
   document.addEventListener("click", evento => {
     const boton = evento.target.closest("[data-log-accion], [data-log-vista]"); if (!boton || !actor()) return;
     if (boton.dataset.logVista) { ir(boton.dataset.logVista); return; }
