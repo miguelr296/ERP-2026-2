@@ -45,6 +45,13 @@ Registrar aquí solo actividades realizadas y comprobadas durante esta nueva eta
 - Versión final: repetición de las pruebas de reglas, **100/100 superadas**, 0 fallidas/omitidas. Conserva la evidencia de navegador ya ejecutada sobre este código: 49 Logística y 56 Comercial, sin excepciones, impresión A4. Documentación vinculada a #118; el PR incluirá `Closes #118` y solicitará revisión de Miguel.
 - Confirmación manual y tiempo real de Logística solicitados a Luis, todavía pendientes. No se inventan horas ni se convierte la evidencia automatizada en revisión personal. El borrador histórico COM-009, appsettings local y los informes TRX anteriores quedan fuera del commit.
 
+### 2026-11-11 · Luis · Confirmación del cierre de Logística · 1 h real total
+
+- Luis confirmó **1 hora (60 minutos) invertida en Logística**, independiente de Comercial; no se acumula otra hora al tiempo pendiente de la sesión anterior ni por registrar esta confirmación.
+- Revisión personal declarada: pantallas de Luis/Asesor, Compras, Despachos y Jefatura. Se registra con ese alcance, sin atribuirle cada caso automatizado, la impresión física ni todo el guion manual.
+- Publicación comprobada: [PR #119](https://github.com/miguelr296/ERP-2026-2/pull/119), commit inicial `db40d44`, en el principal de Miguel desde `luis/logistica`, con `Closes #118`, sin conflictos y revisión solicitada a miguelr296. La [tarjeta #118](https://github.com/miguelr296/ERP-2026-2/issues/118) sigue abierta. Esta actualización incorpora la confirmación a documentación y descripciones, conservando la evidencia automatizada previa.
+- Sin cambios de código funcional; revisión de Miguel e integración pendientes, sin fusión ni Done. COM-009 y la configuración local permanecen fuera.
+
 ### Plantilla
 
 Fecha · Persona · Trabajo realizado

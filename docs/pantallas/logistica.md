@@ -64,9 +64,11 @@ Usar documentos ficticios únicos para no repetir los ya guardados. No borrar el
 
 ## Límites concretos
 
+Confirmación personal de Luis: **1 hora real (60 minutos)** dedicada a Logística y revisión de las pantallas de Luis/Asesor, Compras, Despachos y Jefatura. Esta declaración es distinta de las comprobaciones automatizadas anteriores; no confirma individualmente todos sus casos.
+
 - Persistencia y correlativos por navegador; comandos secuenciales sobre copia con una escritura final, sin transacciones distribuidas ni garantía entre pestañas/equipos. Los datos del sitio no son una base compartida.
 - Tres almacenes configurados, uno por sede; posiciones y capacidades en unidades. La previsión es una comparación de demanda/saldo/entradas, no un optimizador ni pronóstico estadístico.
 - La inspección resuelve la recepción completa. Los no conformes se devuelven al proveedor; no se implementan reparaciones, eliminación física, inspección parcial por línea ni fabricación/subcontratación industrial. El conteo cubre stock Disponible, no la existencia en cuarentena/dañada.
 - Lotes y costes sirven a trazabilidad; no hay cálculo contable de valorización. Guías internas, sin emisión tributaria/SUNAT, geolocalización, transporte contratado ni envío automático a proveedores.
 - Crédito, facturas de venta y ajustes financieros conservan respuestas de contrato pendientes de sus módulos. No hay cobro, pago, nota de crédito ni asiento producido por Logística. El cotejo de proveedor entrega evidencia a Finanzas.
-- Luis autorizó crear la [tarjeta #118](https://github.com/miguelr296/ERP-2026-2/issues/118) y su PR. Pendientes: confirmación de revisión manual/tiempo real de Luis y revisión/integración de Miguel. No se marca Done.
+- [Tarjeta #118](https://github.com/miguelr296/ERP-2026-2/issues/118) y [PR #119](https://github.com/miguelr296/ERP-2026-2/pull/119) publicados con autorización de Luis. Revisión de Miguel e integración pendientes; no se marca Done.
