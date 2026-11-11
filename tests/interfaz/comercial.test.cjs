@@ -202,7 +202,7 @@ test("no se autoriza anulación si llegó una entrega desde otro módulo", () =>
   const t = entorno(), p = pedido(t);
   const s = t.r.crearSolicitud(t.datos, { pedidoId: p.id, tipo: "Anulación", motivo: "Cliente desiste" }, asesor);
   t.respuestas.entregas[p.id] = [{ id: "externa", numero: "GRE-9", lineas: [] }];
-  assert.throws(() => t.r.resolverSolicitud(t.datos, s.id, true, "Revisado", jefatura, t.puertos), /entregas o facturas/);
+  assert.throws(() => t.r.resolverSolicitud(t.datos, s.id, true, "Revisado", jefatura, t.puertos), /entregas.*facturas/);
   assert.equal(p.estado, "Borrador");
 });
 test("devolución no excede entregas ni cantidades ya solicitadas", () => {

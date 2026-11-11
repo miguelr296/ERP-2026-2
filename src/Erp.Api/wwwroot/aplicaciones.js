@@ -26,12 +26,12 @@
 
   const modulos = [
     { id: "comercial", nombre: "Comercial", icono: "ventas", color: "#d68743", descripcion: "Clientes y ventas" },
-    { id: "inventarios", nombre: "Inventarios", icono: "caja", color: "#50889a" },
-    { id: "despachos", nombre: "Despachos", icono: "camion", color: "#589c89" },
+    { id: "logistica", nombre: "Logística", icono: "caja", color: "#50889a", descripcion: "Inventarios y operaciones" },
+    { id: "despachos", nombre: "Despachos", icono: "camion", color: "#589c89", descripcion: "Preparación y entregas" },
     { id: "finanzas", nombre: "Finanzas", icono: "finanzas", color: "#aa70a1" },
     { id: "facturacion", nombre: "Facturación", icono: "documento", color: "#d59946" },
     { id: "contabilidad", nombre: "Contabilidad", icono: "libro", color: "#687fa7" },
-    { id: "compras", nombre: "Compras", icono: "compra", color: "#559694" },
+    { id: "compras", nombre: "Compras", icono: "compra", color: "#559694", descripcion: "Proveedores y abastecimiento" },
     { id: "reportes", nombre: "Reportes", icono: "ventas", color: "#b57479" }
   ];
   const secciones = { resumen: "Inicio", clientes: "Clientes", oportunidades: "Oportunidades", cotizaciones: "Cotizaciones", pedidos: "Pedidos", catalogo: "Catálogo", precios: "Precios", aprobaciones: "Aprobaciones", solicitudes: "Postventa", indicadores: "Indicadores" };
@@ -112,6 +112,7 @@
     let partes;
     try { partes = location.hash.slice(1).split("/").map(decodeURIComponent); }
     catch { partes = ["aplicaciones"]; }
+    if (partes[0] === "inventarios") partes[0] = "logistica";
     const modulo = modulos.find(item => item.id === partes[0]);
     $("#aplicaciones").hidden = Boolean(modulo);
     $("#area").hidden = !modulo;
@@ -122,6 +123,8 @@
       return;
     }
     $("#nombre-modulo").textContent = modulo.nombre;
+    if (["logistica", "compras", "despachos"].includes(modulo.id)) { logistica.dibujar(modulo.id, partes); return; }
+    $("#navegacion").setAttribute("aria-label", "Secciones de Comercial");
     const habilitado = modulo.id === "comercial" && puedeComercial() && datos;
     $("#accesos-rapidos").hidden = !habilitado;
     $("#navegacion").innerHTML = habilitado ? Object.entries(secciones).map(([id, texto]) => `<button type="button" data-vista="${id}" ${id === (partes[1] || "resumen") ? 'aria-current="page"' : ""}>${id === "resumen" ? icono("casa") : ""}${texto}</button>`).join("") : `<button type="button" aria-current="page">${modulo.nombre}</button>`;
@@ -150,7 +153,7 @@
   }
 
   function tabla(titulo, columnas, filas, buscar = true) {
-    return `<section class="tarjeta"><div class="barra-tabla"><h2>${esc(titulo)}</h2>${buscar ? '<label class="solo-lectores" for="filtro-tabla">Buscar en la tabla</label><input id="filtro-tabla" type="search" placeholder="Buscar en esta vista…">' : ""}</div><div class="tabla-desplazable"><table><thead><tr>${columnas.map(columna => `<th scope="col">${columna}</th>`).join("")}</tr></thead><tbody>${filas.join("") || `<tr><td colspan="${columnas.length}" class="vacio">No hay registros en esta vista.</td></tr>`}</tbody></table></div><p id="tabla-sin-resultados" class="vacio" hidden>No se encontraron coincidencias.</p></section>`;
+    return `<section class="tarjeta"><div class="barra-tabla"><h2>${esc(titulo)}</h2>${buscar ? '<label class="solo-lectores" for="filtro-tabla">Buscar en la tabla</label><input id="filtro-tabla" type="search" placeholder="Buscar en esta vista…">' : ""}</div><div class="tabla-desplazable"><table><thead><tr>${columnas.map(columna => `<th scope="col">${columna}</th>`).join("")}</tr></thead><tbody>${filas.join("") || `<tr><td colspan="${columnas.length}" class="vacio">No hay registros en esta vista.</td></tr>`}</tbody></table></div>${buscar ? '<p id="tabla-sin-resultados" class="vacio" hidden>No se encontraron coincidencias.</p>' : ""}</section>`;
   }
 
   function filasOportunidades(lista) {
@@ -327,12 +330,25 @@
 
   function verCliente(id) { ampliacion.verCliente(id); }
 
-  const ampliacion = window.PantallasComerciales({
+  const contextoPantallas = {
     get datos() { return datos; }, get sesion() { return sesion; }, configuracion, reglas,
     $, esc, moneda, sedeNombre, fechaHoy, fechaCorta, fechaTexto, accion, enlace, opciones,
     cabecera, tabla, etiqueta, formulario, abrirModal, guardarCambios, navegar, aviso,
-    detalleLineas, totales, mostrarHistorial, prepararImpresion, sumarDias
-  });
+    detalleLineas, totales, mostrarHistorial, prepararImpresion, sumarDias,
+    solicitarAbastecimiento(pedido) { logistica.solicitarDesdeComercial(pedido); }
+  };
+  const ampliacion = window.PantallasComerciales(contextoPantallas);
+  const logistica = window.PantallasLogistica(contextoPantallas);
+
+  // Contratos públicos de solo consulta para las áreas que consumen documentos comerciales.
+  window.ContratosComerciales = {
+    listarProductos() { return structuredClone(leerDatos().productos); },
+    listarPedidos(sede) { return structuredClone(leerDatos().pedidos.filter(p => !sede || p.sede === sede)); },
+    listarDevoluciones(sede) {
+      const actuales = leerDatos();
+      return actuales.solicitudes.filter(s => s.tipo === "Devolución" && (!sede || s.sede === sede)).map(s => ({ ...structuredClone(s), lineas: s.lineas.map(l => ({ ...l, nombre: actuales.pedidos.find(p => p.id === s.pedidoId)?.lineas.find(pl => pl.codigo === l.codigo)?.nombre, coste: actuales.pedidos.find(p => p.id === s.pedidoId)?.lineas.find(pl => pl.codigo === l.codigo)?.coste || 0 })) }));
+    }
+  };
 
   document.addEventListener("click", eventoClick => {
     const boton = eventoClick.target.closest("[data-accion], [data-vista], [data-modulo]");
@@ -412,7 +428,7 @@
   });
   window.addEventListener("hashchange", dibujarRuta);
   window.addEventListener("storage", eventoStorage => {
-    if (eventoStorage.key === CLAVE_DATOS && sesion) { cargarDatos(); dibujarRuta(); aviso("Datos actualizados desde otra pestaña."); }
+    if ([CLAVE_DATOS, window.LogisticaAplicacion.CLAVE].includes(eventoStorage.key) && sesion) { cargarDatos(); dibujarRuta(); aviso("Datos actualizados desde otra pestaña."); }
   });
   try {
     const anterior = JSON.parse(sessionStorage.getItem(CLAVE_SESION));

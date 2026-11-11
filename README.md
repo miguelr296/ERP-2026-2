@@ -1,6 +1,6 @@
 # ERP FAMIHOGAR
 
-Interfaz para una mueblería retail con varias sedes, desarrollada con HTML, CSS y JavaScript. La fuente funcional es [Sesión 06 — Sistema de Gestión Comercial](docs/fuentes/sesion-06-sistema-gestion-comercial.pdf); Bartolito ERP aporta la referencia visual y de navegación.
+Interfaz para una mueblería retail con varias sedes, desarrollada con HTML, CSS y JavaScript. Fuentes funcionales: [Sesión 06 — Gestión Comercial](docs/fuentes/sesion-06-sistema-gestion-comercial.pdf) y [Sesión 10 — Gestión Logística](docs/fuentes/sesion-10-gestion-logistica.pdf). Bartolito ERP aporta la referencia visual y de navegación.
 
 ## Abrir las pantallas
 
@@ -10,13 +10,15 @@ Desde la raíz del repositorio:
 python -m http.server 5300 --bind 127.0.0.1 --directory src/Erp.Api/wwwroot
 ```
 
-Abrir `http://localhost:5300/`, elegir usuario, rol y sede. Asesor y Jefatura acceden a Comercial. Las demás áreas muestran su estado de desarrollo. Los registros comerciales se guardan en el navegador; no se comparten entre equipos.
+Abrir `http://localhost:5300/`, elegir usuario, rol y sede. Asesor y Jefatura acceden a Comercial. Compras, Almacén, Transporte y Jefatura operan sus procesos de Logística; Asesor puede solicitar abastecimiento. Las otras áreas muestran su estado de desarrollo. Los registros se guardan en el navegador; no se comparten entre equipos.
 
 ## Recorrido disponible
 
-Aplicaciones → Comercial → Clientes y productos revisados → Oportunidades → Cotizaciones → Controles/aprobación de pedidos → Seguimiento y postventa. Incluye precios por canal, promociones, descuentos, indicadores y fichas imprimibles. Cobros, reservas, salidas, comprobantes y asientos quedan en sus módulos; Comercial consume sus [contratos de consulta locales](docs/contratos/integracion-comercial.md).
+Aplicaciones → Comercial → Clientes y productos revisados → Oportunidades → Cotizaciones → Controles/aprobación de pedidos → Seguimiento y postventa. Incluye precios por canal, promociones, descuentos, indicadores y fichas imprimibles. Comercial consume [contratos públicos](docs/contratos/integracion-comercial.md).
 
-La [tarjeta #116](https://github.com/miguelr296/ERP-2026-2/issues/116) corresponde al nuevo enfoque. Revisión e integración pendientes; no se cierran automáticamente tarjetas anteriores con criterios de API.
+Aplicaciones → Logística/Compras/Despachos → Necesidades → Ofertas y OC → Recepción/calidad → Inventario → Reserva/picking/embalaje → Salida/entrega. Incluye retornos, traslados, conteos, cotejo de factura, evaluación e indicadores. [Guion por rol y límites](docs/pantallas/logistica.md) · [Reglas](docs/reglas-logisticas.md) · [Contratos](docs/contratos/integracion-logistica.md).
+
+Comercial (#116) fue integrado por Miguel en el [PR #117](https://github.com/miguelr296/ERP-2026-2/pull/117). Logística corresponde a la [tarjeta #118](https://github.com/miguelr296/ERP-2026-2/issues/118), con implementación y validación local para revisión; PR autorizado, revisión e integración pendientes. No se cierran automáticamente tarjetas anteriores con criterios de API. Cobros/pagos, comprobantes y asientos siguen a cargo de sus áreas.
 
 ## Cómo leer este repositorio
 
@@ -24,8 +26,8 @@ La [tarjeta #116](https://github.com/miguelr296/ERP-2026-2/issues/116) correspon
 2. Lee `docs/decisiones.md` para conocer los acuerdos vigentes.
 3. Lee `BITACORA.md` para consultar el trabajo comprobado.
 4. Consulta la [fuente y su uso](docs/fuentes/README.md) antes de definir reglas o recorridos.
-5. Revisa el [alcance, separación de módulos y guía de comprobación](docs/pantallas/comercial.md).
-6. La entrada es `src/Erp.Api/wwwroot/index.html`; parámetros y datos iniciales están en `datos-comercial.js`.
+5. Revisa los guiones de [Comercial](docs/pantallas/comercial.md) y [Logística](docs/pantallas/logistica.md).
+6. La entrada es `src/Erp.Api/wwwroot/index.html`; parámetros y datos iniciales están en `datos-comercial.js` y `datos-logistica.js`.
 7. Consulta las [reglas y pruebas](docs/reglas-comerciales.md), el [glosario](docs/glosario.md) y la [preparación del PR](docs/borradores/interfaz-comercial-pr.md).
 
 ## Validación
@@ -34,9 +36,10 @@ Reglas con Node.js, sin dependencias adicionales:
 
 ```powershell
 node --test --test-isolation=none tests/interfaz/comercial.test.cjs
+node --test --test-isolation=none tests/interfaz/logistica.test.cjs
 ```
 
-Resultado local: **46 superadas, 0 fallidas, 0 omitidas**. El aislamiento de procesos del runner falló con EPERM en el entorno restringido; el comando anterior ejecuta los casos en el mismo proceso.
+Resultado local: **46 Comercial + 54 Logística = 100 superadas, 0 fallidas, 0 omitidas**. El aislamiento de procesos del runner falló con EPERM en el entorno restringido; los comandos anteriores ejecutan los casos en el mismo proceso.
 
 Para la prueba de pantalla, dejar el servidor estático activo e iniciar un Chrome headless de prueba con perfil temporal:
 
@@ -44,9 +47,10 @@ Para la prueba de pantalla, dejar el servidor estático activo e iniciar un Chro
 $perfilPruebas = Join-Path $env:TEMP ('famihogar-pruebas-' + [guid]::NewGuid().ToString('N'))
 Start-Process -FilePath 'C:\Program Files\Google\Chrome\Application\chrome.exe' -ArgumentList @('--headless=new', '--disable-extensions', '--remote-debugging-address=127.0.0.1', '--remote-debugging-port=9245', "--user-data-dir=$perfilPruebas", '--no-first-run', 'about:blank') -WindowStyle Hidden
 node tests/interfaz/navegador.cjs 9245
+node tests/interfaz/logistica-navegador.cjs 9245
 ```
 
-Si Chrome está en otra carpeta, ajustar su ruta. El script exige headless, crea su propio contexto y lo elimina al terminar. Resultado local: **54 comprobaciones, 0 excepciones JavaScript**, ficha A4 de una página. Capturas y PDF se guardan en `%TEMP%/famihogar-comercial-validacion`, fuera del repositorio. No se afirma CI: el reinicio de Miguel retiró el workflow anterior.
+Si Chrome está en otra carpeta, ajustar su ruta. Cada script exige headless, crea su propio contexto y lo elimina al terminar. Resultado local: **56 comprobaciones Comercial y 49 Logística, 0 excepciones JavaScript**; cotización y despacho de prueba, cada uno en A4 de una página. Capturas/PDF/resultados en `%TEMP%/famihogar-comercial-validacion` y `%TEMP%/famihogar-logistica-validacion`, fuera del repositorio. Se ejecutaron en el puerto de depuración 9246; los comandos aceptan el puerto como argumento. Cerrar únicamente ese navegador de prueba al terminar. No se afirma CI: el reinicio de Miguel retiró el workflow anterior.
 
 ## Flujo
 

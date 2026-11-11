@@ -17,6 +17,7 @@ window.FAMIHOGAR_RESPUESTAS = {
 
 window.IntegracionesComerciales = {
   consultarDisponibilidad(pedido) {
+    if (window.ContratosLogisticos) return window.ContratosLogisticos.consultarDisponibilidad(pedido);
     const stock = window.FAMIHOGAR_RESPUESTAS.inventarios[pedido.sede];
     return {
       origen: "Inventarios · respuesta local", consultadoEn: new Date().toISOString(),
@@ -28,6 +29,7 @@ window.IntegracionesComerciales = {
     return { origen: "Finanzas · respuesta local", consultadoEn: new Date().toISOString(), datos: respuesta ? structuredClone(respuesta) : null };
   },
   consultarSeguimiento(pedidoId) {
+    if (window.ContratosLogisticos) return { ...window.ContratosLogisticos.consultarSeguimiento(pedidoId), facturas: structuredClone(window.FAMIHOGAR_RESPUESTAS.facturas[pedidoId] || []) };
     return {
       origen: "Despachos / Facturación · respuesta local", consultadoEn: new Date().toISOString(),
       entregas: structuredClone(window.FAMIHOGAR_RESPUESTAS.entregas[pedidoId] || []),
@@ -35,6 +37,7 @@ window.IntegracionesComerciales = {
     };
   },
   consultarDevolucion(solicitudId) {
+    if (window.ContratosLogisticos) return { origen: "Logística / Facturación / Finanzas", ...structuredClone(window.FAMIHOGAR_RESPUESTAS.devoluciones[solicitudId] || {}), ...window.ContratosLogisticos.consultarRecepcionDevolucion(solicitudId) };
     return { origen: "Inventarios / Facturación / Finanzas · respuesta local", ...structuredClone(window.FAMIHOGAR_RESPUESTAS.devoluciones[solicitudId] || {}) };
   }
 };
