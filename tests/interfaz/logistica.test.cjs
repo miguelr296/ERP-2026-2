@@ -17,12 +17,12 @@ function entorno() {
   const memoria = new Map();
   const localStorage = { getItem: k => memoria.get(k) || null, setItem: (k, v) => memoria.set(k, v) };
   const ctx = vm.createContext({ window: {}, structuredClone, crypto: webcrypto, Date, localStorage });
-  for (const f of ["datos-comercial.js", "reglas-comerciales.js", "datos-logistica.js", "logistica-reglas.js", "compras-reglas.js", "distribucion-reglas.js"]) vm.runInContext(fs.readFileSync(path.join(raiz, f), "utf8"), ctx, { filename: f });
+  for (const f of ["datos-comercial.js", "reglas-comerciales.js", "datos-logistica.js", "logistica-reglas.js", "compras-reglas.js", "almacenes-reglas.js", "distribucion-reglas.js"]) vm.runInContext(fs.readFileSync(path.join(raiz, f), "utf8"), ctx, { filename: f });
   const w = ctx.window, comercial = w.ReglasComerciales.prepararDatos(w.FAMIHOGAR, null);
   w.ContratosComerciales = { listarProductos: () => structuredClone(comercial.productos), listarPedidos: sede => structuredClone(comercial.pedidos.filter(p => !sede || p.sede === sede)), listarDevoluciones: sede => structuredClone(comercial.solicitudes.filter(s => !sede || s.sede === sede)) };
   for (const f of ["logistica-aplicacion.js", "integraciones-locales.js"]) vm.runInContext(fs.readFileSync(path.join(raiz, f), "utf8"), ctx, { filename: f });
   const A = w.LogisticaAplicacion;
-  return { w, A, L: w.LogisticaReglas, C: w.ComprasReglas, D: w.DistribucionReglas, comercial, memoria, localStorage, ejecutar: (actor, fn) => A.ejecutar(actor, fn), leer: () => A.leer() };
+  return { w, A, L: w.LogisticaReglas, C: w.ComprasReglas, M: w.AlmacenesReglas, D: w.DistribucionReglas, comercial, memoria, localStorage, ejecutar: (actor, fn) => A.ejecutar(actor, fn), leer: () => A.leer() };
 }
 function requisicion(t, cantidad = 3) {
   const r = t.ejecutar(compras, (d, s) => t.C.crearRequisicion(d, { almacen: "alm-centro", requerida: "2026-11-18", motivo: "Reposición de sala", lineas: linea(cantidad) }, compras, s.productos));
@@ -261,4 +261,145 @@ test("recepción de devolución no autorizada se rechaza", () => { const t = ent
 test("contratos devuelven copias y no cambian los documentos comerciales", () => {
   const t = entorno(), p = pedido(t), antes = JSON.stringify(t.comercial); despachar(t, p); assert.equal(JSON.stringify(t.comercial), antes);
   const s = t.w.ContratosLogisticos.consultarSeguimiento(p.id); s.salidas[0].estado = "Inventado"; assert.equal(t.leer().despachos[0].estado, "Preparado");
+});
+
+const posicionInicial = (cambios = {}) => ({ almacen: "alm-centro", codigo: "SOF-001", ubicacion: "RACK-A", calidad: "Disponible", lote: "INICIAL", cantidad: 2, fecha: hoy, motivo: "Incidencia física documentada", ...cambios });
+function nuevoAlmacen(t) { return t.ejecutar(jefe, (d, s) => t.M.guardarAlmacen(d, { nombre: "Depósito auxiliar", direccion: "Calle Ejemplo 300", activo: true, motivo: "Separar exhibición y depósito" }, jefe, s.config)); }
+function solicitar(t, entrada = posicionInicial({ tipo: "Deterioro" })) { return t.ejecutar(almacen, d => t.M.solicitarTratamiento(d, entrada, almacen)); }
+function autorizar(t, doc) { return t.ejecutar(jefe, (d, s) => t.M.resolverTratamiento(d, doc.id, true, "Evidencia y cantidad revisadas", jefe, s.config)); }
+function deteriorar(t) { const doc = solicitar(t); autorizar(t, doc); return posicionInicial({ ubicacion: "CUARENTENA", calidad: "Dañado" }); }
+function reparar(t, entrada) { const doc = solicitar(t, { ...entrada, tipo: "Reparación" }); autorizar(t, doc); return doc; }
+
+test("migrar esquema 1 conserva IDs, movimientos y facturas sin publicar al leer", () => {
+  const t = entorno(), oc = orden(t), rec = recibir(t, oc); inspeccionar(t, rec); factura(t, oc);
+  const viejo = t.leer(); viejo.version = 1; delete viejo.tratamientos; delete viejo.reubicaciones;
+  viejo.ubicaciones = viejo.ubicaciones.filter(u => u.almacen === "alm-centro").map(({ codigo, nombre, capacidad, estados }) => ({ codigo, nombre, capacidad, estados }));
+  viejo.recepciones.forEach(r => r.lineas.forEach(l => { for (const k of ["conforme", "noConforme", "devuelta", "enReparacion", "baja"]) delete l[k]; }));
+  const previo = JSON.stringify(viejo); t.memoria.set(t.A.CLAVE, previo); const nuevo = t.leer();
+  assert.equal(nuevo.version, 2); assert.equal(nuevo.recepciones[0].id, rec.id); assert.equal(nuevo.recepciones[0].lineas[0].conforme, 3); assert.equal(nuevo.facturas[0].estado, "Verificada"); assert.equal(t.memoria.get(t.A.CLAVE), previo);
+  assert.deepEqual(nuevo.movimientos, viejo.movimientos); assert.equal(JSON.stringify(t.leer()), JSON.stringify(nuevo));
+  t.ejecutar(jefe, d => t.L.configurarReposicion(d, { almacen: "alm-centro", codigo: "SOF-001", minimo: 2, objetivo: 12, motivo: "Conservar parámetros" }, jefe)); assert.equal(JSON.parse(t.memoria.get(t.A.CLAVE)).version, 2);
+});
+test("una inspección acepta, observa y deja pendientes dentro de la misma recepción", () => {
+  const t = entorno(), oc = orden(t, 10), r = recibir(t, oc, 10);
+  t.ejecutar(almacen, (d, s) => t.C.inspeccionarParcial(d, { recepcionId: r.id, fecha: hoy, ubicacion: "RACK-A", motivo: "Ocho conformes y uno observado", lineas: [{ codigo: "SOF-001", conformes: 8, observadas: 1 }] }, almacen, s.config));
+  let actual = t.leer().recepciones[0]; assert.equal(actual.estado, "Parcialmente inspeccionada"); assert.equal(t.C.pendienteInspeccion(actual.lineas[0]), 1); assert.equal(saldo(t), 20); assert.equal(saldo(t, "Cuarentena"), 2);
+  inspeccionar(t, r, false); actual = t.leer().recepciones[0]; assert.equal(actual.estado, "Con observaciones"); assert.equal(actual.lineas[0].noConforme, 2); assert.equal(t.C.recibido(t.leer(), oc.id, "SOF-001", true), 8);
+  assert.equal(factura(t, oc, 8).estado, "Verificada"); assert.equal(factura(t, oc, 2, { documento: "F001-OBS" }).estado, "Observada");
+});
+test("inspección parcial excesiva, repetida, cero y error de destino no publican nada", () => {
+  const t = entorno(), r = recibir(t, orden(t));
+  for (const [conformes, observadas, ubicacion] of [[3, 1, "RACK-A"], [0, 0, "RACK-A"], [-1, 1, "RACK-A"], [2, 1, "CUARENTENA"]]) fallaSinGuardar(t, () => t.ejecutar(almacen, (d, s) => t.C.inspeccionarParcial(d, { recepcionId: r.id, fecha: hoy, ubicacion, motivo: "Inspección física", lineas: [{ codigo: "SOF-001", conformes, observadas }] }, almacen, s.config)));
+  inspeccionar(t, r); fallaSinGuardar(t, () => inspeccionar(t, r), /ya fue inspeccionada/);
+});
+test("devolver solo unidades observadas conserva conformes y libera únicamente la cantidad devuelta de la OC", () => {
+  const t = entorno(), oc = orden(t, 10), r = recibir(t, oc, 10);
+  t.ejecutar(almacen, (d, s) => t.C.inspeccionarParcial(d, { recepcionId: r.id, fecha: hoy, ubicacion: "RACK-A", motivo: "Tapizado de dos unidades dañado", lineas: [{ codigo: "SOF-001", conformes: 8, observadas: 2 }] }, almacen, s.config));
+  t.ejecutar(almacen, (d, s) => t.C.devolverProveedor(d, r.id, "Proveedor retira dos observados", almacen, s.config));
+  assert.equal(saldo(t), 20); assert.equal(saldo(t, "Cuarentena"), 0); assert.equal(t.C.recibido(t.leer(), oc.id, "SOF-001"), 8); assert.equal(t.leer().recepciones[0].lineas[0].devuelta, 2);
+  recibir(t, oc, 2, "GP-REPO", "NUEVO"); fallaSinGuardar(t, () => recibir(t, oc, 1, "GP-EXCESO"), /supera/);
+});
+test("reubicar conserva físico y lote y no mueve unidades reservadas", () => {
+  const t = entorno(); reservar(t, pedido(t, 11), 11);
+  fallaSinGuardar(t, () => t.ejecutar(almacen, (d, s) => t.M.reubicar(d, { ...posicionInicial(), destino: "EXHIBICION" }, almacen, s.config)), /reservadas/);
+  const doc = t.ejecutar(almacen, (d, s) => t.M.reubicar(d, { ...posicionInicial({ cantidad: 1 }), destino: "EXHIBICION" }, almacen, s.config)); assert.equal(saldo(t), 12); assert.equal(t.L.saldo(t.leer(), "alm-centro", "SOF-001", "EXHIBICION", "Disponible", "INICIAL"), 1); assert.equal(doc.estado, "Registrada");
+});
+test("reubicación no supera capacidad ni cruza estados o sedes", () => {
+  const t = entorno(); for (const cambios of [{ destino: "CUARENTENA" }, { destino: "RACK-A" }, { almacen: "alm-olivos", destino: "EXHIBICION" }]) fallaSinGuardar(t, () => t.ejecutar(almacen, (d, s) => t.M.reubicar(d, { ...posicionInicial(), ...cambios }, almacen, s.config)));
+  t.ejecutar(jefe, d => { d.ubicaciones.find(u => u.almacen === "alm-centro" && u.codigo === "EXHIBICION").capacidad = 1; });
+  fallaSinGuardar(t, () => t.ejecutar(almacen, (d, s) => t.M.reubicar(d, { ...posicionInicial(), destino: "EXHIBICION" }, almacen, s.config)), /capacidad/);
+});
+test("deterioro exige otra persona y no disminuye físico", () => {
+  const t = entorno(), doc = solicitar(t), mismo = { ...almacen, rol: "Jefatura" }; assert.equal(saldo(t), 12);
+  fallaSinGuardar(t, () => t.ejecutar(mismo, (d, s) => t.M.resolverTratamiento(d, doc.id, true, "Revisión propia", mismo, s.config)), /Otra persona/);
+  autorizar(t, doc); assert.equal(saldo(t), 10); assert.equal(saldo(t, "Dañado"), 2); assert.equal(t.L.existencias(t.leer(), t.A.productos(), "centro")[0].fisico, 12);
+});
+test("tratamiento pendiente retiene sus unidades y bloquea duplicación", () => {
+  const t = entorno(); solicitar(t); assert.equal(t.L.disponible(t.leer(), "alm-centro", "SOF-001"), 10); fallaSinGuardar(t, () => solicitar(t), /Ya hay/);
+  fallaSinGuardar(t, () => t.ejecutar(almacen, (d, s) => t.M.reubicar(d, { ...posicionInicial({ cantidad: 11 }), destino: "EXHIBICION" }, almacen, s.config)), /reservadas/);
+});
+test("rechazar tratamiento conserva stock y libera la posición para operar", () => {
+  const t = entorno(), doc = solicitar(t); t.ejecutar(jefe, (d, s) => t.M.resolverTratamiento(d, doc.id, false, "Evidencia insuficiente", jefe, s.config)); assert.equal(saldo(t), 12);
+  t.ejecutar(almacen, (d, s) => t.M.reubicar(d, { ...posicionInicial(), destino: "EXHIBICION" }, almacen, s.config)); assert.equal(saldo(t), 12);
+});
+test("reparación queda fuera de disponible hasta evidencia y reinspección independiente", () => {
+  const t = entorno(), pos = deteriorar(t), rep = reparar(t, pos); assert.equal(saldo(t, "Dañado"), 0); assert.equal(saldo(t, "En reparación"), 2); assert.equal(saldo(t), 10);
+  t.ejecutar(almacen, d => t.M.terminarReparacion(d, rep.id, "Tapizado reparado, foto EVI-001", almacen));
+  const e = { id: rep.id, conforme: true, ubicacion: "RACK-A", fecha: hoy, motivo: "Revisión visual y estabilidad" }, mismo = { ...almacen, rol: "Jefatura" };
+  fallaSinGuardar(t, () => t.ejecutar(mismo, (d, s) => t.M.reinspeccionar(d, e, mismo, s.config)), /Otra persona/);
+  t.ejecutar(jefe, (d, s) => t.M.reinspeccionar(d, e, jefe, s.config)); assert.equal(saldo(t), 12); assert.equal(saldo(t, "En reparación"), 0); assert.equal(t.leer().tratamientos.at(-1).estado, "Recuperado");
+  fallaSinGuardar(t, () => t.ejecutar(jefe, (d, s) => t.M.reinspeccionar(d, e, jefe, s.config)), /Estado/);
+});
+test("reinspección fallida conserva dañados y baja requiere revisión y resta físico una vez", () => {
+  const t = entorno(), pos = deteriorar(t), rep = reparar(t, pos); t.ejecutar(almacen, d => t.M.terminarReparacion(d, rep.id, "Reparación sin resultado", almacen));
+  t.ejecutar(jefe, (d, s) => t.M.reinspeccionar(d, { id: rep.id, conforme: false, fecha: hoy, motivo: "No supera revisión" }, jefe, s.config)); assert.equal(saldo(t, "Dañado"), 2);
+  const baja = solicitar(t, { ...pos, tipo: "Baja" }); autorizar(t, baja); assert.equal(t.L.existencias(t.leer(), t.A.productos(), "centro")[0].fisico, 10); assert.equal(saldo(t, "Dañado"), 0);
+  fallaSinGuardar(t, () => autorizar(t, baja), /ya fue resuelto/); assert.match(t.leer().movimientos.at(-1).tipo, /Baja autorizada/);
+});
+test("reparar observados de compra actualiza conformidad e invoice sin duplicar recepción", () => {
+  const t = entorno(), oc = orden(t), r = recibir(t, oc); inspeccionar(t, r, false);
+  const pos = posicionInicial({ ubicacion: "CUARENTENA", calidad: "Cuarentena", lote: "LOTE-001", cantidad: 3, recepcionId: r.id });
+  const rep = reparar(t, pos); assert.equal(t.leer().recepciones[0].lineas[0].enReparacion, 3); assert.equal(factura(t, oc).estado, "Observada");
+  t.ejecutar(almacen, d => t.M.terminarReparacion(d, rep.id, "Corrección de acabado", almacen)); t.ejecutar(jefe, (d, s) => t.M.reinspeccionar(d, { id: rep.id, conforme: true, fecha: hoy, ubicacion: "RACK-A", motivo: "Acabado conforme" }, jefe, s.config));
+  assert.equal(t.leer().recepciones[0].estado, "Conforme"); assert.equal(t.C.recibido(t.leer(), oc.id, "SOF-001"), 3); assert.equal(t.C.recibido(t.leer(), oc.id, "SOF-001", true), 3); assert.equal(saldo(t), 15);
+  t.ejecutar(compras, (d, s) => t.C.revalidarFactura(d, d.facturas[0].id, compras, s.config)); assert.equal(t.leer().facturas[0].estado, "Verificada");
+});
+test("no se reubica ni altera por conteo una cuarentena de compra pendiente de resolver", () => {
+  const t = entorno(), r = recibir(t, orden(t)); const pos = posicionInicial({ ubicacion: "RECEPCION", calidad: "Cuarentena", lote: "LOTE-001" });
+  fallaSinGuardar(t, () => t.ejecutar(almacen, (d, s) => t.M.reubicar(d, { ...pos, destino: "CUARENTENA" }, almacen, s.config)), /documento de calidad/);
+  const con = t.ejecutar(almacen, (d, s) => t.L.crearConteo(d, { almacen: "alm-centro", fecha: hoy, motivo: "Conteo de recepción", lineas: [{ ...pos, contado: 2 }] }, almacen, s.productos));
+  fallaSinGuardar(t, () => t.ejecutar(jefe, (d, s) => t.L.aprobarConteo(d, con.id, true, "Ajustar diferencia", jefe, s.config)), /documento de calidad/); assert.equal(t.leer().recepciones[0].id, r.id);
+});
+for (const calidad of ["Cuarentena", "Dañado"]) test(`conteo permite ${calidad} sin mezclarlo con disponible`, () => {
+  const t = entorno(); const pos = deteriorar(t);
+  if (calidad === "Cuarentena") t.ejecutar(jefe, (d, s) => { t.L.registrarMovimiento(d, { ...pos, coste: 105000, cantidad: -2 }, jefe, s.config); t.L.registrarMovimiento(d, { ...pos, calidad, coste: 105000 }, jefe, s.config); });
+  const con = t.ejecutar(almacen, (d, s) => t.L.crearConteo(d, { almacen: "alm-centro", fecha: hoy, motivo: "Conteo de calidad", lineas: [{ ...pos, calidad, contado: 1 }] }, almacen, s.productos));
+  t.ejecutar(jefe, (d, s) => t.L.aprobarConteo(d, con.id, true, "Diferencia revisada", jefe, s.config)); assert.equal(saldo(t, calidad), 1); assert.equal(saldo(t), 10);
+});
+test("un conteo se invalida aunque dos movimientos posteriores dejen el mismo saldo", () => {
+  const t = entorno(), con = conteo(t);
+  t.ejecutar(almacen, (d, s) => t.M.reubicar(d, { ...posicionInicial(), destino: "EXHIBICION" }, almacen, s.config));
+  t.ejecutar(almacen, (d, s) => t.M.reubicar(d, { ...posicionInicial({ ubicacion: "EXHIBICION" }), destino: "RACK-A" }, almacen, s.config));
+  assert.equal(saldo(t), 12); fallaSinGuardar(t, () => t.ejecutar(jefe, (d, s) => t.L.aprobarConteo(d, con.id, true, "Revisado", jefe, s.config)), /Repite el conteo/);
+});
+test("Jefatura crea almacén/ubicaciones y otro rol no cambia maestros", () => {
+  const t = entorno(), a = nuevoAlmacen(t); assert.equal(t.leer().ubicaciones.filter(u => u.almacen === a.id).length, 5);
+  const e = { almacen: a.id, codigo: "RACK-B", nombre: "Muebles auxiliares", capacidad: 10, estados: ["Disponible"], motivo: "Nueva posición" };
+  fallaSinGuardar(t, () => t.ejecutar(almacen, d => t.M.guardarUbicacion(d, e, almacen)), /rol/);
+  const u = t.ejecutar(jefe, d => t.M.guardarUbicacion(d, e, jefe)); assert.equal(u.sede, "centro");
+  fallaSinGuardar(t, () => t.ejecutar(jefe, d => t.M.guardarUbicacion(d, e, jefe)), /ya existe/);
+  fallaSinGuardar(t, () => t.ejecutar({ ...jefe, sede: "olivos" }, d => t.M.guardarUbicacion(d, { ...e, id: u.id }, { ...jefe, sede: "olivos" })), /sede/);
+});
+test("no se reduce capacidad ni se retira calidad o desactiva una ubicación ocupada", () => {
+  const t = entorno(), u = t.leer().ubicaciones.find(u => u.almacen === "alm-centro" && u.codigo === "RACK-A");
+  for (const cambios of [{ capacidad: 1 }, { estados: ["Cuarentena"] }, { activo: false }, { codigo: "OTRO" }]) fallaSinGuardar(t, () => t.ejecutar(jefe, d => t.M.guardarUbicacion(d, { ...u, motivo: "Editar posición", ...cambios }, jefe)));
+});
+test("almacén vacío se desactiva sin borrar historial y vuelve a activarse", () => {
+  const t = entorno(), a = nuevoAlmacen(t);
+  t.ejecutar(jefe, (d, s) => t.M.guardarAlmacen(d, { ...a, activo: false, motivo: "Cierre temporal" }, jefe, s.config));
+  fallaSinGuardar(t, () => t.ejecutar(almacen, (d, s) => t.C.crearRequisicion(d, { almacen: a.id, requerida: hoy, motivo: "Reposición", lineas: linea() }, almacen, s.productos)), /inactivo/);
+  t.ejecutar(jefe, (d, s) => t.M.guardarAlmacen(d, { ...a, activo: true, motivo: "Reapertura" }, jefe, s.config)); assert.equal(t.leer().almacenes.at(-1).historial.length, 3);
+});
+test("dos almacenes de una sede no duplican demanda ni previsión", () => {
+  const t = entorno(); nuevoAlmacen(t); pedido(t, 20);
+  const plan = t.L.planificar(t.leer(), t.A.productos(), t.A.pedidos(), t.A.config, "centro", "2026-11").filter(p => p.codigo === "SOF-001");
+  assert.equal(plan.length, 2); assert.equal(plan.reduce((n, p) => n + p.demanda, 0), 20); assert.equal(plan.reduce((n, p) => n + p.proyectado, 0), -8);
+});
+test("incidencia pendiente excluye unidades de la venta y convive con reservas de las unidades sanas", () => {
+  const t = entorno(), doc = solicitar(t);
+  assert.equal(t.w.ContratosLogisticos.consultarDisponibilidad({ sede: "centro", id: "nuevo", lineas: linea() }).lineas[0].disponible, 10);
+  fallaSinGuardar(t, () => reservar(t, pedido(t, 11), 11), /Stock disponible insuficiente/);
+  const p = pedido(t, 10, "pv-sano"); reservar(t, p, 10); autorizar(t, doc);
+  assert.equal(saldo(t), 10); assert.equal(saldo(t, "Dañado"), 2); assert.equal(t.L.disponible(t.leer(), "alm-centro", "SOF-001"), 0);
+});
+test("no se desactiva un almacén vacío que tiene una necesidad pendiente", () => {
+  const t = entorno(), a = nuevoAlmacen(t);
+  t.ejecutar(almacen, (d, s) => t.C.crearRequisicion(d, { almacen: a.id, requerida: hoy, motivo: "Abastecimiento del nuevo almacén", lineas: linea() }, almacen, s.productos));
+  fallaSinGuardar(t, () => t.ejecutar(jefe, (d, s) => t.M.guardarAlmacen(d, { ...a, activo: false, motivo: "Cerrar almacén" }, jefe, s.config)), /operaciones pendientes/);
+});
+test("reparación sin capacidad conserva documento, cuarentena y cantidades de origen intactos", () => {
+  const t = entorno(), r = recibir(t, orden(t)); inspeccionar(t, r, false);
+  const rep = solicitar(t, posicionInicial({ tipo: "Reparación", ubicacion: "CUARENTENA", calidad: "Cuarentena", lote: r.lote, cantidad: 3, recepcionId: r.id }));
+  t.ejecutar(jefe, d => { d.ubicaciones.find(u => u.almacen === "alm-centro" && u.codigo === "TALLER").capacidad = 1; });
+  fallaSinGuardar(t, () => autorizar(t, rep), /capacidad/); assert.equal(t.leer().recepciones[0].lineas[0].noConforme, 3); assert.equal(saldo(t, "Cuarentena"), 3);
 });

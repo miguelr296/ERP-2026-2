@@ -198,7 +198,7 @@ window.DistribucionReglas = (() => {
   function resolverCuarentena(datos, entrada, actor, config) {
     L.permitir(actor, ["Jefatura"]); L.almacenDe(datos, entrada.almacen, actor); L.motivo(entrada.motivo);
     L.exigir(L.entero(entrada.cantidad) && ["Disponible", "Dañado"].includes(entrada.destinoCalidad), "Cantidad o destino no válido.");
-    L.exigir(!datos.recepciones.some(r => r.almacen === entrada.almacen && r.lote === entrada.lote && ["En inspección", "No conforme"].includes(r.estado)), "Resuelve la calidad desde la ficha de la recepción de compra.");
+    L.exigir(!L.posicionProtegida(datos, { ...entrada, ubicacion: entrada.origen, calidad: "Cuarentena" }), "Resuelve la calidad desde la ficha de la recepción de compra.");
     const salida = L.registrarMovimiento(datos, { tipo: "Resolución de cuarentena", almacen: entrada.almacen, ubicacion: entrada.origen, calidad: "Cuarentena", codigo: entrada.codigo, lote: entrada.lote, cantidad: -entrada.cantidad, coste: entrada.coste || 0, referencia: entrada.motivo, fecha: entrada.fecha }, actor, config);
     L.registrarMovimiento(datos, { ...L.copiar(salida), ubicacion: entrada.destino, calidad: entrada.destinoCalidad, cantidad: entrada.cantidad }, actor, config);
     return salida;

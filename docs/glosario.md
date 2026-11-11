@@ -23,7 +23,7 @@
 | OC | Orden de compra revisada, con proveedor, condiciones, cantidades y precios conservados |
 | Cuarentena | Existencias físicamente recibidas que no están disponibles para reservar o despachar |
 | Lote / ubicación | Identificación del grupo de mercancía y posición física que permiten seguir sus movimientos |
-| Disponible | Stock de calidad Disponible menos reserva activa pendiente de consumir; no incluye cuarentena/dañado |
+| Disponible | Stock de calidad Disponible menos reserva activa pendiente y retenciones por incidencias; no incluye cuarentena/dañado/reparación |
 | Reserva | Compromiso de unidades por pedido/lote/posición; no registra por sí mismo salida física |
 | Picking / embalaje | Preparación de unidades reservadas y verificación de su protección antes de despachar |
 | Guía interna | Referencia local de salida; no es una guía tributaria electrónica |
@@ -33,3 +33,9 @@
 | Kardex | Secuencia de entradas/salidas/ajustes con sus referencias; en esta entrega no calcula valorización contable |
 | OTIF | Entrega a tiempo y completa; aquí porcentaje de despachos confirmados completos dentro de su fecha prevista |
 | Acción correctiva | Trabajo con causa, responsable, plazo, evidencia y revisión independiente de cierre |
+| Inspección parcial | Distribución por producto entre conformes, observadas y unidades que todavía esperan inspección |
+| Retención por calidad | Unidades comprometidas por un tratamiento pendiente que no se ofrecen a otra venta ni se retiran por otra operación |
+| Deterioro | Incidencia revisada que separa unidades dañadas del stock disponible sin reducir el físico total |
+| Reinspección | Revisión independiente posterior a la reparación, con evidencia y resultado antes de volver a disponible |
+| Baja autorizada | Salida física con motivo, aprobación y referencia; conserva registros y no genera por sí sola un asiento |
+| Reubicación interna | Movimiento entre posiciones del mismo almacén, conservando lote, estado y cantidad total |

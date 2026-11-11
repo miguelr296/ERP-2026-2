@@ -108,6 +108,7 @@ window.ComprasReglas = (() => {
     }
     const proveedorElegido = proveedor(datos, proveedorId);
     L.exigir(req.estado === "Aprobada", "La necesidad no está aprobada.");
+    L.almacenDe(datos, req.almacen, actor);
     const anterior = datos.ordenes.find(o => o.requisicionId === req.id && !["Anulada", "Rechazada"].includes(o.estado)); if (anterior) return anterior;
     L.exigir(L.fechaValida(entrada.entregaPrevista) && entrada.entregaPrevista >= hoy, "Indica una fecha prevista válida.");
     const base = lineas.reduce((n, l) => n + l.precio * l.cantidad, 0);
@@ -134,7 +135,18 @@ window.ComprasReglas = (() => {
   }
 
   function recibido(datos, ordenId, codigo, soloConforme = false) {
-    return datos.recepciones.filter(r => r.ordenId === ordenId && (soloConforme ? r.estado === "Conforme" : r.estado !== "Devuelta")).flatMap(r => r.lineas).filter(l => l.codigo === codigo).reduce((n, l) => n + l.cantidad, 0);
+    return datos.recepciones.filter(r => r.ordenId === ordenId).flatMap(r => r.lineas).filter(l => l.codigo === codigo).reduce((n, l) => n + (soloConforme ? l.conforme : l.cantidad - l.devuelta), 0);
+  }
+
+  const pendienteInspeccion = l => l.cantidad - l.conforme - l.noConforme - l.devuelta - l.enReparacion - l.baja;
+  function actualizarRecepcion(r) {
+    const total = campo => r.lineas.reduce((n, l) => n + (campo === "pendiente" ? pendienteInspeccion(l) : l[campo]), 0);
+    const cantidad = total("cantidad"), pendiente = total("pendiente");
+    r.estado = pendiente ? pendiente === cantidad ? "En inspección" : "Parcialmente inspeccionada" : total("enReparacion") ? "En tratamiento" : total("conforme") === cantidad ? "Conforme" : total("devuelta") === cantidad ? "Devuelta" : total("noConforme") === cantidad ? "No conforme" : total("noConforme") ? "Con observaciones" : total("conforme") ? "Conforme parcial" : "Baja";
+  }
+
+  function actualizarOrden(datos, orden) {
+    orden.estado = orden.lineas.every(l => recibido(datos, orden.id, l.codigo) === l.cantidad) ? "Recibida" : "Parcialmente recibida";
   }
 
   function recibir(datos, entrada, actor, config) {
@@ -146,31 +158,49 @@ window.ComprasReglas = (() => {
     const lineas = entrada.lineas.map(l => {
       const pedida = orden.lineas.find(p => p.codigo === l.codigo);
       L.exigir(pedida && L.entero(l.cantidad) && recibido(datos, orden.id, l.codigo) + l.cantidad <= pedida.cantidad, "La recepción supera las cantidades de la orden o contiene productos ajenos.");
-      return { ...L.copiar(l), nombre: pedida.nombre, unidad: pedida.unidad, coste: pedida.precio };
+      return { ...L.copiar(l), nombre: pedida.nombre, unidad: pedida.unidad, coste: pedida.precio, conforme: 0, noConforme: 0, devuelta: 0, enReparacion: 0, baja: 0 };
     });
     const recepcion = L.crear(datos.recepciones, "REC", { ...entrada, lineas, proveedorId: orden.proveedorId, almacen: orden.almacen, estado: "En inspección" }, actor, "Mercancía recibida en cuarentena");
     for (const l of lineas) L.registrarMovimiento(datos, { tipo: "Recepción en cuarentena", almacen: orden.almacen, ubicacion: "RECEPCION", calidad: "Cuarentena", codigo: l.codigo, lote: entrada.lote, cantidad: l.cantidad, coste: l.coste, referencia: recepcion.numero, fecha: entrada.fecha }, actor, config);
-    orden.estado = orden.lineas.every(l => recibido(datos, orden.id, l.codigo) === l.cantidad) ? "Recibida" : "Parcialmente recibida";
+    actualizarOrden(datos, orden);
     orden.historial.push(L.evento(actor, `Recepción derivada ${recepcion.numero}`)); return recepcion;
   }
 
   function inspeccionar(datos, id, conforme, motivo, ubicacion, actor, config) {
-    almacen(actor); const recepcion = L.obtener(datos.recepciones, id, actor); L.motivo(motivo);
-    L.exigir(recepcion.estado === "En inspección", "La recepción ya fue inspeccionada.");
-    for (const l of recepcion.lineas) {
-      L.registrarMovimiento(datos, { tipo: "Inspección", almacen: recepcion.almacen, ubicacion: "RECEPCION", calidad: "Cuarentena", codigo: l.codigo, lote: recepcion.lote, cantidad: -l.cantidad, coste: l.coste, referencia: recepcion.numero, fecha: recepcion.fecha }, actor, config);
-      L.registrarMovimiento(datos, { tipo: conforme ? "Liberación a inventario" : "No conformidad", almacen: recepcion.almacen, ubicacion: conforme ? ubicacion : "CUARENTENA", calidad: conforme ? "Disponible" : "Cuarentena", codigo: l.codigo, lote: recepcion.lote, cantidad: l.cantidad, coste: l.coste, referencia: recepcion.numero, fecha: recepcion.fecha }, actor, config);
+    const r = L.obtener(datos.recepciones, id, actor), lineas = r.lineas.filter(l => pendienteInspeccion(l) > 0).map(l => ({ codigo: l.codigo, conformes: conforme ? pendienteInspeccion(l) : 0, observadas: conforme ? 0 : pendienteInspeccion(l) }));
+    L.exigir(lineas.length, "La recepción ya fue inspeccionada.");
+    return inspeccionarParcial(datos, { recepcionId: id, fecha: r.fecha, motivo, ubicacion, lineas }, actor, config);
+  }
+
+  function inspeccionarParcial(datos, entrada, actor, config) {
+    almacen(actor); const r = L.obtener(datos.recepciones, entrada.recepcionId, actor); L.motivo(entrada.motivo);
+    L.exigir(L.fechaValida(entrada.fecha) && entrada.fecha >= r.fecha, "La fecha de inspección no es válida.");
+    L.exigir(entrada.lineas.length && new Set(entrada.lineas.map(l => l.codigo)).size === entrada.lineas.length, "Selecciona líneas sin repetir.");
+    let inspeccionadas = 0;
+    for (const e of entrada.lineas) {
+      const l = r.lineas.find(l => l.codigo === e.codigo), cantidad = e.conformes + e.observadas;
+      L.exigir(l && [e.conformes, e.observadas].every(n => Number.isSafeInteger(n) && n >= 0) && cantidad <= pendienteInspeccion(l), "La inspección supera las unidades pendientes.");
+      if (!cantidad) continue; inspeccionadas += cantidad;
+      const movimiento = { almacen: r.almacen, codigo: l.codigo, lote: r.lote, coste: l.coste, referencia: r.numero, fecha: entrada.fecha };
+      L.registrarMovimiento(datos, { ...movimiento, tipo: "Inspección", ubicacion: "RECEPCION", calidad: "Cuarentena", cantidad: -cantidad }, actor, config);
+      if (e.conformes) L.registrarMovimiento(datos, { ...movimiento, tipo: "Liberación a inventario", ubicacion: entrada.ubicacion, calidad: "Disponible", cantidad: e.conformes }, actor, config);
+      if (e.observadas) L.registrarMovimiento(datos, { ...movimiento, tipo: "No conformidad", ubicacion: "CUARENTENA", calidad: "Cuarentena", cantidad: e.observadas }, actor, config);
+      l.conforme += e.conformes; l.noConforme += e.observadas;
     }
-    recepcion.estado = conforme ? "Conforme" : "No conforme"; recepcion.ubicacion = conforme ? ubicacion : "CUARENTENA";
-    recepcion.historial.push(L.evento(actor, `${recepcion.estado}: ${motivo}`));
+    L.exigir(inspeccionadas, "Indica al menos una unidad para inspeccionar.");
+    r.inspecciones ??= []; r.inspecciones.push({ fecha: entrada.fecha, ubicacion: entrada.ubicacion, lineas: L.copiar(entrada.lineas), responsable: actor.nombre, motivo: entrada.motivo });
+    actualizarRecepcion(r); r.historial.push(L.evento(actor, `${r.estado}: ${entrada.motivo}`)); return r;
   }
 
   function devolverProveedor(datos, id, motivo, actor, config) {
     almacen(actor); const r = L.obtener(datos.recepciones, id, actor); L.motivo(motivo);
-    L.exigir(r.estado === "No conforme", "Solo se devuelve una recepción no conforme.");
-    for (const l of r.lineas) L.registrarMovimiento(datos, { tipo: "Devolución a proveedor", almacen: r.almacen, ubicacion: "CUARENTENA", calidad: "Cuarentena", codigo: l.codigo, lote: r.lote, cantidad: -l.cantidad, coste: l.coste, referencia: r.numero, fecha: r.fecha }, actor, config);
-    r.estado = "Devuelta"; r.historial.push(L.evento(actor, `Devolución al proveedor: ${motivo}`));
-    const orden = L.obtener(datos.ordenes, r.ordenId, actor); orden.estado = "Parcialmente recibida";
+    L.exigir(r.lineas.some(l => l.noConforme > 0), "Solo se devuelven unidades no conformes.");
+    for (const l of r.lineas.filter(l => l.noConforme > 0)) {
+      L.registrarMovimiento(datos, { tipo: "Devolución a proveedor", almacen: r.almacen, ubicacion: "CUARENTENA", calidad: "Cuarentena", codigo: l.codigo, lote: r.lote, cantidad: -l.noConforme, coste: l.coste, referencia: r.numero, fecha: r.fecha }, actor, config);
+      l.devuelta += l.noConforme; l.noConforme = 0;
+    }
+    actualizarRecepcion(r); r.historial.push(L.evento(actor, `Devolución al proveedor: ${motivo}`));
+    const orden = L.obtener(datos.ordenes, r.ordenId, actor); actualizarOrden(datos, orden);
     orden.historial.push(L.evento(actor, `${r.numero} devuelta; reposición pendiente`));
   }
 
@@ -220,9 +250,9 @@ window.ComprasReglas = (() => {
     const recepciones = datos.recepciones.filter(r => ordenes.some(o => o.id === r.ordenId));
     L.exigir(recepciones.length, "Todavía no hay recepciones para evaluar a este proveedor en la sede.");
     const aTiempo = recepciones.filter(r => r.fecha <= ordenes.find(o => o.id === r.ordenId).entregaPrevista).length;
-    const inspeccionadas = recepciones.filter(r => r.estado !== "En inspección");
-    return L.crear(datos.evaluaciones, "EVAL", { ...entrada, recepciones: recepciones.length, aTiempo, inspeccionadas: inspeccionadas.length, conformes: inspeccionadas.filter(r => r.estado === "Conforme").length, estado: "Registrada" }, actor, "Evaluación con evidencia de recepciones");
+    const inspeccionadas = recepciones.filter(r => r.lineas.every(l => pendienteInspeccion(l) === 0));
+    return L.crear(datos.evaluaciones, "EVAL", { ...entrada, recepciones: recepciones.length, aTiempo, inspeccionadas: inspeccionadas.length, conformes: inspeccionadas.filter(r => r.estado === "Conforme").length, unidadesRecibidas: recepciones.flatMap(r => r.lineas).reduce((n, l) => n + l.cantidad, 0), unidadesConformes: recepciones.flatMap(r => r.lineas).reduce((n, l) => n + l.conforme, 0), estado: "Registrada" }, actor, "Evaluación con evidencia de recepciones");
   }
 
-  return { guardarProveedor, resolverProveedor, crearRequisicion, resolverRequisicion, crearPeticion, registrarOferta, adjudicar, guardarAcuerdo, resolverAcuerdo, crearOrden, resolverOrden, emitirOrden, confirmarOrden, recibido, recibir, inspeccionar, devolverProveedor, verificarFactura, revalidarFactura, anularOrden, evaluarProveedor };
+  return { guardarProveedor, resolverProveedor, crearRequisicion, resolverRequisicion, crearPeticion, registrarOferta, adjudicar, guardarAcuerdo, resolverAcuerdo, crearOrden, resolverOrden, emitirOrden, confirmarOrden, recibido, recibir, pendienteInspeccion, actualizarRecepcion, inspeccionar, inspeccionarParcial, devolverProveedor, verificarFactura, revalidarFactura, anularOrden, evaluarProveedor };
 })();
