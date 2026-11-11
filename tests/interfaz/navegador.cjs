@@ -131,7 +131,7 @@ async function ejecutar() {
     await comprobar("document.querySelector('#estado').textContent.includes('Otra persona')", "No autoaprobar pedido");
     await login("Miguel", "Jefatura"); await ir(`pedidos/${p.id}`); await clic("[data-accion=aprobar-pedido]");
     await comprobar("!!document.querySelector('[data-accion=seguimiento-pedido]')", "Aprobación comercial habilita seguimiento"); await foto("03-pedido-aprobado");
-    await evaluar(`window.FAMIHOGAR_RESPUESTAS.entregas[${JSON.stringify(p.id)}]=[{id:'entrega-1',numero:'GRE-0001',lineas:[{codigo:'SOF-001',cantidad:1}]}]`);
+    await evaluar(`{const original=window.IntegracionesComerciales.consultarSeguimiento;window.IntegracionesComerciales.consultarSeguimiento=id=>id===${JSON.stringify(p.id)}?{...original(id),entregas:[{id:'entrega-1',numero:'GRE-0001',lineas:[{codigo:'SOF-001',cantidad:1}]}]}:original(id);}`);
     await clic("[data-accion=seguimiento-pedido]");
     await comprobar("document.querySelector('#contenido').textContent.includes('Parcialmente atendido')", "Atención parcial informada por Despachos");
     await login("Luis", "Asesor"); await ir(`pedidos/${p.id}`); await clic("[data-accion=solicitar-devolucion]");
@@ -193,7 +193,7 @@ async function ejecutar() {
     await rellenar({ "#indicador-desde": "" }); await cambiar("#indicador-desde");
     await rellenar({ "#indicador-canal": "Web" }); await cambiar("#indicador-canal"); await comprobar("!document.querySelector('#contenido tbody').textContent.includes('PV-')", "Filtro de canal modifica el seguimiento");
     await rellenar({ "#sede-actual": "olivos" }); await cambiar("#sede-actual"); await ir(`pedidos/${p.id}`); await comprobar("document.querySelector('#contenido').textContent.includes('No se encontró')", "Separación de documentos por sede");
-    for (const rol of ["Tesorería", "Almacén", "Facturación", "Contabilidad", "Compras"]) {
+    for (const rol of ["Tesorería", "Almacén", "Transporte", "Facturación", "Contabilidad", "Compras"]) {
       await login("Usuario " + rol, rol); await clic("[data-modulo=comercial]"); await esperar("document.querySelector('#contenido').textContent.includes('Disponible para Asesor')");
       await comprobar("document.querySelector('#accesos-rapidos').hidden && !document.querySelector('#contenido .ficha')", "Separación de rol " + rol);
       await clic("#ir-aplicaciones"); await esperar("!document.querySelector('#aplicaciones').hidden"); await clic("[data-modulo=finanzas]"); await esperar("document.querySelector('#contenido h1')?.textContent==='Finanzas'");

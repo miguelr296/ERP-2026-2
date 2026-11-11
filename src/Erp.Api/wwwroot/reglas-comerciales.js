@@ -172,10 +172,11 @@ window.ReglasComerciales = (() => {
     return p;
   }
 
-  function bloquearPedido(datos, id, motivo, actor) {
+  function bloquearPedido(datos, id, motivo, actor, puertos) {
     jefatura(actor);
     const p = buscar(datos.pedidos, id, actor);
     exigir(["Borrador", "Pendiente de aprobación", "Aprobado"].includes(p.estado) && !p.entregas.length && !p.facturas.length, "No se puede bloquear un pedido atendido, facturado o anulado.");
+    exigir(!puertos?.consultarSeguimiento(p.id).salidas?.length, "Logística ya registró una salida; consulta el seguimiento antes de bloquear.");
     const razon = motivoValido(motivo);
     p.estado = "Bloqueado"; p.historial.push(evento(actor, `Bloqueo manual: ${razon}`));
   }
@@ -250,7 +251,7 @@ window.ReglasComerciales = (() => {
     const razon = motivoValido(motivo), p = buscar(datos.pedidos, s.pedidoId, actor);
     if (aceptar && s.tipo === "Anulación") {
       const externos = puertos.consultarSeguimiento(p.id);
-      exigir(!p.entregas.length && !p.facturas.length && !externos.entregas.length && !externos.facturas.length, "Hay entregas o facturas; se requiere devolución y documentos de ajuste.");
+      exigir(!p.entregas.length && !p.facturas.length && !externos.entregas.length && !externos.facturas.length && !externos.salidas?.length, "Hay entregas, salidas o facturas; se requiere devolución y documentos de ajuste.");
       exigir(p.estado !== "Anulado", "El pedido ya está anulado.");
       p.estado = "Anulado"; p.historial.push(evento(actor, `Anulación autorizada por ${s.numero}: ${razon}`));
     }

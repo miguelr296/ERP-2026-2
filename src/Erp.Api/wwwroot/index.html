@@ -10,6 +10,12 @@
   <script src="integraciones-locales.js" defer></script>
   <script src="reglas-comerciales.js" defer></script>
   <script src="pantallas-comerciales.js" defer></script>
+  <script src="datos-logistica.js" defer></script>
+  <script src="logistica-reglas.js" defer></script>
+  <script src="compras-reglas.js" defer></script>
+  <script src="distribucion-reglas.js" defer></script>
+  <script src="logistica-aplicacion.js" defer></script>
+  <script src="pantallas-logistica.js" defer></script>
   <script src="aplicaciones.js" defer></script>
 </head>
 <body>
@@ -34,7 +40,7 @@
       <form id="formulario-acceso">
         <label for="nombre">Usuario</label><input id="nombre" name="nombre" maxlength="60" autocomplete="username" placeholder="Tu nombre de usuario" required>
         <label for="rol">Rol</label>
-        <select id="rol" name="rol" required><option value="">Selecciona tu rol</option><option>Asesor</option><option>Jefatura</option><option>Tesorería</option><option>Almacén</option><option>Facturación</option><option>Contabilidad</option><option>Compras</option></select>
+        <select id="rol" name="rol" required><option value="">Selecciona tu rol</option><option>Asesor</option><option>Jefatura</option><option>Tesorería</option><option>Almacén</option><option>Transporte</option><option>Facturación</option><option>Contabilidad</option><option>Compras</option></select>
         <label for="sede-acceso">Sede</label><select id="sede-acceso" name="sede" required></select>
         <p id="error-acceso" class="error" role="alert"></p>
         <button class="boton primario ancho" type="submit">Ingresar <span aria-hidden="true">→</span></button>

@@ -194,6 +194,7 @@ window.PantallasComerciales = c => {
     }
     if (tipo !== "pedidos" || d.estado === "Anulado") return "";
     let html = "";
+    if (d.estado === "Bloqueado" && d.controles?.disponibilidad.some(l => !l.aprobado)) html += b("Solicitar abastecimiento", "solicitar-abastecimiento", d.id);
     if (["Borrador", "Bloqueado", "Pendiente de aprobación"].includes(d.estado)) html += b("Validar controles", "validar-pedido", d.id);
     if (esJefatura() && ["Borrador", "Bloqueado", "Pendiente de aprobación"].includes(d.estado)) html += b("Revisar y aprobar", "aprobar-pedido", d.id, "boton primario");
     if (esJefatura() && ["Borrador", "Pendiente de aprobación", "Aprobado"].includes(d.estado) && !d.entregas.length && !d.facturas.length) html += b("Bloquear", "bloquear-pedido", d.id);
@@ -286,7 +287,8 @@ window.PantallasComerciales = c => {
       "aprobar-maestro": () => resolverMaestro(id, true), "rechazar-maestro": () => resolverMaestro(id, false),
       "aprobar-descuento": () => resolverDescuento(id, true), "rechazar-descuento": () => resolverDescuento(id, false),
       "validar-pedido": () => validarPedido(id, false), "aprobar-pedido": () => validarPedido(id, true),
-      "bloquear-pedido": () => registrar("Bloquear pedido", motivo => operacion(actuales => r.bloquearPedido(actuales, id, motivo, actor())), volver(`pedidos/${id}`)),
+      "bloquear-pedido": () => registrar("Bloquear pedido", motivo => operacion(actuales => r.bloquearPedido(actuales, id, motivo, actor(), window.IntegracionesComerciales)), volver(`pedidos/${id}`)),
+      "solicitar-abastecimiento": () => c.solicitarAbastecimiento(datos().pedidos.find(p => p.id === id && p.sede === actor().sede)),
       "seguimiento-pedido": () => { operacion(actuales => r.sincronizarPedido(actuales, id, actor(), window.IntegracionesComerciales)); c.navegar(volver(`pedidos/${id}`)); },
       "anular-cotizacion": () => registrar("Anular cotización", motivo => operacion(actuales => r.cambiarCotizacion(actuales, id, "Anulada", motivo, actor(), c.fechaHoy())), volver(`cotizaciones/${id}`)),
       "vencer-cotizacion": () => { operacion(actuales => r.cambiarCotizacion(actuales, id, "Vencida", "", actor(), c.fechaHoy())); c.navegar(volver(`cotizaciones/${id}`)); },
