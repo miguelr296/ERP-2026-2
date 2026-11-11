@@ -22,7 +22,7 @@ Un pedido bloqueado por stock puede abrir Nueva necesidad con sus líneas y refe
 
 | Consulta | Resultado / consumidor |
 |---|---|
-| `consultarDisponibilidad(pedido)` | Físico Disponible menos reservas ajenas, por SKU y sede; excluye compromiso del propio pedido para no bloquear su revalidación. Comercial consulta de nuevo al aprobar |
+| `consultarDisponibilidad(pedido)` | Físico Disponible menos reservas ajenas y unidades retenidas por incidencias pendientes, por SKU y sede; excluye compromiso del propio pedido para no bloquear su revalidación. Comercial consulta de nuevo al aprobar |
 | `consultarSeguimiento(pedidoId)` | `salidas` con identidad/estado para impedir bloqueo/anulación posterior a salida; `entregas` solo con cantidades realmente entregadas, receptor y constancia. Preparado/En ruta/No entregado no generan entrega ficticia |
 | `consultarRecepcionDevolucion(solicitudId)` | Referencia `recepcion` cuando se recibe toda la cantidad autorizada; referencias parciales separadas. No produce nota de crédito ni ajuste financiero |
 | `listarFacturasVerificadas(sede)` | Facturas de proveedor cotejadas, base e IGV, identidad proveedor/OC. Puerto de consulta para Finanzas, sin registrar pago |
@@ -31,10 +31,10 @@ Un pedido bloqueado por stock puede abrir Nueva necesidad con sus líneas y refe
 
 ## Persistencia y límites
 
-- Clave propia `famihogar.logistica.v1`; Comercial conserva `famihogar.comercial.v1` (esquema 2). Se mantienen las sesiones existentes.
+- Clave propia `famihogar.logistica.v1`, **esquema 2**, con conversión del esquema 1 sobre copia y publicación en la siguiente operación válida; no borra documentos/movimientos ni importes. Las ubicaciones pertenecen a su almacén, las recepciones conservan cantidades por resultado y se añaden reubicaciones/tratamientos. Comercial conserva `famihogar.comercial.v1` (esquema 2). Se mantienen las sesiones existentes.
 - `LogisticaAplicacion.ejecutar` relee, copia, ejecuta y comprueba posiciones/reservas antes de publicar una vez. Un fallo conserva el estado persistido, incluidos los movimientos anteriores.
 - No ofrece una transacción entre áreas/pestañas/equipos. Cada preparación/salida vuelve a comprobar el pedido, y los consumidores consultan estado fresco; eso no equivale a un bloqueo distribuido.
 - Los movimientos se añaden, no se reescriben. Una devolución/ajuste agrega movimientos con referencia y responsable.
 - Los roles limitan los comandos de pantalla; el JavaScript y localStorage son accesibles al navegador. No se afirma autenticación de servidor ni servicio API.
 
-Evidencia: 54 pruebas de reglas y 49 comprobaciones de pantalla de Logística, incluida venta creada en Comercial, reserva/salida/entrega, recepción de devolución y consulta posterior. Los scripts crean datos aislados y eliminan su contexto; no acreditan que Luis haya ejecutado el guion manual.
+Evidencia: **77 pruebas de reglas y 71 comprobaciones de pantalla de Logística**, incluida venta creada en Comercial, reserva/salida/entrega, recepción de devolución, inspección parcial y reparación/reinspección vinculada a compra. Una reparación conforme aumenta la cantidad aceptada para el cotejo; no duplica la recepción ni registra pago. Los scripts crean datos aislados y eliminan su contexto; no acreditan que Luis haya ejecutado el guion manual nuevo.

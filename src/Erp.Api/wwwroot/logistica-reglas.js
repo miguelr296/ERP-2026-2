@@ -19,12 +19,15 @@ window.LogisticaReglas = (() => {
 
   function inicializar(config, productos, guardados) {
     if (guardados) {
-      exigir(guardados.version === config.version && ["almacenes", "ubicaciones", "movimientos", "proveedores", "requisiciones", "peticionesOferta", "ofertas", "acuerdos", "ordenes", "recepciones", "facturas", "reservas", "picking", "despachos", "retornos", "traslados", "conteos", "planes", "acciones", "evaluaciones", "parametros"].every(clave => Array.isArray(guardados[clave])), "Los datos logísticos no son compatibles. Se conservaron sin cambios.");
-      return copiar(guardados);
+      exigir([1, config.version].includes(guardados.version) && ["almacenes", "ubicaciones", "movimientos", "proveedores", "requisiciones", "peticionesOferta", "ofertas", "acuerdos", "ordenes", "recepciones", "facturas", "reservas", "picking", "despachos", "retornos", "traslados", "conteos", "planes", "acciones", "evaluaciones", "parametros"].every(clave => Array.isArray(guardados[clave])), "Los datos logísticos no son compatibles. Se conservaron sin cambios.");
+      const datos = copiar(guardados);
+      if (datos.version === 1) migrar(datos, config);
+      exigir(Array.isArray(datos.tratamientos) && Array.isArray(datos.reubicaciones), "Los datos logísticos no son compatibles. Se conservaron sin cambios.");
+      return datos;
     }
     const datos = {
-      version: config.version, revision: 0, almacenes: copiar(config.almacenes), ubicaciones: copiar(config.ubicaciones),
-      proveedores: copiar(config.proveedores), movimientos: [], requisiciones: [], peticionesOferta: [], ofertas: [], acuerdos: [], ordenes: [], recepciones: [], facturas: [], reservas: [], picking: [], despachos: [], retornos: [], traslados: [], conteos: [], planes: [], acciones: [], evaluaciones: [], parametros: []
+      version: config.version, revision: 0, almacenes: config.almacenes.map(a => ({ ...copiar(a), activo: true, estado: "Activo", historial: [] })), ubicaciones: config.almacenes.flatMap(a => config.ubicaciones.map(u => ({ ...copiar(u), id: `ubicacion-${a.id}-${u.codigo}`, almacen: a.id, sede: a.sede, activo: true, estado: "Activo", historial: [] }))),
+      proveedores: copiar(config.proveedores), movimientos: [], requisiciones: [], peticionesOferta: [], ofertas: [], acuerdos: [], ordenes: [], recepciones: [], facturas: [], reservas: [], picking: [], despachos: [], retornos: [], traslados: [], conteos: [], planes: [], acciones: [], evaluaciones: [], parametros: [], tratamientos: [], reubicaciones: []
     };
     for (const almacen of config.almacenes) {
       for (const [codigo, cantidad] of Object.entries(config.existencias[almacen.id] || {})) {
@@ -36,7 +39,27 @@ window.LogisticaReglas = (() => {
   }
 
   function almacenDe(datos, id, actor, otraSede = false) {
-    return obtener(datos.almacenes, id, actor, otraSede);
+    const almacen = obtener(datos.almacenes, id, actor, otraSede);
+    exigir(almacen.activo !== false, "El almacén está inactivo."); return almacen;
+  }
+
+  function migrar(datos, config) {
+    const anteriores = copiar(datos.ubicaciones);
+    datos.almacenes.forEach(a => { a.activo ??= true; a.estado = a.activo ? "Activo" : "Inactivo"; a.historial ??= []; });
+    datos.ubicaciones = datos.almacenes.flatMap(a => [...anteriores, ...config.ubicaciones.filter(u => !anteriores.some(v => v.codigo === u.codigo))].map(u => ({ ...copiar(u), id: `ubicacion-${a.id}-${u.codigo}`, almacen: a.id, sede: a.sede, activo: true, estado: "Activo", historial: [] })));
+    for (const r of datos.recepciones) for (const l of r.lineas) Object.assign(l, { conforme: r.estado === "Conforme" ? l.cantidad : 0, noConforme: r.estado === "No conforme" ? l.cantidad : 0, devuelta: r.estado === "Devuelta" ? l.cantidad : 0, enReparacion: 0, baja: 0 });
+    datos.conteos.forEach(c => c.lineas.forEach(l => { l.calidad ??= "Disponible"; }));
+    datos.tratamientos = []; datos.reubicaciones = []; datos.version = config.version;
+  }
+
+  function ubicacionDe(datos, almacen, codigo) {
+    const u = datos.ubicaciones.find(u => u.almacen === almacen && u.codigo === codigo);
+    exigir(u && u.activo !== false, "La ubicación no existe o está inactiva en este almacén."); return u;
+  }
+
+  function mismaPosicion(a, b) { return ["almacen", "codigo", "ubicacion", "calidad", "lote"].every(k => a[k] === b[k]); }
+  function posicionProtegida(datos, p) {
+    return datos.recepciones.some(r => r.almacen === p.almacen && r.lote === p.lote && r.lineas.some(l => l.codigo === p.codigo && ((p.ubicacion === "RECEPCION" && p.calidad === "Cuarentena" && l.cantidad > l.conforme + l.noConforme + l.devuelta + l.enReparacion + l.baja) || (p.ubicacion === "CUARENTENA" && p.calidad === "Cuarentena" && l.noConforme > 0))));
   }
 
   function saldo(datos, almacen, codigo, ubicacion, calidad = "Disponible", lote) {
@@ -47,21 +70,27 @@ window.LogisticaReglas = (() => {
     return datos.reservas.filter(r => r.estado === "Activa" && r.pedidoId !== excluirPedido).flatMap(r => r.lineas).filter(l => l.almacen === almacen && l.codigo === codigo && (!ubicacion || l.ubicacion === ubicacion) && (!lote || l.lote === lote)).reduce((n, l) => n + l.cantidad - l.consumida - l.liberada, 0);
   }
 
-  function disponible(datos, almacen, codigo, ubicacion, lote, excluirPedido) {
-    return saldo(datos, almacen, codigo, ubicacion, "Disponible", lote) - reservado(datos, almacen, codigo, ubicacion, lote, excluirPedido);
+  function retenido(datos, almacen, codigo, ubicacion, lote, calidad = "Disponible", excluirTratamiento) {
+    return datos.tratamientos.filter(t => t.estado === "Pendiente" && t.id !== excluirTratamiento && t.almacen === almacen && t.codigo === codigo && t.calidad === calidad && (!ubicacion || t.ubicacion === ubicacion) && (!lote || t.lote === lote)).reduce((n, t) => n + t.cantidad, 0);
+  }
+
+  function disponible(datos, almacen, codigo, ubicacion, lote, excluirPedido, excluirTratamiento) {
+    return saldo(datos, almacen, codigo, ubicacion, "Disponible", lote) - reservado(datos, almacen, codigo, ubicacion, lote, excluirPedido) - retenido(datos, almacen, codigo, ubicacion, lote, "Disponible", excluirTratamiento);
   }
 
   function registrarMovimiento(datos, entrada, actor, config) {
     exigir(Number.isSafeInteger(entrada.cantidad) && entrada.cantidad !== 0 && dinero(entrada.coste), "Cantidad o coste de movimiento no válido.");
     exigir(fechaValida(entrada.fecha) && entrada.codigo?.trim() && entrada.lote?.trim(), "Fecha, producto o lote del movimiento no válido.");
-    const almacen = datos.almacenes.find(a => a.id === entrada.almacen);
-    const ubicacion = config.ubicaciones.find(u => u.codigo === entrada.ubicacion);
+    const almacen = datos.almacenes.find(a => a.id === entrada.almacen && a.activo !== false);
+    const ubicacion = ubicacionDe(datos, entrada.almacen, entrada.ubicacion);
     exigir(almacen && ubicacion && ubicacion.estados.includes(entrada.calidad), "Almacén, ubicación o estado de calidad no válido.");
     const actual = saldo(datos, entrada.almacen, entrada.codigo, entrada.ubicacion, entrada.calidad, entrada.lote);
     exigir(actual + entrada.cantidad >= 0, "El movimiento dejaría existencias negativas.");
+    if (entrada.cantidad < 0) exigir(actual + entrada.cantidad >= retenido(datos, entrada.almacen, entrada.codigo, entrada.ubicacion, entrada.lote, entrada.calidad, entrada.tratamientoId), "La posición tiene cantidades retenidas por tratamiento pendiente.");
     const ocupacion = datos.movimientos.filter(m => m.almacen === entrada.almacen && m.ubicacion === entrada.ubicacion).reduce((n, m) => n + m.cantidad, 0);
     exigir(entrada.cantidad < 0 || ocupacion + entrada.cantidad <= ubicacion.capacidad, "La ubicación no tiene capacidad suficiente.");
-    const movimiento = { ...copiar(entrada), id: crypto.randomUUID(), numero: numerar(datos.movimientos, "MOV"), sede: almacen.sede, registradoPor: actor.nombre, ocurridoEn: new Date().toISOString() };
+    const campos = Object.fromEntries(["tipo", "almacen", "ubicacion", "calidad", "codigo", "lote", "cantidad", "coste", "referencia", "fecha", "tratamientoId"].filter(k => entrada[k] != null).map(k => [k, entrada[k]]));
+    const movimiento = { ...campos, id: crypto.randomUUID(), numero: numerar(datos.movimientos, "MOV"), sede: almacen.sede, registradoPor: actor.nombre, ocurridoEn: new Date().toISOString() };
     datos.movimientos.push(movimiento); return movimiento;
   }
 
@@ -77,8 +106,8 @@ window.LogisticaReglas = (() => {
   }
 
   function existencias(datos, productos, sede) {
-    return datos.almacenes.filter(a => a.sede === sede).flatMap(a => productos.filter(p => p.estado === "Aprobado").map(p => ({
-      almacen: a.id, codigo: p.codigo, fisico: saldo(datos, a.id, p.codigo) + saldo(datos, a.id, p.codigo, null, "Cuarentena") + saldo(datos, a.id, p.codigo, null, "Dañado"), reservado: reservado(datos, a.id, p.codigo), disponible: disponible(datos, a.id, p.codigo), cuarentena: saldo(datos, a.id, p.codigo, null, "Cuarentena"), danado: saldo(datos, a.id, p.codigo, null, "Dañado")
+    return datos.almacenes.filter(a => a.sede === sede && a.activo !== false).flatMap(a => productos.filter(p => p.estado === "Aprobado").map(p => ({
+      almacen: a.id, codigo: p.codigo, fisico: ["Disponible", "Cuarentena", "Dañado", "En reparación"].reduce((n, estado) => n + saldo(datos, a.id, p.codigo, null, estado), 0), retenido: retenido(datos, a.id, p.codigo), reservado: reservado(datos, a.id, p.codigo), disponible: disponible(datos, a.id, p.codigo), cuarentena: saldo(datos, a.id, p.codigo, null, "Cuarentena"), danado: saldo(datos, a.id, p.codigo, null, "Dañado"), enReparacion: saldo(datos, a.id, p.codigo, null, "En reparación")
     })));
   }
 
@@ -100,46 +129,56 @@ window.LogisticaReglas = (() => {
   }
 
   function planificar(datos, productos, pedidos, config, sede, periodo) {
-    return existencias(datos, productos, sede).map(e => {
-      const parametros = datos.parametros.find(p => p.almacen === e.almacen && p.codigo === e.codigo) || config.reposicion;
+    const saldos = existencias(datos, productos, sede), demandas = new Map();
+    for (const codigo of new Set(saldos.map(e => e.codigo))) {
       const necesidades = pedidos.filter(p => p.sede === sede && ["Aprobado", "Parcialmente atendido"].includes(p.estado)).reduce((n, p) => {
-        const pedida = p.lineas.find(l => l.codigo === e.codigo)?.cantidad || 0;
-        const salida = datos.despachos.filter(d => d.pedidoId === p.id).flatMap(d => d.lineas).filter(l => l.codigo === e.codigo).reduce((s, l) => s + l.cantidad - (l.retornada || 0), 0);
-        const reservada = datos.reservas.filter(r => r.pedidoId === p.id && r.estado === "Activa").flatMap(r => r.lineas).filter(l => l.codigo === e.codigo).reduce((s, l) => s + l.cantidad - l.consumida - l.liberada, 0);
+        const pedida = p.lineas.find(l => l.codigo === codigo)?.cantidad || 0;
+        const salida = datos.despachos.filter(d => d.pedidoId === p.id).flatMap(d => d.lineas).filter(l => l.codigo === codigo).reduce((s, l) => s + l.cantidad - (l.retornada || 0), 0);
+        const reservada = datos.reservas.filter(r => r.pedidoId === p.id && r.estado === "Activa").flatMap(r => r.lineas).filter(l => l.codigo === codigo).reduce((s, l) => s + l.cantidad - l.consumida - l.liberada, 0);
         return n + Math.max(0, pedida - salida - reservada);
       }, 0);
-      const prevision = datos.planes.find(p => p.sede === sede && p.periodo === periodo && p.codigo === e.codigo)?.cantidad || 0;
-      const salidasPeriodo = datos.despachos.filter(d => d.sede === sede && d.fecha?.startsWith(periodo)).flatMap(d => d.lineas).filter(l => l.codigo === e.codigo).reduce((n, l) => n + l.cantidad - (l.retornada || 0), 0);
-      const previsionPendiente = Math.max(0, prevision - salidasPeriodo - e.reservado);
-      const enCamino = datos.ordenes.filter(o => o.sede === sede && o.almacen === e.almacen && ["Emitida", "Confirmada", "Parcialmente recibida"].includes(o.estado)).reduce((n, o) => n + (o.lineas.find(l => l.codigo === e.codigo)?.cantidad || 0) - datos.recepciones.filter(r => r.ordenId === o.id && r.estado !== "Devuelta").flatMap(r => r.lineas).filter(l => l.codigo === e.codigo).reduce((s, l) => s + l.cantidad, 0), 0);
-      const proyectado = e.disponible - Math.max(necesidades, previsionPendiente) + enCamino;
-      return { ...e, minimo: parametros.minimo, objetivo: parametros.objetivo, demanda: Math.max(necesidades, previsionPendiente), enCamino, proyectado, sugerido: proyectado < parametros.minimo ? Math.max(0, parametros.objetivo - proyectado) : 0 };
+      const prevision = datos.planes.find(p => p.sede === sede && p.periodo === periodo && p.codigo === codigo)?.cantidad || 0;
+      const salidas = datos.despachos.filter(d => d.sede === sede && d.fecha?.startsWith(periodo)).flatMap(d => d.lineas).filter(l => l.codigo === codigo).reduce((n, l) => n + l.cantidad - (l.retornada || 0), 0);
+      const reservas = saldos.filter(e => e.codigo === codigo).reduce((n, e) => n + e.reservado, 0);
+      demandas.set(codigo, Math.max(necesidades, prevision - salidas - reservas, 0));
+    }
+    return saldos.map((e, indice) => {
+      const parametros = datos.parametros.find(p => p.almacen === e.almacen && p.codigo === e.codigo) || config.reposicion;
+      const enCamino = datos.ordenes.filter(o => o.sede === sede && o.almacen === e.almacen && ["Emitida", "Confirmada", "Parcialmente recibida"].includes(o.estado)).reduce((n, o) => n + (o.lineas.find(l => l.codigo === e.codigo)?.cantidad || 0) - datos.recepciones.filter(r => r.ordenId === o.id).flatMap(r => r.lineas).filter(l => l.codigo === e.codigo).reduce((s, l) => s + l.cantidad - l.devuelta, 0), 0);
+      const pendiente = demandas.get(e.codigo), ultimo = !saldos.slice(indice + 1).some(s => s.codigo === e.codigo);
+      const demanda = ultimo ? pendiente : Math.min(pendiente, Math.max(0, e.disponible + enCamino)); demandas.set(e.codigo, pendiente - demanda);
+      const proyectado = e.disponible - demanda + enCamino;
+      return { ...e, minimo: parametros.minimo, objetivo: parametros.objetivo, demanda, enCamino, proyectado, sugerido: proyectado < parametros.minimo ? Math.max(0, parametros.objetivo - proyectado) : 0 };
     });
   }
 
   function crearConteo(datos, entrada, actor, productos) {
     permitir(actor, ["Almacén", "Jefatura"]); almacenDe(datos, entrada.almacen, actor);
     exigir(fechaValida(entrada.fecha), "Indica una fecha válida para el conteo.");
-    exigir(entrada.lineas.length && new Set(entrada.lineas.map(l => `${l.codigo}|${l.ubicacion}|${l.lote}`)).size === entrada.lineas.length, "Agrega posiciones sin repetirlas.");
+    exigir(entrada.lineas.length && new Set(entrada.lineas.map(l => `${l.codigo}|${l.ubicacion}|${l.lote}|${l.calidad || "Disponible"}`)).size === entrada.lineas.length, "Agrega posiciones sin repetirlas.");
     const lineas = entrada.lineas.map(l => {
       exigir(productos.some(p => p.codigo === l.codigo) && l.lote?.trim() && Number.isSafeInteger(l.contado) && l.contado >= 0, "Producto, lote o cantidad contada no válida.");
-      const teorico = saldo(datos, entrada.almacen, l.codigo, l.ubicacion, "Disponible", l.lote);
-      exigir(configuracionUbicacion(datos, l.ubicacion)?.estados.includes("Disponible"), "Selecciona una ubicación de stock disponible para contar.");
-      return { ...copiar(l), teorico, diferencia: l.contado - teorico };
+      const calidad = l.calidad || "Disponible", u = ubicacionDe(datos, entrada.almacen, l.ubicacion);
+      exigir(u.estados.includes(calidad), "La ubicación no admite este estado de calidad.");
+      const teorico = saldo(datos, entrada.almacen, l.codigo, l.ubicacion, calidad, l.lote);
+      return { ...copiar(l), calidad, teorico, diferencia: l.contado - teorico, movimientosAlContar: datos.movimientos.filter(m => mismaPosicion(m, { ...l, almacen: entrada.almacen, calidad })).length };
     });
     return crear(datos.conteos, "CON", { ...entrada, lineas, estado: "Pendiente", motivo: motivo(entrada.motivo) }, actor, "Conteo físico registrado");
   }
-
-  function configuracionUbicacion(datos, codigo) { return datos.ubicaciones.find(u => u.codigo === codigo); }
 
   function aprobarConteo(datos, id, aceptar, razon, actor, config) {
     permitir(actor, ["Jefatura"]); const conteo = obtener(datos.conteos, id, actor);
     independiente(actor, conteo.registradoPor); exigir(conteo.estado === "Pendiente", "El conteo ya fue resuelto."); motivo(razon);
     if (aceptar) {
       for (const l of conteo.lineas) {
-        exigir(saldo(datos, conteo.almacen, l.codigo, l.ubicacion, "Disponible", l.lote) === l.teorico, "Hubo movimientos después de contar. Repite el conteo.");
-        exigir(l.contado >= reservado(datos, conteo.almacen, l.codigo, l.ubicacion, l.lote), "El ajuste afectaría cantidades reservadas.");
-        if (l.diferencia) registrarMovimiento(datos, { tipo: "Ajuste de inventario", almacen: conteo.almacen, ubicacion: l.ubicacion, codigo: l.codigo, lote: l.lote, cantidad: l.diferencia, calidad: "Disponible", coste: l.coste || 0, referencia: conteo.numero, fecha: conteo.fecha }, actor, config);
+        const posicion = { ...l, almacen: conteo.almacen };
+        exigir(saldo(datos, conteo.almacen, l.codigo, l.ubicacion, l.calidad, l.lote) === l.teorico && (l.movimientosAlContar == null || datos.movimientos.filter(m => mismaPosicion(m, posicion)).length === l.movimientosAlContar), "Hubo movimientos después de contar. Repite el conteo.");
+        if (l.calidad === "Disponible") exigir(l.contado >= reservado(datos, conteo.almacen, l.codigo, l.ubicacion, l.lote), "El ajuste afectaría cantidades reservadas.");
+        if (l.diferencia) {
+          exigir(l.calidad !== "En reparación" && !posicionProtegida(datos, posicion), "Resuelve el documento de calidad antes de ajustar esta posición.");
+          exigir(!datos.tratamientos.some(t => ["Pendiente", "En reparación", "Por reinspeccionar"].includes(t.estado) && mismaPosicion(t, posicion)), "La posición tiene un tratamiento pendiente.");
+          registrarMovimiento(datos, { tipo: "Ajuste de inventario", almacen: conteo.almacen, ubicacion: l.ubicacion, codigo: l.codigo, lote: l.lote, cantidad: l.diferencia, calidad: l.calidad, coste: l.coste || 0, referencia: conteo.numero, fecha: conteo.fecha }, actor, config);
+        }
       }
     }
     conteo.estado = aceptar ? "Aprobado" : "Rechazado"; conteo.historial.push(evento(actor, `${conteo.estado}: ${razon}`));
@@ -160,5 +199,5 @@ window.LogisticaReglas = (() => {
     accion.estado = estado; accion.historial.push(evento(actor, `${estado}: ${evidencia}`));
   }
 
-  return { exigir, copiar, permitir, motivo, entero, dinero, fechaValida, independiente, evento, numerar, obtener, crear, inicializar, almacenDe, saldo, reservado, disponible, registrarMovimiento, lotesDisponibles, validarLineas, existencias, configurarReposicion, registrarPrevision, planificar, crearConteo, aprobarConteo, crearAccion, avanzarAccion };
+  return { exigir, copiar, permitir, motivo, entero, dinero, fechaValida, independiente, evento, numerar, obtener, crear, inicializar, almacenDe, ubicacionDe, mismaPosicion, posicionProtegida, saldo, reservado, retenido, disponible, registrarMovimiento, lotesDisponibles, validarLineas, existencias, configurarReposicion, registrarPrevision, planificar, crearConteo, aprobarConteo, crearAccion, avanzarAccion };
 })();

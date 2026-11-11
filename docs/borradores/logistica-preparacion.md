@@ -1,5 +1,7 @@
 # Logística — preparación y desarrollo
 
+**Estado posterior comprobado:** el PR #119 ya está integrado en main (`dc0fc80`). La continuación de las cinco ampliaciones se registra por separado en [pulido de Logística](logistica-pulido.md); la hora y revisión personal de esta primera entrega no se trasladan a esa continuación.
+
 ## Autorización y punto de partida
 
 Luis pidió trabajar Logística con el mismo enfoque frontend de Comercial: mueblería retail con sedes, fuente PDF nueva, estilo/estructura Bartolito y responsabilidades separadas. Inicialmente autorizó fetch y crear `luis/logistica` desde Comercial publicada, conservando COM-009. Después de validar el recorrido, autorizó preparar la nueva tarjeta y el PR.
