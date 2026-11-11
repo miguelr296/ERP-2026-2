@@ -1,10 +1,7 @@
 # /iniciar
 
-[Índice](../../README.md)
-
-1. Preguntar integrante y horas disponibles, salvo que ya se conozcan.
-2. Leer AGENTS, contexto, bitácora, calendario y alcance vigente. Si no hay sesiones, partir del estado inicial.
-3. Consultar el estado del tablero mediante acceso de lectura autorizado o información del equipo. No inventar avances.
-4. Pedir al equipo el estado de rama y cambios cuando haga falta; no ejecutar Git sin autorización.
-5. Elegir una tarjeta desbloqueada por persona y explicar resultado, dependencias y evidencia requerida.
-6. Resumir el siguiente paso y actuar solo dentro del alcance autorizado.
+1. Leer `README.md`, `docs/contexto.md`, `docs/decisiones.md` y `BITACORA.md`.
+2. Confirmar con el usuario qué trabajo Comercial se abordará y el tiempo disponible.
+3. Consultar el PDF de referencia en `docs/fuentes/Documento_TO_BE_FAMIHOGAR.pdf` cuando sea pertinente.
+4. Trabajar solo con HTML, CSS y JavaScript; mantener el código simple y limpio.
+5. No asumir avances ni registrar trabajo sin evidencia. Respetar el alcance autorizado.

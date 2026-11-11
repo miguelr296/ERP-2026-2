@@ -5,16 +5,9 @@
 const catalogo = [
   {
     nombre: "Comercial",
-    descripcion: "Catálogo de productos y precios de demostración",
+    descripcion: "Área Comercial de FAMIHOGAR",
     icono: "↗",
-    etapa: "Selector conectado a la API",
-    ruta: "comercial/catalogo.html"
-  },
-  {
-    nombre: "Logística",
-    descripcion: "Alcance por definir con su fuente",
-    icono: "▦",
-    etapa: "Fecha por confirmar",
+    etapa: "Por desarrollar",
     ruta: null
   }
 ];

@@ -1,11 +1,7 @@
 # /cierre
 
-[Índice](../../README.md)
-
-1. Revisar criterios y ejecutar las comprobaciones aplicables.
-2. Pedir al autor una explicación de su pieza y corregir errores conceptuales.
-3. Proponer juntos los cambios de bitácora, reglas, contratos, glosario y contexto que sean necesarios.
-4. Aplicar únicamente los cambios autorizados y validar la versión final.
-5. Declarar lista para PR, no Done: el equipo realiza commit, abre PR y obtiene revisión de otra persona.
-6. Si la revisión exige cambios, repetir el ciclo de trabajo y cierre antes de actualizar el PR.
-7. Done requiere integración y aceptación. No agregar una entrada de avance solo por haber leído archivos.
+1. Revisar el cambio realizado contra el alcance acordado y la fuente aplicable.
+2. Validar manualmente lo que corresponda en las pantallas y comprobar que el código use solo HTML, CSS y JavaScript.
+3. Explicar el cambio y sus límites con claridad.
+4. Actualizar `BITACORA.md` solo con trabajo realizado y comprobado; actualizar contexto o decisiones únicamente si hace falta.
+5. Revisar la versión final y reportar validaciones, pendientes y bloqueos sin declarar comprobaciones que no se ejecutaron.
