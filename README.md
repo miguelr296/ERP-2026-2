@@ -39,6 +39,7 @@ Reglas con Node.js, sin dependencias adicionales:
 ```powershell
 node --test --test-isolation=none tests/interfaz/comercial.test.cjs
 node --test --test-isolation=none tests/interfaz/logistica.test.cjs
+node --test --test-isolation=none tests/interfaz/kardex-evaluacion.test.cjs
 ```
 
 Resultado local: **46 Comercial + 77 Logística = 123 superadas, 0 fallidas, 0 omitidas**. El aislamiento de procesos del runner falló con EPERM en el entorno restringido; los comandos anteriores ejecutan los casos en el mismo proceso.

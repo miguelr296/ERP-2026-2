@@ -76,7 +76,7 @@ Registrar aquí solo actividades realizadas y comprobadas durante esta nueva eta
 - Implementación: desde Logística → Kardex valorizado se podrá ejecutar un escenario de evaluación temporal. Recorre necesidad y aprobación, dos ofertas, orden de compra, recepción/inspección, cotejo de factura, cotización/pedido aprobado, reserva, salida y entrega. Usa las reglas reales dentro de una copia en memoria y no escribe en el almacenamiento normal.
 - Evidencia: `node --test --test-isolation=none tests/interfaz/kardex-evaluacion.test.cjs`: **2 superadas, 0 fallidas** (recorrido de reglas y conexión de la vista). El cálculo produjo salida a S/ 1,061.54, con saldo posterior de 12 unidades y S/ 12,738.46. El generador produce vista HTML/JSON para revisión local.
 - Límites: Jefatura, proveedor, factura y constancia son simulados; no se registran pagos ni operaciones reales. Revisión visual manual de Luis y revisión de Miguel pendientes; no se afirma una prueba de navegador. Evaluar con Contabilidad ajustes, traslados, devoluciones, reparación y bajas.
-- Publicación: se creó la [tarjeta #122](https://github.com/miguelr296/ERP-2026-2/issues/122) y una rama de test desde el `main` actualizado después de integrar #121. El PR incluirá `Closes #122`, pedirá revisión a Miguel y no se fusionará ni marcará Done.
+- Publicación: se creó la [tarjeta #122](https://github.com/miguelr296/ERP-2026-2/issues/122) y la rama de test desde el `main` actualizado después de integrar #121. El [PR #123](https://github.com/miguelr296/ERP-2026-2/pull/123) está abierto con `Closes #122`; revisión de Miguel solicitada. No se fusiona ni marca Done.
 
 ### Plantilla
 
