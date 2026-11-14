@@ -25,6 +25,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .solo-lectores { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .ceja { font-size: 10px; letter-spacing: 1.7px; font-weight: 700; color: var(--suave); margin-bottom: 9px; }
 .texto-suave { color: var(--suave); line-height: 1.6; }
+.aviso-evaluacion { margin-bottom: 18px; padding: 16px; border-left: 4px solid #91a582; border-radius: 6px; background: #edf3e9; color: #294c42; line-height: 1.6; }
 .marca { display: inline-flex; align-items: center; gap: 11px; color: #233f5b; text-decoration: none; font-size: 19px; font-weight: 750; letter-spacing: .8px; }
 .marca small { display: block; color: var(--suave); font-size: 10px; font-weight: 500; letter-spacing: 1px; margin-top: 3px; }
 .marca-icono { display: grid; place-items: center; width: 39px; height: 39px; background: var(--azul); color: white; border-radius: 8px 8px 8px 0; font-size: 29px; font-weight: 750; box-shadow: 4px 4px 0 #ddaa70; }
@@ -99,6 +100,7 @@ input::placeholder { color: #8c99a9; }
 .barra-tabla h2 { margin: 0; font-size: 14px; }
 .barra-tabla input { max-width: 275px; padding: 8px 10px; min-height: 35px; font-size: 12px; }
 .tabla-desplazable { overflow-x: auto; }
+.kardex-valorizado thead tr:first-child th[colspan] { background: #e9f0eb; color: #254b40; text-align: center; }
 table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
 th { color: #687e94; background: #f8fafc; font-size: 10px; letter-spacing: .4px; font-weight: 650; padding: 13px 16px; white-space: nowrap; border-bottom: 1px solid var(--borde); }
 td { padding: 15px 16px; border-bottom: 1px solid #edf1f5; line-height: 1.5; }

@@ -16,11 +16,11 @@
 | Atención parcial | Cantidad entregada menor que la pedida, según documentos informados por Despachos |
 | Solicitud de devolución | Documento comercial que pide autorización y sigue recepción, nota de crédito y ajuste de las áreas responsables |
 | Correlativo local | Número asignado dentro del almacenamiento de este navegador; no es un correlativo tributario compartido |
-| Requisición / necesidad | Solicitud interna de abastecimiento antes de comprar o trasladar |
+| Solicitud de pedido | Solicitud interna de abastecimiento antes de comprar o trasladar |
 | RFQ / petición de ofertas | Invitación a proveedores aprobados para cotizar las mismas cantidades |
 | Adjudicación | Selección motivada de una oferta tras comparar importe, plazo y calidad |
 | Acuerdo marco | Condiciones de proveedor vigentes con precios y máximo acumulado de cantidades para derivar OC |
-| OC | Orden de compra revisada, con proveedor, condiciones, cantidades y precios conservados |
+| Orden de compra | Orden revisada con proveedor, condiciones, cantidades y precios conservados |
 | Cuarentena | Existencias físicamente recibidas que no están disponibles para reservar o despachar |
 | Lote / ubicación | Identificación del grupo de mercancía y posición física que permiten seguir sus movimientos |
 | Disponible | Stock de calidad Disponible menos reserva activa pendiente y retenciones por incidencias; no incluye cuarentena/dañado/reparación |
@@ -30,7 +30,9 @@
 | Constancia de entrega / POD | Referencia de prueba de entrega con receptor, fecha y cantidades; no equivale a la salida del almacén |
 | En tránsito | Mercancía que salió de origen y aún no se recibió físicamente en destino |
 | Cotejo de tres documentos | Comparación OC, recepción conforme y factura del proveedor antes de pasar evidencia a Finanzas |
-| Kardex | Secuencia de entradas/salidas/ajustes con sus referencias; en esta entrega no calcula valorización contable |
+| Orden de ingreso | Documento logístico que registra mercancía recibida vinculada a una orden de compra |
+| Orden de salida | Documento logístico que registra la salida física vinculada a un pedido aprobado |
+| Kardex valorizado | Única tarjeta por producto; presenta Entradas, Salidas y Saldos finales con trazabilidad física y valorización por Promedio Ponderado Móvil |
 | OTIF | Entrega a tiempo y completa; aquí porcentaje de despachos confirmados completos dentro de su fecha prevista |
 | Acción correctiva | Trabajo con causa, responsable, plazo, evidencia y revisión independiente de cierre |
 | Inspección parcial | Distribución por producto entre conformes, observadas y unidades que todavía esperan inspección |
