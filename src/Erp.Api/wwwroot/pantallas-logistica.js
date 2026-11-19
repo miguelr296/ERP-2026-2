@@ -84,7 +84,10 @@ window.PantallasLogistica = c => {
       if (partes[1] === "pedido" && partes[2]) { fichaPedido(partes[2]); return; }
       L.exigir(permitir(secciones[vistaActual][2]), "No tienes acceso a ese proceso logístico.");
       if (partes[2]) ficha(vistaActual, partes[2], sub);
-      else c.$("#contenido").innerHTML = sub + lista(vistaActual);
+      else {
+        const accesoPatrimonial = ["compras", "logistica"].includes(modulo) ? c.accesoPatrimonial(modulo) : "";
+        c.$("#contenido").innerHTML = sub + (accesoPatrimonial ? `<div class="acciones-documento">${accesoPatrimonial}</div>` : "") + lista(vistaActual);
+      }
     } catch (error) { c.$("#contenido").innerHTML = cabecera("Logística") + `<p class="tarjeta vacio error">${e(error.message)}</p>`; }
     c.$("#contenido").focus();
   }

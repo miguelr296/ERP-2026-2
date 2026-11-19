@@ -63,6 +63,9 @@ window.ContratosLogisticos = {
     const completa = solicitud && solicitud.lineas.every(l => recepciones.flatMap(r => r.lineas).filter(r => r.codigo === l.codigo).reduce((n, r) => n + r.cantidad, 0) === l.cantidad);
     return { recepcion: completa ? recepciones.map(r => r.numero).join(" / ") : null, recepcionesParciales: recepciones.map(r => r.numero) };
   },
+  listarProveedoresAprobados() {
+    return window.LogisticaAplicacion.leer().proveedores.filter(p => p.estado === "Aprobado").map(({ id, nombre, ruc, estado }) => ({ id, nombre, ruc, estado }));
+  },
   listarFacturasVerificadas(sede) {
     const datos = window.LogisticaAplicacion.leer();
     return datos.facturas.filter(f => f.estado === "Verificada" && (!sede || f.sede === sede)).map(f => ({ id: f.id, numero: f.numero, documento: f.documento, proveedorId: f.proveedorId, ordenId: f.ordenId, base: f.baseCalculada, igv: f.igv, moneda: "PEN", estado: f.estado }));

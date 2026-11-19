@@ -68,6 +68,12 @@ Registrar aquí solo actividades realizadas y comprobadas durante esta nueva eta
 - Luis solicitó el PR. Se creó la [tarjeta #120](https://github.com/miguelr296/ERP-2026-2/issues/120), asignada a LuisInfinito, con implementación automatizada comprobada y revisión manual parcial explícita. Se comprobó permiso write en el principal, ausencia de PR abiertos/tarjeta duplicada y main sin novedades sobre `dc0fc80`.
 - Verificación previa al commit: **123/123 pruebas de reglas**, 0 fallidas/omitidas; conserva evidencia de navegador sobre el código funcional sin cambios posteriores. El PR incluirá `Closes #120` y revisión solicitada a Miguel, sin fusión automática ni Done. COM-009, configuración local e informes TRX anteriores se conservan fuera del commit.
 
+### 2026-11-19 · Activos Fijos
+
+- Se revisó la rama local `work` en `6bb4fb7`, los cambios de Luis en Comercial y Logística y la Sesión 10 de activos fijos, incluidos los diagramas de ciclo de vida, BPM e integración.
+- Se añadió el circuito patrimonial por rol y sede. Comparte el maestro de proveedores aprobado con Logística, registra los documentos de compra para uso interno y expone el diario y las obligaciones locales en Contabilidad y Finanzas. [Fuente y guion](docs/pantallas/activos-fijos.md).
+- Validación automatizada en el checkout local. 136 pruebas de reglas y 153 comprobaciones de Chromium, con 0 fallos y 0 excepciones JavaScript. El caso de la sesión confirmó S/ 120,000 de costo, S/ 21,600 de IGV recuperable, S/ 141,600 de obligación y S/ 1,000 de depreciación mensual. Ficha patrimonial A4 de una página, pantallas a 390 px y recarga comprobadas.
+
 ### Plantilla
 
 Fecha · Persona · Trabajo realizado

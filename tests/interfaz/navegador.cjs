@@ -88,7 +88,7 @@ async function ejecutar() {
     await enviar("Page.navigate", { url: origen });
     await esperar("!!window.ReglasComerciales && document.querySelector('#sede-acceso').options.length===3");
     await foto("01-acceso"); await login("Luis", "Asesor");
-    await comprobar("document.querySelectorAll('[data-modulo]').length===8", "Selector de ocho módulos");
+    await comprobar("document.querySelectorAll('[data-modulo]').length===9 && !!document.querySelector('[data-modulo=activos]')", "Selector de nueve módulos, incluido Activos Fijos");
     await rellenar({ "#buscar-aplicacion": "facturacion" }); await evaluar("document.querySelector('#buscar-aplicacion').dispatchEvent(new Event('input',{bubbles:true}))");
     await comprobar("document.querySelectorAll('[data-modulo]').length===1", "Búsqueda sin tildes");
     await rellenar({ "#buscar-aplicacion": "" }); await evaluar("document.querySelector('#buscar-aplicacion').dispatchEvent(new Event('input',{bubbles:true}))");

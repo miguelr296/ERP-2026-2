@@ -32,6 +32,7 @@
     { id: "facturacion", nombre: "Facturación", icono: "documento", color: "#d59946" },
     { id: "contabilidad", nombre: "Contabilidad", icono: "libro", color: "#687fa7" },
     { id: "compras", nombre: "Compras", icono: "compra", color: "#559694", descripcion: "Proveedores y abastecimiento" },
+    { id: "activos", nombre: "Activos Fijos", icono: "caja", color: "#667f9c", descripcion: "Inversión y control patrimonial" },
     { id: "reportes", nombre: "Reportes", icono: "ventas", color: "#b57479" }
   ];
   const secciones = { resumen: "Inicio", clientes: "Clientes", oportunidades: "Oportunidades", cotizaciones: "Cotizaciones", pedidos: "Pedidos", catalogo: "Catálogo", precios: "Precios", aprobaciones: "Aprobaciones", solicitudes: "Postventa", indicadores: "Indicadores" };
@@ -123,6 +124,7 @@
       return;
     }
     $("#nombre-modulo").textContent = modulo.nombre;
+    if (modulo.id === "activos" || activos.ruta(modulo.id, partes[1])) { activos.dibujar(modulo.id, partes); return; }
     if (["logistica", "compras", "despachos"].includes(modulo.id)) { logistica.dibujar(modulo.id, partes); return; }
     $("#navegacion").setAttribute("aria-label", "Secciones de Comercial");
     const habilitado = modulo.id === "comercial" && puedeComercial() && datos;
@@ -130,7 +132,7 @@
     $("#navegacion").innerHTML = habilitado ? Object.entries(secciones).map(([id, texto]) => `<button type="button" data-vista="${id}" ${id === (partes[1] || "resumen") ? 'aria-current="page"' : ""}>${id === "resumen" ? icono("casa") : ""}${texto}</button>`).join("") : `<button type="button" aria-current="page">${modulo.nombre}</button>`;
     document.title = `${modulo.nombre} · FAMIHOGAR`;
     if (modulo.id !== "comercial") {
-      $("#contenido").innerHTML = `<div class="tarjeta pendiente">${icono(modulo.icono)}<h1>${modulo.nombre}</h1><p>En desarrollo</p></div>`;
+      $("#contenido").innerHTML = `<div class="tarjeta pendiente">${icono(modulo.icono)}<h1>${modulo.nombre}</h1><p>En desarrollo</p>${activos.acceso(modulo.id)}</div>`;
     } else if (!puedeComercial()) {
       $("#contenido").innerHTML = `<div class="tarjeta pendiente">${icono("personas")}<h1>Comercial</h1><p>Disponible para Asesor y Jefatura.</p><a class="boton" href="#aplicaciones">Volver a aplicaciones</a></div>`;
     } else if (!datos) {
@@ -335,10 +337,12 @@
     $, esc, moneda, sedeNombre, fechaHoy, fechaCorta, fechaTexto, accion, enlace, opciones,
     cabecera, tabla, etiqueta, formulario, abrirModal, guardarCambios, navegar, aviso,
     detalleLineas, totales, mostrarHistorial, prepararImpresion, sumarDias,
+    accesoPatrimonial(modulo) { return activos.acceso(modulo); },
     solicitarAbastecimiento(pedido) { logistica.solicitarDesdeComercial(pedido); }
   };
   const ampliacion = window.PantallasComerciales(contextoPantallas);
   const logistica = window.PantallasLogistica(contextoPantallas);
+  const activos = window.PantallasActivos(contextoPantallas);
 
   // Contratos públicos de solo consulta para las áreas que consumen documentos comerciales.
   window.ContratosComerciales = {
@@ -428,7 +432,7 @@
   });
   window.addEventListener("hashchange", dibujarRuta);
   window.addEventListener("storage", eventoStorage => {
-    if ([CLAVE_DATOS, window.LogisticaAplicacion.CLAVE].includes(eventoStorage.key) && sesion) { cargarDatos(); dibujarRuta(); aviso("Datos actualizados desde otra pestaña."); }
+    if ([CLAVE_DATOS, window.LogisticaAplicacion.CLAVE, window.ActivosAplicacion.CLAVE].includes(eventoStorage.key) && sesion) { cargarDatos(); dibujarRuta(); aviso("Datos actualizados desde otra pestaña."); }
   });
   try {
     const anterior = JSON.parse(sessionStorage.getItem(CLAVE_SESION));
