@@ -96,10 +96,15 @@ async function ejecutar() {
     await clic("[data-accion=nuevo-cliente]");
     await rellenar({ "#documento": "70000003", "#nombreCliente": "Cliente de revisión", "#direccion": "Av. Ejemplo 100", "#direccionFiscal": "Av. Ejemplo 100", "#direccionCobranza": "Av. Ejemplo 100" });
     await guardar(); await esperar("!document.querySelector('#modal').open");
-    const clienteId = await almacen("d.clientes.at(-1).id"), maestroId = await almacen("d.solicitudesMaestro.at(-1).id");
-    await comprobar("document.querySelector('#contenido').textContent.includes('Pendiente')", "Alta de cliente pendiente de revisión");
+    const clienteId = await almacen("d.clientes.at(-1).id");
+    await comprobar("document.querySelector('#contenido').textContent.includes('Aprobado')", "Alta de cliente disponible al guardar");
     await clic("[data-accion=nueva-oportunidad]");
-    await comprobar(`!Array.from(document.querySelector('#cliente-oportunidad').options).some(o=>o.value===${JSON.stringify(clienteId)})`, "Cliente pendiente no se usa en oportunidad"); await clic("#cerrar-modal");
+    await comprobar(`Array.from(document.querySelector('#cliente-oportunidad').options).some(o=>o.value===${JSON.stringify(clienteId)})`, "Cliente nuevo disponible inmediatamente en oportunidad"); await clic("#cerrar-modal");
+    await clic(`[data-accion=ver-cliente][data-id='${clienteId}']`);
+    await clic("[data-accion=editar-cliente]");
+    await rellenar({ "#correo": "cliente@prueba.example.com" });
+    await guardar(); await esperar("!document.querySelector('#modal').open");
+    const maestroId = await almacen("d.solicitudesMaestro.at(-1).id");
     await login("Luis", "Jefatura"); await ir("aprobaciones");
     await decidir(`[data-accion=aprobar-maestro][data-id='${maestroId}']`, "Revisión propia");
     await comprobar("document.querySelector('#error-formulario').textContent.includes('Otra persona')", "No autoaprobar maestro"); await clic("#cerrar-modal");

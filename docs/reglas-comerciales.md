@@ -6,7 +6,7 @@ La evidencia corresponde al frontend y a contratos locales de consulta. Las regl
 
 | Regla | Fuente / decisión | Evidencia ejecutada |
 |---|---|---|
-| Revisar altas y cambios de maestros antes de utilizarlos; otra persona resuelve | PDF pp. 6, 23; decisión de esta interfaz | Cliente pendiente no cotiza; producto no se publica antes de revisar; cambio de lista mantiene versión vigente hasta aprobación |
+| Habilitar clientes nuevos al validar datos y documento único; revisar actualizaciones y otros maestros por otra persona | Cambio solicitado el 2026-11-19; PDF pp. 6, 23 | Cliente nuevo cotiza inmediatamente; altas pendientes válidas se habilitan al leer; producto y cambio de lista requieren revisión |
 | Usar una sola lista vigente por canal y segmento, con productos y precios aprobados | PDF pp. 6–7 | Listas vencida, futura, inactiva, ambigua, ausente y solapada; canal y segmento; precio faltante |
 | Conservar copia de líneas, cantidades, precios, descuento e impuesto | PDF pp. 4, 7–8 | Cambiar catálogo no modifica cotización ni pedido; cantidades cero y productos repetidos rechazados |
 | Calcular dinero en céntimos; separar bruto, descuento, base e impuesto | PDF pp. 7, 12, 14; DEC-003/004 | Ejemplo 3547,00 + 638,46 = 4185,46; con 10 %: descuento 354,70, base 3192,30, IGV 574,61, total 3766,91 |
@@ -21,4 +21,4 @@ La evidencia corresponde al frontend y a contratos locales de consulta. Las regl
 | Separar roles, sede y registro de operaciones de otros módulos | PDF pp. 3, 5, 23; indicación de Luis | Siete roles, documentos de otra sede no operables, ausencia de formularios de cobro en áreas pendientes |
 | Reportar conversión, descuentos, ticket, margen estimado y pendientes sin confundirlos con cobros/asientos | PDF p. 24 | Indicadores y filtros de fecha/canal/sede; costes solo para Jefatura; anulación no deja unidades pendientes |
 
-Pruebas: [46 casos de reglas](../tests/interfaz/comercial.test.cjs) y [54 comprobaciones de pantalla](../tests/interfaz/navegador.cjs). Los resultados de la primera entrega (41 comprobaciones) se conservan como históricos y no sustituyen esta regresión.
+Pruebas: [49 casos de reglas](../tests/interfaz/comercial.test.cjs) y [56 comprobaciones de pantalla](../tests/interfaz/navegador.cjs). Los resultados de la primera entrega (41 comprobaciones) se conservan como históricos y no sustituyen esta regresión.

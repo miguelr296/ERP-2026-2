@@ -29,7 +29,7 @@ window.PantallasComerciales = c => {
 
   function clientes() {
     const filas = datos().clientes.map(cliente => `<tr><td>${b(cliente.nombre, "ver-cliente", cliente.id, "enlace-boton")}</td><td>${e(cliente.tipoDocumento)} ${e(cliente.documento)}</td><td>${e(cliente.correo || "—")}<small>${e(cliente.telefono)}</small></td><td>${e(cliente.segmento)}</td><td>${c.etiqueta(cliente.estado)}</td></tr>`);
-    return c.cabecera("Clientes", "Directorio compartido entre sedes. Las altas y cambios requieren revisión.", b("+ Nuevo cliente", "nuevo-cliente", "", "boton primario")) + c.tabla("Directorio de clientes", ["Cliente", "Documento", "Contacto", "Segmento", "Estado"], filas);
+    return c.cabecera("Clientes", "Directorio compartido entre sedes. Los clientes nuevos quedan disponibles al guardar sus datos.", b("+ Nuevo cliente", "nuevo-cliente", "", "boton primario")) + c.tabla("Directorio de clientes", ["Cliente", "Documento", "Contacto", "Segmento", "Estado"], filas);
   }
 
   function cliente(id = "") {
@@ -53,7 +53,7 @@ window.PantallasComerciales = c => {
       for (const clave of Object.keys(valor)) valor[clave] = valor[clave].trim();
       operacion(actuales => r.solicitarMaestro(actuales, "cliente", valor, id, actor()));
       return volver("clientes");
-    }, "Enviar a revisión");
+    }, id ? "Enviar a revisión" : "Guardar cliente");
     const formatoDocumento = () => {
       const cantidad = c.$("#tipoDocumento").value === "DNI" ? 8 : 11;
       c.$("#documento").pattern = `[0-9]{${cantidad}}`; c.$("#documento").maxLength = cantidad;
@@ -121,7 +121,7 @@ window.PantallasComerciales = c => {
 
   function nuevaCotizacion(id = "") {
     const oportunidades = deSede(datos().oportunidades).filter(o => o.estado !== "Perdida" && r.aprobado(datos().clientes.find(cliente => cliente.id === o.clienteId)));
-    if (!oportunidades.length) { c.aviso("Registra una oportunidad con un cliente aprobado en esta sede."); return; }
+    if (!oportunidades.length) { c.aviso("Registra una oportunidad con un cliente habilitado en esta sede."); return; }
     const hoy = c.fechaHoy();
     const seleccion = `<select id="oportunidad-cotizacion" name="oportunidadId" required><option value="">Selecciona una oportunidad</option>${oportunidades.map(o => `<option value="${e(o.id)}">${e(o.numero)} · ${e(datos().clientes.find(cliente => cliente.id === o.clienteId)?.nombre)} · ${e(o.asunto)}</option>`).join("")}</select>`;
     const campos = campo("Oportunidad de origen", "oportunidad-cotizacion", seleccion) + campo("Vigente hasta", "vigencia", texto("vigencia", c.sumarDias(hoy, c.configuracion.parametros.diasVigencia), `type="date" min="${hoy}" required`)) + campo("Entrega propuesta", "entrega", texto("entrega", c.sumarDias(hoy, 7), `type="date" min="${hoy}" required`)) + campo("Condición de pago", "condicion", selector("condicion", ["Contado", "Crédito 30 días"], "Contado")) + campo("Promoción", "promocion", '<select id="promocion" name="promocionId"><option value="">Sin promoción</option></select>') + campo("Descuento manual (%)", "descuento", texto("descuento", 0, 'type="number" min="0" max="20" step="0.01" required'));

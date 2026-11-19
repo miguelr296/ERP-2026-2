@@ -31,13 +31,29 @@ window.ReglasComerciales = (() => {
       c.listaNombre ??= "Lista histórica"; c.moneda ??= "PEN"; c.autorizacion ??= "No requiere";
     });
     datos.pedidos.forEach(p => { p.entregas ??= []; p.facturas ??= []; });
+    habilitarAltasPendientes(datos);
     datos.version = 2;
     return datos;
   }
 
+  function habilitarAltasPendientes(datos) {
+    for (const solicitud of datos.solicitudesMaestro.filter(s => s.tipo === "cliente" && s.estado === "Pendiente")) {
+      const cliente = datos.clientes.find(c => c.id === solicitud.objetivoId && c.estado === "Pendiente");
+      if (!cliente) continue;
+      try { validarMaestro(datos, "cliente", cliente, cliente.id); }
+      catch { continue; }
+      const registro = evento({ nombre: "Sistema", rol: "Sistema" }, "Alta habilitada tras validar datos y duplicados según el nuevo flujo de clientes");
+      cliente.estado = "Aprobado";
+      cliente.historial.push(registro);
+      solicitud.estado = "Registrada";
+      solicitud.historial ??= [];
+      solicitud.historial.push(copiar(registro));
+    }
+  }
+
   function listaVigente(datos, oportunidad, fecha) {
     const cliente = datos.clientes.find(c => c.id === oportunidad.clienteId);
-    exigir(aprobado(cliente), "El cliente debe estar aprobado antes de cotizar.");
+    exigir(aprobado(cliente), "El cliente debe estar habilitado antes de cotizar.");
     const listas = datos.listasPrecio.filter(l => vigente(l, fecha) && l.canal === oportunidad.canal && l.segmento === cliente.segmento);
     exigir(listas.length === 1, listas.length ? "Hay más de una lista vigente para el canal y segmento." : "No hay lista vigente para el canal y segmento del cliente.");
     return listas[0];
@@ -114,7 +130,7 @@ window.ReglasComerciales = (() => {
     if (estado === "Vencida") exigir(c.vigenteHasta < fecha, "La cotización todavía está vigente.");
     if (["Enviada", "Aceptada"].includes(estado)) {
       exigir(c.vigenteHasta >= fecha && (!c.listaVigenteHasta || c.listaVigenteHasta >= fecha), "La cotización o su lista venció.");
-      exigir(aprobado(datos.clientes.find(cliente => cliente.id === c.cliente.id)), "El cliente no está aprobado.");
+      exigir(aprobado(datos.clientes.find(cliente => cliente.id === c.cliente.id)), "El cliente no está habilitado.");
     }
     if (["Rechazada", "Anulada"].includes(estado)) motivo = motivoValido(motivo);
     exigir(estado !== "Anulada" || !datos.pedidos.some(p => p.cotizacionId === id), "La cotización ya tiene un pedido derivado.");
@@ -144,7 +160,7 @@ window.ReglasComerciales = (() => {
     const credito = pedido.condicion === "Contado" ? { origen: "No aplica: contado", aprobado: true } : puertos.consultarCredito(pedido.cliente.id);
     if (pedido.condicion !== "Contado") credito.aprobado = !!credito.datos && Number.isSafeInteger(credito.datos.limite) && credito.datos.limite >= 0 && Number.isSafeInteger(credito.datos.exposicion) && credito.datos.exposicion >= 0 && credito.datos.vencido === 0 && credito.datos.limite - credito.datos.exposicion >= pedido.total;
     const motivos = [];
-    if (!identificacion) motivos.push("Cliente no aprobado o identificación incompleta");
+    if (!identificacion) motivos.push("Cliente no habilitado o identificación incompleta");
     if (disponibilidad.some(l => l.disponible == null)) motivos.push("Sin respuesta de disponibilidad de Inventarios");
     else if (disponibilidad.some(l => !l.aprobado)) motivos.push("Disponibilidad insuficiente en Inventarios");
     if (!credito.aprobado) motivos.push(credito.datos ? "Finanzas: crédito insuficiente o deuda vencida" : "Sin respuesta de crédito de Finanzas");
@@ -298,9 +314,10 @@ window.ReglasComerciales = (() => {
     validarMaestro(datos, tipo, valor, id);
     exigir(!datos.solicitudesMaestro.some(s => s.tipo === tipo && s.objetivoId === id && id && s.estado === "Pendiente"), "Ya hay un cambio pendiente para este registro.");
     const objetivoId = id || crypto.randomUUID();
-    const solicitud = { id: crypto.randomUUID(), tipo, objetivoId, datos: copiar(valor), registradoPor: actor.nombre, sede: actor.sede, estado: "Pendiente", historial: [evento(actor, `Solicitud de ${id ? "actualización" : "alta"} de ${tipo}`)] };
+    const altaCliente = tipo === "cliente" && !id;
+    const solicitud = { id: crypto.randomUUID(), tipo, objetivoId, datos: copiar(valor), registradoPor: actor.nombre, sede: actor.sede, estado: altaCliente ? "Registrada" : "Pendiente", historial: [evento(actor, altaCliente ? "Cliente registrado con datos validados y documento único" : `Solicitud de ${id ? "actualización" : "alta"} de ${tipo}`)] };
     datos.solicitudesMaestro.push(solicitud);
-    if (tipo === "cliente" && !id) datos.clientes.push({ ...copiar(valor), id: objetivoId, estado: "Pendiente", historial: copiar(solicitud.historial) });
+    if (altaCliente) datos.clientes.push({ ...copiar(valor), id: objetivoId, estado: "Aprobado", historial: copiar(solicitud.historial) });
     return solicitud;
   }
 

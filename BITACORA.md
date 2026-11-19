@@ -74,6 +74,13 @@ Registrar aquí solo actividades realizadas y comprobadas durante esta nueva eta
 - Se añadió el circuito patrimonial por rol y sede. Comparte el maestro de proveedores aprobado con Logística, registra los documentos de compra para uso interno y expone el diario y las obligaciones locales en Contabilidad y Finanzas. [Fuente y guion](docs/pantallas/activos-fijos.md).
 - Validación automatizada en el checkout local. 136 pruebas de reglas y 153 comprobaciones de Chromium, con 0 fallos y 0 excepciones JavaScript. El caso de la sesión confirmó S/ 120,000 de costo, S/ 21,600 de IGV recuperable, S/ 141,600 de obligación y S/ 1,000 de depreciación mensual. Ficha patrimonial A4 de una página, pantallas a 390 px y recarga comprobadas.
 
+### 2026-11-19 · Alta inmediata de clientes
+
+- Se habilitó el uso de clientes nuevos en oportunidades y cotizaciones al guardar datos válidos con DNI/RUC único. La interfaz muestra Guardar cliente en el alta.
+- Las altas pendientes del flujo anterior se habilitan al leer sobre copia si pasan las validaciones. Se conservan IDs e historial y se registra el cambio de política. Los rechazados, duplicados y datos inválidos conservan su estado.
+- Validación ejecutada sobre este cambio. 49 pruebas de reglas Comercial y 77 Logística superadas. El recorrido de navegador Comercial pasó sus 56 comprobaciones, con 0 excepciones JavaScript, incluyendo uso inmediato del cliente, revisión de una actualización, crédito, descuentos y pedidos.
+- Cambio incorporado a la rama `codex/activos-fijos` solicitada por el usuario.
+
 ### Plantilla
 
 Fecha · Persona · Trabajo realizado

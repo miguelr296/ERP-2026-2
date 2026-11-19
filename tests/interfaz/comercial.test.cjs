@@ -222,14 +222,46 @@ test("devolución autorizada espera recepción, nota y ajuste de sus áreas", ()
   t.r.seguirDevolucion(t.datos, s.id, asesor, t.puertos); assert.equal(s.estado, "Completada");
   assert.equal(t.datos.pagos, undefined);
 });
-test("cliente nuevo requiere aprobación antes de cotizar", () => {
+test("cliente nuevo puede cotizar al guardar sus datos válidos", () => {
   const t = entorno();
   const s = t.r.solicitarMaestro(t.datos, "cliente", { nombre: "Cliente nuevo", tipoDocumento: "DNI", documento: "70000003", direccion: "Dirección", segmento: "Retail" }, "", asesor);
   t.datos.oportunidades[0].clienteId = s.objetivoId;
-  assert.throws(() => cotizacion(t), /cliente debe estar aprobado/);
-  assert.throws(() => t.r.resolverMaestro(t.datos, s.id, true, "Revisado", { ...jefatura, nombre: "Luis" }), /Otra persona/);
-  t.r.resolverMaestro(t.datos, s.id, true, "Identificación revisada", jefatura);
+  assert.equal(s.estado, "Registrada");
   assert.equal(cotizacion(t).cliente.id, s.objetivoId);
+  assert.throws(() => t.r.resolverMaestro(t.datos, s.id, true, "Revisado", jefatura), /ya fue resuelta/);
+});
+test("actualizar un cliente conserva los datos vigentes hasta revisión independiente", () => {
+  const t = entorno(), original = t.datos.clientes[0];
+  const s = t.r.solicitarMaestro(t.datos, "cliente", { ...original, direccion: "Nueva dirección" }, original.id, asesor);
+  assert.equal(t.datos.clientes[0].direccion, original.direccion);
+  assert.throws(() => t.r.resolverMaestro(t.datos, s.id, true, "Revisado", { ...jefatura, nombre: "Luis" }), /Otra persona/);
+  t.r.resolverMaestro(t.datos, s.id, true, "Dirección revisada", jefatura);
+  assert.equal(t.datos.clientes[0].direccion, "Nueva dirección");
+});
+test("altas pendientes anteriores se habilitan en copia conservando historial y documentos", () => {
+  const t = entorno();
+  const solicitud = t.r.solicitarMaestro(t.datos, "cliente", { nombre: "Cliente anterior", tipoDocumento: "DNI", documento: "70000003", direccion: "Dirección", segmento: "Retail" }, "", asesor);
+  solicitud.estado = "Pendiente";
+  t.datos.clientes.at(-1).estado = "Pendiente";
+  const antes = JSON.stringify(t.datos);
+  const actual = t.r.prepararDatos(t.config, t.datos);
+  assert.equal(JSON.stringify(t.datos), antes);
+  assert.equal(actual.clientes.at(-1).estado, "Aprobado");
+  assert.equal(actual.solicitudesMaestro.at(-1).estado, "Registrada");
+  assert.equal(actual.clientes.at(-1).id, solicitud.objetivoId);
+  assert.equal(actual.clientes.at(-1).historial.length, 2);
+  assert.deepEqual(JSON.parse(JSON.stringify(t.r.prepararDatos(t.config, actual))), JSON.parse(JSON.stringify(actual)));
+});
+test("migración conserva rechazados y no habilita altas inválidas o duplicadas", () => {
+  const t = entorno();
+  for (const [id, documento, estado] of [["duplicado", "70000001", "Pendiente"], ["invalido", "123", "Pendiente"], ["rechazado", "70000005", "Rechazado"]]) {
+    t.datos.clientes.push({ id, nombre: "Anterior", tipoDocumento: "DNI", documento, estado, direccion: "Dirección", segmento: "Retail" });
+    t.datos.solicitudesMaestro.push({ id, tipo: "cliente", objetivoId: id, estado: "Pendiente", historial: [] });
+  }
+  const actual = t.r.prepararDatos(t.config, t.datos);
+  assert.equal(actual.clientes.find(c => c.id === "rechazado").estado, "Rechazado");
+  assert.equal(actual.clientes.find(c => c.id === "duplicado").estado, "Pendiente");
+  assert.equal(actual.clientes.find(c => c.id === "invalido").estado, "Pendiente");
 });
 test("documentos de clientes repetidos se rechazan", () => {
   const t = entorno();

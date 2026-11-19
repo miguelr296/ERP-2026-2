@@ -12,9 +12,9 @@ Luis declaró **1 hora real en total**. Confirmó los límites 5 % / 20 %, expli
 |---|---|---|
 | Acceso y Aplicaciones | Usuario, ocho roles con Transporte incorporado por Logística, sede, sesión/salida, ocho módulos, búsqueda sin tildes | Bartolito e indicaciones de Luis |
 | Panel Comercial | Operaciones por sede, accesos y contadores calculados | PDF pp. 3, 24 |
-| Clientes | Alta/actualización propuesta, DNI/RUC único, direcciones de entrega/fiscal/cobranza, segmento y condición preferida, revisión independiente | PDF pp. 6, 23 |
+| Clientes | Alta inmediata con DNI/RUC único, nombre, direcciones y segmento validados; actualización propuesta con revisión independiente | PDF pp. 6, 23 |
 | Productos | Alta/actualización con familia, unidad y coste separado del precio; publicación tras revisión | PDF pp. 6–7, 23 |
-| Oportunidades | Cliente aprobado, canal, vendedor, sede, productos/cantidades, seguimiento y cierre como perdida con motivo | PDF pp. 3–6; indicación de Luis |
+| Oportunidades | Cliente habilitado, canal, vendedor, sede, productos/cantidades, seguimiento y cierre como perdida con motivo | PDF pp. 3–6; indicación de Luis |
 | Precios | Listas por canal/segmento, fechas inclusivas, rechazo de solapamiento, activación/desactivación y cambios sujetos a revisión | PDF pp. 6–7 |
 | Promociones | Canal, segmento, vigencia y rebaja no acumulable, revisión antes de publicar | PDF p. 7; DEC-004 |
 | Cotizaciones | Precios desde lista vigente, copia de condiciones, descuento/motivo, IGV, fechas, condición de pago, excepción, estados, vencimiento, ficha e impresión | PDF pp. 4, 7–9, 23; límites confirmados por Luis |
@@ -35,12 +35,12 @@ Los módulos propietarios, Compras y Reportes generales siguen mostrando En desa
 
 ## Reglas de operación
 
-1. Un cliente pendiente/rechazado no se usa para una nueva oportunidad/cotización. La actualización propuesta no reemplaza el maestro aprobado hasta su revisión.
+1. Un cliente nuevo queda habilitado al guardar nombre, dirección, segmento y DNI/RUC válido y único. Se puede usar inmediatamente en oportunidades y cotizaciones. Las altas pendientes del flujo anterior se habilitan sobre copia al leer si pasan esas mismas validaciones. Los registros rechazados conservan su estado. Las actualizaciones propuestas mantienen su revisión independiente.
 2. Para cotizar debe existir exactamente una lista aprobada y activa del canal/segmento, vigente en la fecha y con precio para cada producto. La cotización no supera la vigencia de la lista.
 3. Dinero en céntimos: descuento por línea redondeado al céntimo, base como suma de importes netos e impuesto sobre la base. Hasta 5 % manual con motivo; más de 5 % hasta 20 % queda Pendiente de aprobación; más de 20 % se rechaza. No se acumula promoción y descuento manual.
 4. Una excepción requiere otra persona de Jefatura, aunque el solicitante también tenga ese rol. No se envía ni acepta antes de resolverla. Rechazo/anulación requieren motivo; el vencimiento se registra sin borrar la ficha.
 5. El pedido deriva de cotización aceptada/vigente. Volver a consultarlo devuelve el existente. Borrador → validación → Pendiente de aprobación/Bloqueado; otra Jefatura consulta de nuevo y aprueba únicamente con controles favorables.
-6. Crédito/stock insuficiente, ausente o vencido no se omite desde Comercial. Bloqueo manual requiere motivo. La identificación y aprobación del cliente también se revisan.
+6. Crédito/stock insuficiente, ausente o vencido no se omite desde Comercial. Bloqueo manual requiere motivo. La identificación y habilitación del cliente también se revisan.
 7. Las respuestas de entrega no exceden cantidades pedidas, ni las facturas informadas el total. Misma referencia se consulta sin duplicar; una respuesta que cambia una entrega/factura ya registrada requiere revisión del área propietaria.
 8. Anulación exige otra revisión y no se autoriza si existen entregas/facturas, incluidas las aparecidas después de solicitarla. Devolución no excede cantidades entregadas disponibles, contando las otras solicitudes pendientes/autorizadas.
 9. Una devolución autorizada espera referencias de recepción, nota de crédito y regularización financiera para figurar Completada. Un valor booleano sin documento no demuestra esos registros.
@@ -58,7 +58,7 @@ Los módulos propietarios, Compras y Reportes generales siguen mostrando En desa
 ## Recorrido manual
 
 1. Abrir `http://localhost:5300/`. Entrar como **Luis / Asesor / Lima Centro** y revisar aplicaciones, clientes, oportunidades y precios.
-2. Crear un cliente con sus tres direcciones. Queda pendiente. Entrar como **Miguel / Jefatura**, ir a Aprobaciones, consultar la propuesta y aprobar con motivo. Con el nombre Luis no se permite resolver su propia solicitud.
+2. Crear un cliente con sus tres direcciones. Al guardar queda disponible para crear oportunidades y cotizaciones. Para probar la revisión de una actualización, proponer un cambio desde la ficha y entrar como **Miguel / Jefatura** para revisarlo en Aprobaciones.
 3. Volver como Luis y crear una oportunidad con ese cliente: dos sofás SOF-001 y una mesa MES-001.
 4. Crear cotización sin descuento: subtotal 3547,00, IGV 638,46, total 4185,46. Con 10 % y motivo: descuento 354,70, base 3192,30, IGV 574,61 y total 3766,91; queda pendiente de otra Jefatura. Más de 20 % se rechaza.
 5. Miguel aprueba la excepción. Luis marca enviada, registra aceptación y crea pedido. Consultarlo de nuevo no crea otro. Validar controles; Miguel revisa y aprueba comercialmente. Comprobar origen, responsables e historial.
@@ -70,7 +70,7 @@ Los módulos propietarios, Compras y Reportes generales siguen mostrando En desa
 
 ## Validación ejecutada
 
-- **46 pruebas de reglas:** precios, límites, permisos, segregación, maestros, controles, cambios de respuestas, concurrencia secuencial/idempotencia local, parciales, anulación, devolución, vencimiento y migración de datos. No acredita concurrencia entre equipos.
+- **49 pruebas de reglas:** precios, límites, permisos, segregación, maestros, controles, cambios de respuestas, concurrencia secuencial/idempotencia local, parciales, anulación, devolución, vencimiento y migración de datos. No acredita concurrencia entre equipos.
 - **56 comprobaciones de pantalla:** Chrome con perfil de prueba y contexto aislado eliminado al terminar; recorrido completo, ocho roles (incluido Transporte), maestros/precios/promoción, excepciones, crédito, solicitudes, filtros de fecha/canal/sede, recarga, salida, impresión y móvil de 390 px. **0 excepciones JavaScript**. La prueba de consumidor aporta respuestas controladas por el contrato; el recorrido real entre pantallas/áreas se prueba adicionalmente en Logística.
 - Cotización con descuento, aprobación e historial: **PDF A4 de una página**. Capturas de escritorio/móvil e impresión revisadas visualmente.
 - Sintaxis JS, referencias HTML, enlaces de documentación y diff se comprueban en la validación final del cierre. [Comandos reproducibles](../../README.md).

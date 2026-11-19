@@ -34,6 +34,8 @@ Aplicaciones → Activos Fijos → Solicitud de inversión → Compra, recepció
 
 ## Validación
 
+El alta de clientes permite crear oportunidades y cotizaciones al guardar datos válidos con documento único. Las actualizaciones del maestro se revisan desde Aprobaciones. El cambio del 2026-11-19 se comprobó con 49 pruebas de Comercial, 77 de Logística y 56 comprobaciones de pantalla Comercial.
+
 Reglas con Node.js, sin dependencias adicionales:
 
 ```powershell

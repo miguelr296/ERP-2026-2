@@ -59,3 +59,10 @@
 - [Reglas/fuente/prueba](reglas-logisticas.md), [guion](pantallas/logistica.md) y [evidencia del pulido](borradores/logistica-pulido.md). Finanzas, comprobantes, fabricación y servicios externos conservan sus límites anteriores.
 - Cierre posterior: Luis declaró 1 hora real adicional para el pulido, verificó el punto 1 de la guía nueva (administración de almacenes/ubicaciones) y solicitó el PR. La tarjeta nueva es #120. Inspección parcial, dañados, conteos y reubicaciones quedan pendientes de revisión manual con ayuda de Miguel, además de revisión de código e integración; no se interpreta la publicación como Done.
 
+
+## DEC-008 · Alta inmediata de clientes · 2026-11-19
+
+- El usuario solicitó agilizar el alta. Asesor y Jefatura pueden registrar un cliente y utilizarlo en oportunidades y cotizaciones después de validar nombre, dirección, segmento y formato/duplicidad de DNI o RUC.
+- Las actualizaciones del maestro siguen su revisión independiente. La condición de pago preferida es un dato comercial y el crédito se consulta en Finanzas al validar el pedido. El alta conserva autor e historial.
+- Las altas pendientes anteriores se habilitan al leer sobre una copia si sus datos son válidos y su documento es único. Se conserva la solicitud como Registrada y se añade un evento de sistema. Las altas inválidas o duplicadas y los registros rechazados conservan su estado.
+- Esta decisión sustituye la exigencia de aprobación de clientes nuevos de DEC-004. El flujo de descuentos excepcionales, pedidos y otros maestros conserva sus controles.
