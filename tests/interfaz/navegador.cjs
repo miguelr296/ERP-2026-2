@@ -201,8 +201,14 @@ async function ejecutar() {
     for (const rol of ["Tesorería", "Almacén", "Transporte", "Facturación", "Contabilidad", "Compras"]) {
       await login("Usuario " + rol, rol); await clic("[data-modulo=comercial]"); await esperar("document.querySelector('#contenido').textContent.includes('Disponible para Asesor')");
       await comprobar("document.querySelector('#accesos-rapidos').hidden && !document.querySelector('#contenido .ficha')", "Separación de rol " + rol);
-      await clic("#ir-aplicaciones"); await esperar("!document.querySelector('#aplicaciones').hidden"); await clic("[data-modulo=finanzas]"); await esperar("document.querySelector('#contenido h1')?.textContent==='Finanzas'");
-      await comprobar("!document.querySelector('#contenido form') && document.querySelector('#contenido').textContent.includes('En desarrollo')", "Sin registro de cobro en áreas pendientes: " + rol);
+      await clic("#ir-aplicaciones"); await esperar("!document.querySelector('#aplicaciones').hidden"); await clic("[data-modulo=finanzas]");
+      if (["Tesorería", "Contabilidad"].includes(rol)) {
+        await esperar("document.querySelector('#contenido h1')?.textContent==='Tesorería'");
+        await comprobar("!document.querySelector('#contenido form') && !!document.querySelector('[data-tes-vista=cobrar]')", "Entrada de Tesorería para " + rol);
+      } else {
+        await esperar("document.querySelector('#contenido h1')?.textContent==='Finanzas'");
+        await comprobar("!document.querySelector('[data-tes-vista]') && document.querySelector('#contenido').textContent.includes('Disponible para Tesorería')", "Finanzas restringe el acceso para " + rol);
+      }
     }
     await login("Miguel", "Jefatura"); await enviar("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     await comprobar("document.documentElement.scrollWidth<=innerWidth", "Selector móvil sin desbordamiento"); await foto("06-movil-aplicaciones");

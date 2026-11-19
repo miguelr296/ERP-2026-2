@@ -10,7 +10,7 @@ Desde la raíz del repositorio:
 python -m http.server 5300 --bind 127.0.0.1 --directory src/Erp.Api/wwwroot
 ```
 
-Abrir `http://localhost:5300/`, elegir usuario, rol y sede. Asesor y Jefatura acceden a Comercial. Compras, Almacén, Transporte y Jefatura operan sus procesos de Logística; Asesor puede solicitar abastecimiento. Activos Fijos abre el circuito patrimonial según el rol. Las áreas con operaciones pendientes muestran su estado de desarrollo. Los registros se guardan en el navegador; no se comparten entre equipos.
+Abrir `http://localhost:5300/`, elegir usuario, rol y sede. Asesor y Jefatura acceden a Comercial. Compras, Almacén, Transporte y Jefatura operan sus procesos de Logística; Asesor puede solicitar abastecimiento. Activos Fijos abre el circuito patrimonial según el rol. Finanzas habilita Tesorería para Tesorería, Jefatura y Contabilidad. Las áreas con operaciones pendientes muestran su estado de desarrollo. Los registros se guardan en el navegador; no se comparten entre equipos.
 
 ## Recorrido disponible
 
@@ -21,6 +21,8 @@ Aplicaciones → Logística/Compras/Despachos → Necesidades → Ofertas y OC �
 Comercial (#116) se integró mediante el [PR #117](https://github.com/miguelr296/ERP-2026-2/pull/117) y la primera entrega de Logística (#118) mediante el [PR #119](https://github.com/miguelr296/ERP-2026-2/pull/119). El [pulido de Logística](docs/borradores/logistica-pulido.md), [tarjeta #120](https://github.com/miguelr296/ERP-2026-2/issues/120), tiene implementación y pruebas automatizadas completas; Luis verificó administración de almacenes/ubicaciones y Miguel ayudará con los otros cuatro cambios. Revisión e integración pendientes. Cobros/pagos, comprobantes y asientos siguen a cargo de sus áreas.
 
 Aplicaciones → Activos Fijos → Solicitud de inversión → Compra, recepción y factura → Puesta en servicio → Depreciación, movimientos e inventario físico. Contabilidad consulta el diario patrimonial y Tesorería registra pagos de esas obligaciones. [Guion por rol, reglas y contratos](docs/pantallas/activos-fijos.md).
+
+Aplicaciones → Finanzas → Caja y bancos, cuentas por cobrar y pagar, programación y aprobación de pagos, y conciliación bancaria con importación CSV de extractos. Incluye posición y proyección de caja por sede, cobros parciales, incorporación de facturas verificadas de Logística y cierre del corte por Contabilidad o Jefatura. [Guion de Tesorería y caso de revisión](docs/pantallas/tesoreria.md).
 
 ## Cómo leer este repositorio
 
@@ -42,9 +44,10 @@ Reglas con Node.js, sin dependencias adicionales:
 node --test --test-isolation=none tests/interfaz/comercial.test.cjs
 node --test --test-isolation=none tests/interfaz/logistica.test.cjs
 node --test --test-isolation=none tests/interfaz/activos.test.cjs
+node --test --test-isolation=none tests/interfaz/tesoreria.test.cjs
 ```
 
-Resultado local: **46 Comercial + 77 Logística + 13 Activos Fijos = 136 superadas, 0 fallidas, 0 omitidas**. El aislamiento de procesos del runner falló con EPERM en el entorno restringido; los comandos anteriores ejecutan los casos en el mismo proceso.
+Resultado local de la suite completa: **151 superadas, 0 fallidas, 0 omitidas**, incluidas 12 de Tesorería. El aislamiento de procesos del runner falló con EPERM en el entorno restringido; los comandos anteriores ejecutan los casos en el mismo proceso.
 
 Para la prueba de pantalla, dejar el servidor estático activo e iniciar un Chrome headless de prueba con perfil temporal:
 
@@ -54,9 +57,10 @@ Start-Process -FilePath 'C:\Program Files\Google\Chrome\Application\chrome.exe' 
 node tests/interfaz/navegador.cjs 9245
 node tests/interfaz/logistica-navegador.cjs 9245
 node tests/interfaz/activos-navegador.cjs 9245
+node tests/interfaz/tesoreria-navegador.cjs 9245
 ```
 
-Si Chrome está en otra carpeta, ajustar su ruta. Cada script exige headless, crea su propio contexto y lo elimina al terminar. Resultado local: **56 comprobaciones Comercial, 71 Logística y 26 Activos Fijos, 0 excepciones JavaScript**; cotización, despacho, reparación y ficha patrimonial de prueba, cada uno en A4 de una página. Capturas/PDF/resultados en `%TEMP%/famihogar-comercial-validacion`, `%TEMP%/famihogar-logistica-validacion` y `%TEMP%/famihogar-activos-validacion`, fuera del repositorio. La validación actual usó el puerto de depuración 9248. Los comandos aceptan el puerto como argumento. Cerrar únicamente ese navegador de prueba al terminar. No se afirma CI: el reinicio de Miguel retiró el workflow anterior.
+Si Chrome está en otra carpeta, ajustar su ruta. Cada script exige headless, crea su propio contexto y lo elimina al terminar. Resultado local: **56 comprobaciones Comercial, 71 Logística y 26 Activos Fijos, 0 excepciones JavaScript**; cotización, despacho, reparación y ficha patrimonial de prueba, cada uno en A4 de una página. Capturas/PDF/resultados en `%TEMP%/famihogar-comercial-validacion`, `%TEMP%/famihogar-logistica-validacion` y `%TEMP%/famihogar-activos-validacion`, fuera del repositorio. La validación actual usó el puerto de depuración 9248. Los comandos aceptan el puerto como argumento. Cerrar únicamente ese navegador de prueba al terminar. El recorrido de Tesorería en Chrome valida caja, cobro parcial, revisión independiente, pago, importación CSV, cierre de conciliación, recarga y separación por sede y rol. Las comprobaciones descritas se ejecutan localmente.
 
 ## Flujo
 

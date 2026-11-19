@@ -147,7 +147,11 @@ test("factura antes de conformidad queda observada y se revalida con historial",
   const t = entorno(), oc = orden(t), f = factura(t, oc); assert.equal(f.estado, "Observada"); assert.equal(t.w.ContratosLogisticos.listarFacturasVerificadas("centro").length, 0);
   inspeccionar(t, recibir(t, oc)); const actual = t.ejecutar(compras, (d, s) => t.C.revalidarFactura(d, f.id, compras, s.config));
   assert.equal(actual.estado, "Verificada"); assert.equal(actual.igv, 54000); assert.match(actual.historial.at(-1).accion, /Observaciones anteriores.*sin recepción/); assert.equal(actual.pago, "Pendiente de Finanzas");
-  assert.equal(t.w.ContratosLogisticos.listarFacturasVerificadas("centro").length, 1);
+  const [verificada] = t.w.ContratosLogisticos.listarFacturasVerificadas("centro");
+  assert.equal(verificada.id, f.id);
+  assert.equal(verificada.fecha, f.fecha);
+  assert.equal(verificada.sede, "centro");
+  assert.equal(verificada.proveedor, oc.proveedor.nombre);
 });
 for (const caso of ["precio", "base", "cantidad", "duplicada"]) test(`cotejo detecta ${caso}`, () => {
   const t = entorno(), oc = orden(t); inspeccionar(t, recibir(t, oc));

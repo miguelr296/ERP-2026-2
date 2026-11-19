@@ -81,6 +81,19 @@ Registrar aquí solo actividades realizadas y comprobadas durante esta nueva eta
 - Validación ejecutada sobre este cambio. 49 pruebas de reglas Comercial y 77 Logística superadas. El recorrido de navegador Comercial pasó sus 56 comprobaciones, con 0 excepciones JavaScript, incluyendo uso inmediato del cliente, revisión de una actualización, crédito, descuentos y pedidos.
 - Cambio incorporado a la rama `codex/activos-fijos` solicitada por el usuario.
 
+### 2026-11-19 · Gestión de Tesorería
+
+- Tiempo real declarado por el usuario al cierre: **1 hora (60 minutos)** para esta entrega de Tesorería. Rama `codex/gestion-tesoreria` creada sobre `1fbd381`, última revisión de la rama de Activos Fijos observada al iniciar.
+- Entrega: Finanzas incorpora caja y bancos, flujo de caja, cuentas por cobrar/pagar, cobros parciales, pagos con aprobación y constancias, facturas verificadas de Logística, conciliación y cierre. [Guion y caso de revisión](docs/pantallas/tesoreria.md).
+- Evidencia local automatizada: **148 pruebas de reglas superadas**, incluidas 9 de Tesorería. En Chrome headless completaron el recorrido de Tesorería con corte, recarga, sedes, roles y móvil, además de 56 comprobaciones de Comercial, 71 de Logística y 26 de Activos Fijos, sin excepciones JavaScript.
+- Revisión manual confirmada por el usuario: apertura en Lima Centro, cobro parcial con actualización de saldos, y programación y aprobación del pago por Jefatura.
+- Revisión manual pendiente al cierre: envío y reserva de fondos, confirmación y aplicación del pago, conciliación del extracto y cierre independiente. La validación automatizada de ese recorrido está registrada arriba.
+
+### 2026-11-19 · Importación CSV de extractos
+
+- Tesorería puede cargar un extracto por cuenta bancaria en **Conciliación**. El importador valida el archivo completo, informa la fila con error, omite duplicados y protege las fechas de cortes cerrados. El historial conserva el nombre del archivo de origen.
+- **151 pruebas de reglas superadas**, incluidas 3 nuevas para el CSV. Chrome verificó rechazo de un lote inválido sin persistencia, importación de la salida, reintento sin duplicar, conciliación y cierre. Los recorridos de Comercial, Logística y Activos Fijos también pasaron. [Formato del CSV y estado de la revisión manual](docs/pantallas/tesoreria.md).
+
 ### Plantilla
 
 Fecha · Persona · Trabajo realizado

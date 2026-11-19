@@ -25,7 +25,7 @@ Un pedido bloqueado por stock puede abrir Nueva necesidad con sus líneas y refe
 | `consultarDisponibilidad(pedido)` | Físico Disponible menos reservas ajenas y unidades retenidas por incidencias pendientes, por SKU y sede; excluye compromiso del propio pedido para no bloquear su revalidación. Comercial consulta de nuevo al aprobar |
 | `consultarSeguimiento(pedidoId)` | `salidas` con identidad/estado para impedir bloqueo/anulación posterior a salida; `entregas` solo con cantidades realmente entregadas, receptor y constancia. Preparado/En ruta/No entregado no generan entrega ficticia |
 | `consultarRecepcionDevolucion(solicitudId)` | Referencia `recepcion` cuando se recibe toda la cantidad autorizada; referencias parciales separadas. No produce nota de crédito ni ajuste financiero |
-| `listarFacturasVerificadas(sede)` | Facturas de proveedor cotejadas, base e IGV, identidad proveedor/OC. Puerto de consulta para Finanzas, sin registrar pago |
+| `listarFacturasVerificadas(sede)` | Facturas cotejadas con documento, fecha, sede, proveedor de la OC, base e IGV. Tesorería las incorpora una vez como partida por pagar, con vencimiento confirmado por el operador. El cotejo de Logística conserva su historial. |
 
 `IntegracionesComerciales` delega disponibilidad, salidas/entregas y recepción de devolución al propietario real de Logística. Crédito, facturas de venta, nota y ajuste mantienen sus respuestas de ejemplo separadas hasta implementar sus áreas. La ausencia de referencia significa pendiente, no cumplimiento.
 

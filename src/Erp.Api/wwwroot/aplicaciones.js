@@ -28,7 +28,7 @@
     { id: "comercial", nombre: "Comercial", icono: "ventas", color: "#d68743", descripcion: "Clientes y ventas" },
     { id: "logistica", nombre: "Logística", icono: "caja", color: "#50889a", descripcion: "Inventarios y operaciones" },
     { id: "despachos", nombre: "Despachos", icono: "camion", color: "#589c89", descripcion: "Preparación y entregas" },
-    { id: "finanzas", nombre: "Finanzas", icono: "finanzas", color: "#aa70a1" },
+    { id: "finanzas", nombre: "Finanzas", icono: "finanzas", color: "#aa70a1", descripcion: "Tesorería, caja y bancos" },
     { id: "facturacion", nombre: "Facturación", icono: "documento", color: "#d59946" },
     { id: "contabilidad", nombre: "Contabilidad", icono: "libro", color: "#687fa7" },
     { id: "compras", nombre: "Compras", icono: "compra", color: "#559694", descripcion: "Proveedores y abastecimiento" },
@@ -125,6 +125,7 @@
     }
     $("#nombre-modulo").textContent = modulo.nombre;
     if (modulo.id === "activos" || activos.ruta(modulo.id, partes[1])) { activos.dibujar(modulo.id, partes); return; }
+    if (modulo.id === "finanzas") { tesoreria.dibujar(partes); return; }
     if (["logistica", "compras", "despachos"].includes(modulo.id)) { logistica.dibujar(modulo.id, partes); return; }
     $("#navegacion").setAttribute("aria-label", "Secciones de Comercial");
     const habilitado = modulo.id === "comercial" && puedeComercial() && datos;
@@ -202,16 +203,25 @@
 
   function formulario(titulo, campos, guardar, textoBoton = "Guardar") {
     abrirModal(titulo, `<form id="formulario-registro">${campos}<p id="error-formulario" class="error" role="alert"></p><div class="acciones-formulario">${accion("Cancelar", "cerrar-modal")}<button class="boton primario" type="submit">${textoBoton}</button></div></form>`);
-    $("#formulario-registro").addEventListener("submit", evento => {
+    $("#formulario-registro").addEventListener("submit", async evento => {
       evento.preventDefault();
-      const form = evento.currentTarget;
-      if (!form.reportValidity()) return;
+      const form = evento.currentTarget, enviar = form.querySelector('[type="submit"]');
+      if (enviar.disabled || !form.reportValidity()) return;
       try {
-        const destino = guardar(new FormData(form));
+        const resultado = guardar(new FormData(form));
+        let destino = resultado;
+        if (resultado instanceof Promise) {
+          enviar.disabled = true;
+          destino = await resultado;
+          if (!form.isConnected || !modal.open) return;
+        }
         modal.close();
-        navegar(destino);
-        aviso("Registro guardado.");
-      } catch (error) { $("#error-formulario").textContent = error.message; }
+        const respuesta = typeof destino === "string" ? { ruta: destino, mensaje: "Registro guardado." } : destino;
+        navegar(respuesta.ruta);
+        aviso(respuesta.mensaje);
+      } catch (error) {
+        if (form.isConnected) form.querySelector("#error-formulario").textContent = error.message;
+      } finally { enviar.disabled = false; }
     });
   }
 
@@ -343,6 +353,7 @@
   const ampliacion = window.PantallasComerciales(contextoPantallas);
   const logistica = window.PantallasLogistica(contextoPantallas);
   const activos = window.PantallasActivos(contextoPantallas);
+  const tesoreria = window.PantallasTesoreria(contextoPantallas);
 
   // Contratos públicos de solo consulta para las áreas que consumen documentos comerciales.
   window.ContratosComerciales = {
@@ -432,6 +443,10 @@
   });
   window.addEventListener("hashchange", dibujarRuta);
   window.addEventListener("storage", eventoStorage => {
+    if (eventoStorage.key === window.TesoreriaAplicacion.CLAVE && sesion && location.hash.startsWith("#finanzas/") && !modal.open) {
+      dibujarRuta();
+      aviso("Tesorería se actualizó desde otra pestaña.");
+    }
     if ([CLAVE_DATOS, window.LogisticaAplicacion.CLAVE, window.ActivosAplicacion.CLAVE].includes(eventoStorage.key) && sesion) { cargarDatos(); dibujarRuta(); aviso("Datos actualizados desde otra pestaña."); }
   });
   try {

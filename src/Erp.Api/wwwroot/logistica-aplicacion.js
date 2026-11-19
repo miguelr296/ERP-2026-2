@@ -68,6 +68,12 @@ window.ContratosLogisticos = {
   },
   listarFacturasVerificadas(sede) {
     const datos = window.LogisticaAplicacion.leer();
-    return datos.facturas.filter(f => f.estado === "Verificada" && (!sede || f.sede === sede)).map(f => ({ id: f.id, numero: f.numero, documento: f.documento, proveedorId: f.proveedorId, ordenId: f.ordenId, base: f.baseCalculada, igv: f.igv, moneda: "PEN", estado: f.estado }));
+    return datos.facturas.filter(f => f.estado === "Verificada" && (!sede || f.sede === sede)).map(f => {
+      const orden = datos.ordenes.find(o => o.id === f.ordenId);
+      const proveedor = orden?.proveedor || datos.proveedores.find(p => p.id === f.proveedorId);
+      return { id: f.id, numero: f.numero, documento: f.documento, fecha: f.fecha, sede: f.sede,
+        proveedorId: f.proveedorId, proveedor: proveedor?.nombre, ordenId: f.ordenId,
+        base: f.baseCalculada, igv: f.igv, moneda: "PEN", estado: f.estado };
+    });
   }
 };
