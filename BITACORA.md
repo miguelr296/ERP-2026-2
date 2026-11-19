@@ -81,6 +81,12 @@ Registrar aquí solo actividades realizadas y comprobadas durante esta nueva eta
 - Validación ejecutada sobre este cambio. 49 pruebas de reglas Comercial y 77 Logística superadas. El recorrido de navegador Comercial pasó sus 56 comprobaciones, con 0 excepciones JavaScript, incluyendo uso inmediato del cliente, revisión de una actualización, crédito, descuentos y pedidos.
 - Cambio incorporado a la rama `codex/activos-fijos` solicitada por el usuario.
 
+### 2026-11-19 · Crear oportunidad desde el cliente
+
+- Se añadió el botón Crear oportunidad en el listado de Clientes y en la ficha de cada cliente habilitado. Abre el formulario existente con ese cliente seleccionado.
+- El formulario conserva necesidad, canal y productos. Al guardar registra la oportunidad vinculada al cliente y a la sede de la sesión. Cancelar conserva al cliente sin crear la oportunidad.
+- Validación ejecutada. 60 comprobaciones de navegador Comercial superadas, con 0 excepciones JavaScript. Se comprobaron los accesos del listado y de la ficha, la selección del cliente, la relación guardada y la cancelación. Sintaxis de los dos archivos de interfaz y del script de navegador y diff comprobados.
+
 ### Plantilla
 
 Fecha · Persona · Trabajo realizado

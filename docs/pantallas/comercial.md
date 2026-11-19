@@ -12,7 +12,7 @@ Luis declaró **1 hora real en total**. Confirmó los límites 5 % / 20 %, expli
 |---|---|---|
 | Acceso y Aplicaciones | Usuario, ocho roles con Transporte incorporado por Logística, sede, sesión/salida, ocho módulos, búsqueda sin tildes | Bartolito e indicaciones de Luis |
 | Panel Comercial | Operaciones por sede, accesos y contadores calculados | PDF pp. 3, 24 |
-| Clientes | Alta inmediata con DNI/RUC único, nombre, direcciones y segmento validados; actualización propuesta con revisión independiente | PDF pp. 6, 23 |
+| Clientes | Alta inmediata con DNI/RUC único, nombre, direcciones y segmento validados; botón Crear oportunidad en el listado y la ficha; actualización propuesta con revisión independiente | PDF pp. 6, 23 |
 | Productos | Alta/actualización con familia, unidad y coste separado del precio; publicación tras revisión | PDF pp. 6–7, 23 |
 | Oportunidades | Cliente habilitado, canal, vendedor, sede, productos/cantidades, seguimiento y cierre como perdida con motivo | PDF pp. 3–6; indicación de Luis |
 | Precios | Listas por canal/segmento, fechas inclusivas, rechazo de solapamiento, activación/desactivación y cambios sujetos a revisión | PDF pp. 6–7 |
@@ -59,7 +59,7 @@ Los módulos propietarios, Compras y Reportes generales siguen mostrando En desa
 
 1. Abrir `http://localhost:5300/`. Entrar como **Luis / Asesor / Lima Centro** y revisar aplicaciones, clientes, oportunidades y precios.
 2. Crear un cliente con sus tres direcciones. Al guardar queda disponible para crear oportunidades y cotizaciones. Para probar la revisión de una actualización, proponer un cambio desde la ficha y entrar como **Miguel / Jefatura** para revisarlo en Aprobaciones.
-3. Volver como Luis y crear una oportunidad con ese cliente: dos sofás SOF-001 y una mesa MES-001.
+3. Volver como Luis y pulsar **Crear oportunidad** junto al cliente en el listado o desde su ficha. El formulario abre con ese cliente seleccionado. Completar la necesidad y los productos, por ejemplo dos sofás SOF-001 y una mesa MES-001, y guardar.
 4. Crear cotización sin descuento: subtotal 3547,00, IGV 638,46, total 4185,46. Con 10 % y motivo: descuento 354,70, base 3192,30, IGV 574,61 y total 3766,91; queda pendiente de otra Jefatura. Más de 20 % se rechaza.
 5. Miguel aprueba la excepción. Luis marca enviada, registra aceptación y crea pedido. Consultarlo de nuevo no crea otro. Validar controles; Miguel revisa y aprueba comercialmente. Comprobar origen, responsables e historial.
 6. Las respuestas iniciales permiten consultar stock de los muebles; el cliente nuevo no tiene crédito configurado. Al elegir Crédito, la respuesta ausente lo bloquea; el Asesor no puede inventar un límite ni cobrar.
@@ -71,7 +71,7 @@ Los módulos propietarios, Compras y Reportes generales siguen mostrando En desa
 ## Validación ejecutada
 
 - **49 pruebas de reglas:** precios, límites, permisos, segregación, maestros, controles, cambios de respuestas, concurrencia secuencial/idempotencia local, parciales, anulación, devolución, vencimiento y migración de datos. No acredita concurrencia entre equipos.
-- **56 comprobaciones de pantalla:** Chrome con perfil de prueba y contexto aislado eliminado al terminar; recorrido completo, ocho roles (incluido Transporte), maestros/precios/promoción, excepciones, crédito, solicitudes, filtros de fecha/canal/sede, recarga, salida, impresión y móvil de 390 px. **0 excepciones JavaScript**. La prueba de consumidor aporta respuestas controladas por el contrato; el recorrido real entre pantallas/áreas se prueba adicionalmente en Logística.
+- **60 comprobaciones de pantalla:** Chrome con perfil de prueba y contexto aislado eliminado al terminar; recorrido completo, ocho roles (incluido Transporte), maestros/precios/promoción, creación de oportunidades desde el listado y ficha del cliente, cancelación sin registros, excepciones, crédito, solicitudes, filtros de fecha/canal/sede, recarga, salida, impresión y móvil de 390 px. **0 excepciones JavaScript**. La prueba de consumidor aporta respuestas controladas por el contrato; el recorrido real entre pantallas/áreas se prueba adicionalmente en Logística.
 - Cotización con descuento, aprobación e historial: **PDF A4 de una página**. Capturas de escritorio/móvil e impresión revisadas visualmente.
 - Sintaxis JS, referencias HTML, enlaces de documentación y diff se comprueban en la validación final del cierre. [Comandos reproducibles](../../README.md).
 

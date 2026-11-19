@@ -21,4 +21,4 @@ La evidencia corresponde al frontend y a contratos locales de consulta. Las regl
 | Separar roles, sede y registro de operaciones de otros módulos | PDF pp. 3, 5, 23; indicación de Luis | Siete roles, documentos de otra sede no operables, ausencia de formularios de cobro en áreas pendientes |
 | Reportar conversión, descuentos, ticket, margen estimado y pendientes sin confundirlos con cobros/asientos | PDF p. 24 | Indicadores y filtros de fecha/canal/sede; costes solo para Jefatura; anulación no deja unidades pendientes |
 
-Pruebas: [49 casos de reglas](../tests/interfaz/comercial.test.cjs) y [56 comprobaciones de pantalla](../tests/interfaz/navegador.cjs). Los resultados de la primera entrega (41 comprobaciones) se conservan como históricos y no sustituyen esta regresión.
+Pruebas: [49 casos de reglas](../tests/interfaz/comercial.test.cjs) y [60 comprobaciones de pantalla](../tests/interfaz/navegador.cjs). Los resultados de la primera entrega (41 comprobaciones) se conservan como históricos y no sustituyen esta regresión.

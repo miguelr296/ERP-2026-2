@@ -28,8 +28,8 @@ window.PantallasComerciales = c => {
   }
 
   function clientes() {
-    const filas = datos().clientes.map(cliente => `<tr><td>${b(cliente.nombre, "ver-cliente", cliente.id, "enlace-boton")}</td><td>${e(cliente.tipoDocumento)} ${e(cliente.documento)}</td><td>${e(cliente.correo || "—")}<small>${e(cliente.telefono)}</small></td><td>${e(cliente.segmento)}</td><td>${c.etiqueta(cliente.estado)}</td></tr>`);
-    return c.cabecera("Clientes", "Directorio compartido entre sedes. Los clientes nuevos quedan disponibles al guardar sus datos.", b("+ Nuevo cliente", "nuevo-cliente", "", "boton primario")) + c.tabla("Directorio de clientes", ["Cliente", "Documento", "Contacto", "Segmento", "Estado"], filas);
+    const filas = datos().clientes.map(cliente => `<tr><td>${b(cliente.nombre, "ver-cliente", cliente.id, "enlace-boton")}</td><td>${e(cliente.tipoDocumento)} ${e(cliente.documento)}</td><td>${e(cliente.correo || "—")}<small>${e(cliente.telefono)}</small></td><td>${e(cliente.segmento)}</td><td>${c.etiqueta(cliente.estado)}</td><td>${r.aprobado(cliente) ? b("Crear oportunidad", "nueva-oportunidad", cliente.id) : ""}</td></tr>`);
+    return c.cabecera("Clientes", "Directorio compartido entre sedes. Los clientes nuevos quedan disponibles al guardar sus datos.", b("+ Nuevo cliente", "nuevo-cliente", "", "boton primario")) + c.tabla("Directorio de clientes", ["Cliente", "Documento", "Contacto", "Segmento", "Estado", "Acciones"], filas);
   }
 
   function cliente(id = "") {
@@ -64,7 +64,8 @@ window.PantallasComerciales = c => {
   function verCliente(id) {
     const cliente = datos().clientes.find(d => d.id === id);
     if (!cliente) return;
-    c.abrirModal(cliente.nombre, `<div class="acciones-documento">${c.etiqueta(cliente.estado)}${b("Solicitar actualización", "editar-cliente", id)}</div><dl class="detalle-documento">${[["Documento", `${cliente.tipoDocumento} ${cliente.documento}`], ["Segmento", cliente.segmento], ["Correo", cliente.correo], ["Teléfono", cliente.telefono], ["Entrega", cliente.direccion], ["Dirección fiscal", cliente.direccionFiscal || cliente.direccion], ["Cobranza", cliente.direccionCobranza || cliente.direccion], ["Zona", cliente.zona], ["Condición preferida", cliente.condicionPreferida || "Contado"]].map(([titulo, valor]) => `<div><dt>${titulo}</dt><dd>${e(valor || "—")}</dd></div>`).join("")}</dl>${c.mostrarHistorial(cliente.historial || [])}`);
+    const crearOportunidad = r.aprobado(cliente) ? b("Crear oportunidad", "nueva-oportunidad", id, "boton primario") : "";
+    c.abrirModal(cliente.nombre, `<div class="acciones-documento">${c.etiqueta(cliente.estado)}${crearOportunidad}${b("Solicitar actualización", "editar-cliente", id)}</div><dl class="detalle-documento">${[["Documento", `${cliente.tipoDocumento} ${cliente.documento}`], ["Segmento", cliente.segmento], ["Correo", cliente.correo], ["Teléfono", cliente.telefono], ["Entrega", cliente.direccion], ["Dirección fiscal", cliente.direccionFiscal || cliente.direccion], ["Cobranza", cliente.direccionCobranza || cliente.direccion], ["Zona", cliente.zona], ["Condición preferida", cliente.condicionPreferida || "Contado"]].map(([titulo, valor]) => `<div><dt>${titulo}</dt><dd>${e(valor || "—")}</dd></div>`).join("")}</dl>${c.mostrarHistorial(cliente.historial || [])}`);
   }
 
   function catalogo() {

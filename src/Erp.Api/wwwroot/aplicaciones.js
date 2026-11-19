@@ -224,7 +224,8 @@
     $("#productos-oportunidad").append(fila);
   }
 
-  function nuevaOportunidad() {
+  function nuevaOportunidad(clienteId = "") {
+    if (clienteId && !datos.clientes.some(c => c.id === clienteId && reglas.aprobado(c))) throw new Error("Selecciona un cliente habilitado para crear la oportunidad.");
     formulario("Nueva oportunidad", `<div class="campos"><div class="campo-completo"><label for="cliente-oportunidad">Cliente</label><select id="cliente-oportunidad" name="clienteId" required><option value="">Selecciona un cliente</option>${datos.clientes.filter(c => reglas.aprobado(c)).map(c => `<option value="${esc(c.id)}">${esc(c.nombre)} · ${esc(c.documento)}</option>`).join("")}</select></div><div class="campo-completo"><label for="asunto">Necesidad del cliente</label><input id="asunto" name="asunto" maxlength="150" placeholder="Por ejemplo, renovar el comedor" required></div><div><label for="canal">Canal</label><select id="canal" name="canal">${opciones(["Tienda", "Web", "Teléfono"])}</select></div></div><h3 style="margin-top:24px">Productos de interés</h3><div id="productos-oportunidad"></div>${accion("+ Agregar producto", "agregar-producto")}`, valores => {
       const asunto = valores.get("asunto").trim();
       const codigos = valores.getAll("producto");
@@ -244,6 +245,7 @@
       return "comercial/oportunidades";
     });
     filaProducto();
+    $("#cliente-oportunidad").value = clienteId;
   }
 
   function numerar(coleccion, prefijo) {
@@ -365,7 +367,7 @@
     try {
       if (ampliacion.accion(tipo, id)) return;
       if (tipo === "nuevo-cliente") nuevoCliente();
-      if (tipo === "nueva-oportunidad") nuevaOportunidad();
+      if (tipo === "nueva-oportunidad") nuevaOportunidad(id);
       if (tipo === "nueva-cotizacion") nuevaCotizacion(id);
       if (tipo === "ver-cliente") verCliente(id);
       if (tipo === "agregar-producto") filaProducto();
