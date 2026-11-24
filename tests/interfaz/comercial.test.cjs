@@ -12,7 +12,7 @@ const raiz = path.resolve(__dirname, "../../src/Erp.Api/wwwroot");
 
 function entorno() {
   const contexto = vm.createContext({ window: {}, structuredClone, crypto: webcrypto, Date });
-  for (const archivo of ["datos-comercial.js", "integraciones-locales.js", "reglas-comerciales.js"]) {
+  for (const archivo of ["permisos.js", "datos-comercial.js", "integraciones-locales.js", "reglas-comerciales.js"]) {
     vm.runInContext(fs.readFileSync(path.join(raiz, archivo), "utf8"), contexto, { filename: archivo });
   }
   const config = contexto.window.FAMIHOGAR;

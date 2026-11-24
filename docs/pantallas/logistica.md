@@ -34,7 +34,11 @@ Abrir [http://localhost:5300/](http://localhost:5300/) con el servidor indicado 
 | Ana / Transporte | Despachos | Confirmar ruta y entrega con constancia; sin movimientos de almacén ni compras |
 | Miguel / Jefatura | Logística | Revisiones, adjudicación, parámetros, resolución de cuarentena y cierre de acciones |
 
-Una persona no resuelve su propuesta cambiándose a Jefatura. Los roles son de interfaz y no sustituyen autenticación/autorización de servidor. Tesorería, Facturación y Contabilidad no operan Logística.
+Las operaciones con revisión independiente exigen otra persona. Super Admin permite completar ambas tareas en una demostración. Tesorería, Facturación y Contabilidad consultan las referencias que sus áreas consumen. [Arquitectura y perfiles](../arquitectura.md#perfiles).
+
+## Orientación en pantalla
+
+**Recorrido de compra** y **Recorrido de entrega** muestran las etapas disponibles por perfil. Las fichas proponen acciones y preseleccionan el documento de origen cuando corresponde. Las secciones relacionadas se agrupan con divisores. Guardar conserva la vista y ofrece abrir la nueva ficha.
 
 ## Recorrido para comprobar manualmente
 
@@ -82,7 +86,7 @@ Confirmación personal de Luis: la entrega anterior (#119) tuvo su propia hora y
 - Tres almacenes iniciales, ampliables por sede; posiciones y capacidades en unidades. La previsión es una comparación de demanda/saldo/entradas, no un optimizador ni pronóstico estadístico. RECEPCION, CUARENTENA y TALLER identifican zonas de los recorridos de calidad.
 - La inspección parcial, reparación, reinspección, baja con motivo/revisión, reubicación y administración de maestros están implementadas. El conteo incluye estados de calidad; no fuerza diferencias sobre unidades ligadas a un documento de calidad/reparación todavía pendiente. No se implementa fabricación/subcontratación industrial.
 - El kardex calcula valorización logística por Promedio Ponderado Móvil; su tratamiento contable y tributario requiere validación de Finanzas/Contabilidad. Guías internas, sin emisión tributaria/SUNAT, geolocalización, transporte contratado ni envío automático a proveedores.
-- Crédito, facturas de venta y ajustes financieros conservan respuestas de contrato pendientes de sus módulos. No hay cobro, pago, nota de crédito ni asiento producido por Logística. El cotejo de proveedor entrega evidencia a Finanzas.
+- El cotejo verificado se incorpora en Finanzas como cuenta por pagar y la ficha logística consulta su estado de pago. La entrega completa habilita la emisión interna en Facturación, que consulta el costo del Kardex. La nota de crédito y el ajuste financiero del retorno siguen pendientes.
 - Los PR [#119](https://github.com/miguelr296/ERP-2026-2/pull/119) y [#121](https://github.com/miguelr296/ERP-2026-2/pull/121) están integrados; GitHub muestra #120 cerrada por el PR, aunque su cuerpo conserva cuatro comprobaciones manuales sin marcar. [Detalle del pulido](../borradores/logistica-pulido.md).
 
 ## Nombres y valoración del inventario

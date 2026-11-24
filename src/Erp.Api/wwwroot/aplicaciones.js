@@ -2,6 +2,7 @@
 
 (() => {
   const configuracion = window.FAMIHOGAR;
+  const ayuda = window.AyudaERP;
   const reglas = window.ReglasComerciales;
   const CLAVE_SESION = "famihogar.sesion";
   const CLAVE_DATOS = "famihogar.comercial.v1";
@@ -9,6 +10,7 @@
   const esc = valor => String(valor ?? "").replace(/[&<>"']/g, caracter => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   })[caracter]);
+  const recorrido = window.RecorridosERP(esc);
   const normalizar = texto => String(texto).trim().toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const moneda = valor => new Intl.NumberFormat("es-PE", { style: "currency", currency: configuracion.parametros.moneda }).format(valor / 100);
   const sedeNombre = id => configuracion.sedes.find(sede => sede.id === id)?.nombre || id;
@@ -28,15 +30,18 @@
     { id: "comercial", nombre: "Comercial", icono: "ventas", color: "#d68743", descripcion: "Clientes y ventas" },
     { id: "logistica", nombre: "Logística", icono: "caja", color: "#50889a", descripcion: "Inventarios y operaciones" },
     { id: "despachos", nombre: "Despachos", icono: "camion", color: "#589c89", descripcion: "Preparación y entregas" },
-    { id: "finanzas", nombre: "Finanzas", icono: "finanzas", color: "#aa70a1" },
-    { id: "facturacion", nombre: "Facturación", icono: "documento", color: "#d59946" },
-    { id: "contabilidad", nombre: "Contabilidad", icono: "libro", color: "#687fa7" },
+    { id: "finanzas", nombre: "Finanzas", icono: "finanzas", color: "#aa70a1", descripcion: "Cobros, pagos y bancos" },
+    { id: "facturacion", nombre: "Facturación", icono: "documento", color: "#d59946", descripcion: "Facturas y boletas de venta" },
+    { id: "contabilidad", nombre: "Contabilidad", icono: "libro", color: "#687fa7", descripcion: "Asientos, activos y libros" },
     { id: "compras", nombre: "Compras", icono: "compra", color: "#559694", descripcion: "Proveedores y abastecimiento" },
     { id: "reportes", nombre: "Reportes", icono: "ventas", color: "#b57479" }
   ];
   const secciones = { resumen: "Inicio", clientes: "Clientes", oportunidades: "Oportunidades", cotizaciones: "Cotizaciones", pedidos: "Pedidos", catalogo: "Catálogo", precios: "Precios", aprobaciones: "Aprobaciones", solicitudes: "Postventa", indicadores: "Indicadores" };
+  const pasosVenta = [["clientes", "Cliente"], ["oportunidades", "Oportunidad"], ["cotizaciones", "Cotización"], ["pedidos", "Pedido"]];
+  const menuComercial = [["resumen", "Inicio"], ["clientes", "Clientes"], ["oportunidades", "Ventas"], ...Object.entries(secciones).slice(5)];
+  const rutaVenta = actual => recorrido.etapas("Recorrido de venta", pasosVenta.map(([id, etiqueta]) => ({ id, etiqueta, ruta: "comercial/" + id })), actual);
   const roles = [...$("#rol").options].map(opcion => opcion.value).filter(Boolean);
-  const puedeComercial = () => sesion && ["Asesor", "Jefatura"].includes(sesion.rol);
+  const puedeComercial = () => window.Permisos.tieneRol(sesion, ["Asesor", "Jefatura"]);
   const deSede = coleccion => coleccion.filter(registro => registro.sede === sesion.sede);
   const clienteDe = id => datos.clientes.find(cliente => cliente.id === id);
 
@@ -97,6 +102,7 @@
     const lista = modulos.filter(modulo => normalizar(modulo.nombre).includes(normalizar($("#buscar-aplicacion").value)));
     $("#modulos").innerHTML = lista.map(modulo => `<button class="modulo" type="button" data-modulo="${modulo.id}" style="--color-modulo:${modulo.color}"><span class="icono-modulo">${icono(modulo.icono)}</span><strong>${modulo.nombre}</strong><small>${modulo.descripcion || "En desarrollo"}</small></button>`).join("");
     $("#sin-modulos").hidden = lista.length !== 0;
+    ayuda.aplicaciones();
   }
 
   function navegar(vista) {
@@ -106,6 +112,7 @@
 
   function dibujarRuta() {
     if (!sesion) return;
+    ayuda.cerrar();
     if (modal.open) modal.close();
     document.querySelector(".vista-imprimir")?.remove();
     document.body.classList.remove("imprimir-documento");
@@ -123,16 +130,27 @@
       return;
     }
     $("#nombre-modulo").textContent = modulo.nombre;
-    if (["logistica", "compras", "despachos"].includes(modulo.id)) { logistica.dibujar(modulo.id, partes); return; }
+    if (["logistica", "compras", "despachos"].includes(modulo.id)) {
+      logistica.dibujar(modulo.id, partes);
+      ayuda.vista(modulo.id, partes[1]);
+      return;
+    }
+    if (["facturacion", "finanzas", "contabilidad"].includes(modulo.id)) {
+      libros.dibujar(modulo, partes);
+      ayuda.vista(modulo.id, partes[1]);
+      $("#contenido").focus();
+      return;
+    }
     $("#navegacion").setAttribute("aria-label", "Secciones de Comercial");
     const habilitado = modulo.id === "comercial" && puedeComercial() && datos;
     $("#accesos-rapidos").hidden = !habilitado;
-    $("#navegacion").innerHTML = habilitado ? Object.entries(secciones).map(([id, texto]) => `<button type="button" data-vista="${id}" ${id === (partes[1] || "resumen") ? 'aria-current="page"' : ""}>${id === "resumen" ? icono("casa") : ""}${texto}</button>`).join("") : `<button type="button" aria-current="page">${modulo.nombre}</button>`;
+    const actual = ["cotizaciones", "pedidos"].includes(partes[1]) ? "oportunidades" : partes[1] || "resumen";
+    $("#navegacion").innerHTML = habilitado ? menuComercial.map(([id, texto]) => `<button type="button" data-vista="${id}" ${id === "oportunidades" ? 'data-ayuda-seccion="comercial"' : ""} ${id === actual ? 'aria-current="page"' : ""}>${id === "resumen" ? icono("casa") : ""}${texto}</button>`).join("") : `<button type="button" aria-current="page">${modulo.nombre}</button>`;
     document.title = `${modulo.nombre} · FAMIHOGAR`;
     if (modulo.id !== "comercial") {
       $("#contenido").innerHTML = `<div class="tarjeta pendiente">${icono(modulo.icono)}<h1>${modulo.nombre}</h1><p>En desarrollo</p></div>`;
     } else if (!puedeComercial()) {
-      $("#contenido").innerHTML = `<div class="tarjeta pendiente">${icono("personas")}<h1>Comercial</h1><p>Disponible para Asesor y Jefatura.</p><a class="boton" href="#aplicaciones">Volver a aplicaciones</a></div>`;
+      $("#contenido").innerHTML = `<div class="tarjeta pendiente">${icono("personas")}<h1>Comercial</h1><p>Disponible para Asesor, Jefatura y Super Admin.</p><a class="boton" href="#aplicaciones">Volver a aplicaciones</a></div>`;
     } else if (!datos) {
       $("#contenido").innerHTML = '<div class="tarjeta vacio">No se pudieron leer los datos locales. Se conservaron sin cambios. Revisa el almacenamiento del navegador.</div>';
     } else if (partes[2]) {
@@ -140,11 +158,23 @@
     } else {
       dibujarSeccion(secciones[partes[1]] ? partes[1] : "resumen");
     }
+    ayuda.vista(modulo.id, partes[1]);
     $("#contenido").focus();
   }
 
-  function cabecera(titulo, descripcion, boton = "") {
-    return `<div class="encabezado-vista"><div><p class="ceja">COMERCIAL / ${esc(sedeNombre(sesion.sede))}</p><h1>${esc(titulo)}</h1><p>${esc(descripcion)}</p></div>${boton}</div>`;
+  function cabeceraVista(titulo, descripcion = "", acciones = "", contexto = "") {
+    const identificacion = contexto ? `<p class="ceja">${esc(contexto)}</p>` : "";
+    const subtitulo = descripcion ? `<p class="descripcion-vista">${esc(descripcion)}</p>` : "";
+    const operaciones = acciones ? `<div class="acciones-vista" role="group" aria-label="Acciones de la sección">${acciones}</div>` : "";
+    return `<header class="encabezado-vista"><div class="titulo-vista">${identificacion}<h1>${esc(titulo)}</h1>${subtitulo}</div>${operaciones}</header>`;
+  }
+
+  function zonaTrabajo(etiqueta, contenido) {
+    return `<section class="zona-trabajo" aria-label="${esc(etiqueta)}">${contenido}</section>`;
+  }
+
+  function cabecera(titulo, descripcion, acciones) {
+    return cabeceraVista(titulo, descripcion, acciones, "COMERCIAL / " + sedeNombre(sesion.sede));
   }
 
   function etiqueta(estado) {
@@ -169,22 +199,25 @@
     let html;
     if (vista === "resumen") {
       const metricas = [["Oportunidades", oportunidades.length], ["Cotizaciones", cotizaciones.length], ["Aceptadas", cotizaciones.filter(c => c.estado === "Aceptada").length], ["Pedidos", pedidos.length]];
-      const grupos = [["Relaciones comerciales", [["Clientes", "clientes"], ["Oportunidades", "oportunidades"]]], ["Gestión de ventas", [["Cotizaciones", "cotizaciones"], ["Pedidos de venta", "pedidos"]]], ["Consultas", [["Productos y precios", "catalogo"]]]];
+      const consultas = [["Catálogo", "catalogo"], ["Precios", "precios"], ["Aprobaciones", "aprobaciones"], ["Postventa", "solicitudes"], ["Indicadores", "indicadores"]];
       html = cabecera("Panel comercial", "Clientes, oportunidades y documentos de venta de tu sede.", accion("+ Nueva oportunidad", "nueva-oportunidad", "", "boton primario"));
-      html += `<div class="indicadores">${metricas.map(([nombre, cantidad]) => `<div class="tarjeta indicador"><small>${nombre}</small><strong>${cantidad}</strong><small>${esc(sedeNombre(sesion.sede))}</small></div>`).join("")}</div>`;
-      html += `<div class="grupos">${grupos.map(([titulo, enlaces]) => `<section class="tarjeta grupo"><h2>${titulo}</h2>${enlaces.map(([texto, destino]) => `<button type="button" data-vista="${destino}">${texto}<span aria-hidden="true">→</span></button>`).join("")}</section>`).join("")}</div>`;
-      html += tabla("Oportunidades recientes", ["Oportunidad", "Cliente", "Canal", "Estado", "Vendedor"], filasOportunidades([...oportunidades].reverse().slice(0, 5)), false);
+      html = zonaTrabajo("Acciones y recorrido de venta", html + rutaVenta());
+      html += zonaTrabajo("Actividad comercial", `<div class="indicadores">${metricas.map(([nombre, cantidad]) => `<div class="tarjeta indicador"><small>${nombre}</small><strong>${cantidad}</strong><small>${esc(sedeNombre(sesion.sede))}</small></div>`).join("")}</div>`
+        + `<details class="recorrido-detalles"><summary>Consultas y otras operaciones</summary><div class="acciones-documento">${consultas.map(([texto, destino]) => enlace(texto, destino)).join("")}</div></details>`
+        + tabla("Oportunidades recientes", ["Oportunidad", "Cliente", "Canal", "Estado", "Vendedor"], filasOportunidades([...oportunidades].reverse().slice(0, 5)), false));
     } else if (vista === "clientes") {
       html = cabecera("Clientes", "Directorio compartido entre sedes.", accion("+ Nuevo cliente", "nuevo-cliente", "", "boton primario"));
       html += tabla("Directorio de clientes", ["Cliente", "Documento", "Contacto", "Segmento"], datos.clientes.map(c => `<tr><td>${accion(c.nombre, "ver-cliente", c.id, "enlace-boton")}</td><td>${esc(c.tipoDocumento)} ${esc(c.documento)}</td><td>${esc(c.correo || "—")}<small>${esc(c.telefono)}</small></td><td>${etiqueta(c.segmento)}</td></tr>`));
     } else if (vista === "oportunidades") {
       html = cabecera("Oportunidades", "Capta la necesidad del cliente y prepara su propuesta.", accion("+ Nueva oportunidad", "nueva-oportunidad", "", "boton primario"));
-      html += tabla("Seguimiento comercial", ["Oportunidad", "Cliente", "Canal", "Estado", "Vendedor"], filasOportunidades(oportunidades));
+      html = zonaTrabajo("Acciones de oportunidades", rutaVenta(vista) + html)
+        + zonaTrabajo("Seguimiento comercial", tabla("Seguimiento comercial", ["Oportunidad", "Cliente", "Canal", "Estado", "Vendedor"], filasOportunidades(oportunidades)));
     } else if (vista === "cotizaciones" || vista === "pedidos") {
       const esCotizacion = vista === "cotizaciones";
       const lista = esCotizacion ? cotizaciones : pedidos;
-      html = cabecera(esCotizacion ? "Cotizaciones" : "Pedidos de venta", esCotizacion ? "Propuestas con productos, condiciones y precios conservados." : "Control, aprobación y seguimiento de pedidos por sede.", esCotizacion ? accion("+ Nueva cotización", "nueva-cotizacion", "", "boton primario") : "");
-      html += tabla(esCotizacion ? "Documentos comerciales" : "Pedidos registrados", ["Documento", "Cliente", "Fecha", "Estado", "Total"], lista.map(d => `<tr><td>${enlace(d.numero, `${vista}/${d.id}`)}</td><td>${esc(d.cliente.nombre)}</td><td>${fechaCorta(d.fecha)}</td><td>${etiqueta(d.estado)}</td><td class="numero">${moneda(d.total)}</td></tr>`));
+      html = cabecera(esCotizacion ? "Cotizaciones" : "Pedidos de venta", esCotizacion ? "Elige una oportunidad para preparar la propuesta. Abre una cotización existente para registrar su envío o aceptación." : "Los pedidos se crean desde una cotización aceptada. Abre una ficha para validar, aprobar o consultar la entrega.", esCotizacion ? accion("+ Nueva cotización", "nueva-cotizacion", "", "boton primario") : "");
+      html = zonaTrabajo(esCotizacion ? "Acciones de cotización" : "Acciones de pedidos", rutaVenta(vista) + html)
+        + zonaTrabajo(esCotizacion ? "Documentos comerciales" : "Pedidos registrados", tabla(esCotizacion ? "Documentos comerciales" : "Pedidos registrados", ["Documento", "Cliente", "Fecha", "Estado", "Total"], lista.map(d => `<tr><td>${enlace(d.numero, `${vista}/${d.id}`)}</td><td>${esc(d.cliente.nombre)}</td><td>${fechaCorta(d.fecha)}</td><td>${etiqueta(d.estado)}</td><td class="numero">${moneda(d.total)}</td></tr>`)));
     } else {
       html = cabecera("Catálogo de productos", "Lista general · PEN · Precios sin IGV.");
       html += tabla("Productos y precios", ["Código", "Producto", "Familia", "Unidad", "Precio unitario"], datos.productos.map(p => `<tr><td>${p.codigo}</td><td>${esc(p.nombre)}</td><td>${esc(p.familia)}</td><td>${esc(p.unidad)}</td><td class="numero">${moneda(p.precio)}</td></tr>`));
@@ -198,18 +231,37 @@
     if (!modal.open) modal.showModal();
   }
 
+  function finalizarOperacion(destino, mensaje = "Registro guardado.") {
+    if (modal.open) modal.close();
+    dibujarRuta();
+    if (!destino || location.hash === `#${destino}`) {
+      aviso(mensaje);
+      return;
+    }
+    const encabezado = $("#contenido .encabezado-vista");
+    const resultado = document.createElement("div");
+    resultado.className = "resultado-operacion";
+    resultado.tabIndex = -1;
+    resultado.innerHTML = `<span>${esc(mensaje)}</span><a class="boton" href="#${esc(destino)}">Ver registro guardado</a>`;
+    if (encabezado) encabezado.after(resultado);
+    else $("#contenido").prepend(resultado);
+    $("#estado").hidden = true;
+    resultado.focus();
+  }
+
   function formulario(titulo, campos, guardar, textoBoton = "Guardar") {
     abrirModal(titulo, `<form id="formulario-registro">${campos}<p id="error-formulario" class="error" role="alert"></p><div class="acciones-formulario">${accion("Cancelar", "cerrar-modal")}<button class="boton primario" type="submit">${textoBoton}</button></div></form>`);
     $("#formulario-registro").addEventListener("submit", evento => {
       evento.preventDefault();
       const form = evento.currentTarget;
       if (!form.reportValidity()) return;
-      try {
-        const destino = guardar(new FormData(form));
-        modal.close();
-        navegar(destino);
-        aviso("Registro guardado.");
-      } catch (error) { $("#error-formulario").textContent = error.message; }
+      let destino;
+      try { destino = guardar(new FormData(form)); }
+      catch (error) {
+        $("#error-formulario").textContent = error.message;
+        return;
+      }
+      finalizarOperacion(destino);
     });
   }
 
@@ -218,7 +270,7 @@
   function filaProducto() {
     const fila = document.createElement("div");
     fila.className = "linea-producto";
-    fila.innerHTML = `<div><label>Producto<select name="producto" required><option value="">Selecciona un producto</option>${datos.productos.map(p => `<option value="${p.codigo}">${esc(p.nombre)}</option>`).join("")}</select></label></div><div><label>Cantidad<input name="cantidad" type="number" min="1" max="999" step="1" value="1" required></label></div><button class="boton-icono" type="button" data-accion="quitar-producto" aria-label="Quitar producto">×</button>`;
+    fila.innerHTML = `<div><label>Producto<select name="producto" required><option value="">Selecciona un producto</option>${datos.productos.filter(reglas.aprobado).map(p => `<option value="${esc(p.codigo)}">${esc(p.codigo + " · " + p.nombre)}</option>`).join("")}</select></label></div><div><label>Cantidad<input name="cantidad" type="number" min="1" max="999" step="1" value="1" required></label></div><button class="boton-icono" type="button" data-accion="quitar-producto" aria-label="Quitar producto">×</button>`;
     $("#productos-oportunidad").append(fila);
   }
 
@@ -230,16 +282,18 @@
       if (!asunto) throw new Error("Describe la necesidad del cliente.");
       if (!codigos.length || cantidades.some(cantidad => !Number.isInteger(cantidad) || cantidad < 1 || cantidad > 999)) throw new Error("Agrega productos con cantidades enteras entre 1 y 999.");
       if (new Set(codigos).size !== codigos.length) throw new Error("Hay un producto repetido. Agrupa su cantidad en una sola línea.");
-      guardarCambios(actuales => {
+      const oportunidad = guardarCambios(actuales => {
         if (!actuales.clientes.some(c => c.id === valores.get("clienteId") && reglas.aprobado(c))) throw new Error("Selecciona un cliente existente.");
-        if (codigos.some(codigo => !datos.productos.some(p => p.codigo === codigo))) throw new Error("Selecciona productos del catálogo.");
-        actuales.oportunidades.push({
+        if (codigos.some(codigo => !actuales.productos.some(p => p.codigo === codigo && reglas.aprobado(p)))) throw new Error("Selecciona productos del catálogo.");
+        const registro = {
           id: crypto.randomUUID(), numero: numerar(actuales.oportunidades, "OP"), clienteId: valores.get("clienteId"),
           asunto, canal: valores.get("canal"), sede: sesion.sede, vendedor: sesion.nombre, fecha: fechaHoy(),
           estado: "Nueva", lineas: codigos.map((codigo, i) => ({ codigo, cantidad: cantidades[i] })), historial: [evento("Captación de oportunidad")]
-        });
+        };
+        actuales.oportunidades.push(registro);
+        return registro;
       });
-      return "comercial/oportunidades";
+      return "comercial/oportunidades/" + oportunidad.id;
     });
     filaProducto();
   }
@@ -284,20 +338,62 @@
     return documentoBaseHtml(d, tipo) + ampliacion.detalle(d, tipo);
   }
 
+  function pasoComercial(d, tipo) {
+    const jefe = window.Permisos.tieneRol(sesion, ["Jefatura"]);
+    const indicar = (titulo, detalle, comando) => ({ titulo, detalle, comando, boton: comando ? accion(titulo, comando, d.id, "boton primario") : "" });
+    if (tipo === "cotizaciones") {
+      if (d.vigenteHasta < fechaHoy() && ["Borrador", "Enviada", "Pendiente de aprobación"].includes(d.estado)) {
+        return indicar("Marcar vencida", "La vigencia terminó. Registra el vencimiento antes de preparar una nueva cotización.", "vencer-cotizacion");
+      }
+      if (d.estado === "Pendiente de aprobación") return jefe
+        ? indicar("Aprobar descuento", "Revisa el motivo y el porcentaje antes de enviar la propuesta.", "aprobar-descuento")
+        : indicar("Esperar la aprobación del descuento", "Jefatura debe revisar el descuento antes del envío.");
+      if (d.estado === "Borrador") return indicar("Marcar enviada", "Úsalo después de compartir la propuesta con el cliente.", "enviar-cotizacion");
+      if (d.estado === "Enviada") return indicar("Registrar aceptación", "Cuando el cliente acepte, registra su decisión para poder crear el pedido.", "aceptar-cotizacion");
+      if (d.estado === "Aceptada") {
+        const pedido = datos.pedidos.find(p => p.cotizacionId === d.id);
+        if (pedido) return { titulo: "Consultar el pedido", detalle: "Esta cotización ya tiene un pedido asociado.", boton: enlace("Abrir pedido", `pedidos/${pedido.id}`) };
+        if (d.vigenteHasta >= fechaHoy()) return indicar("Crear pedido", "La propuesta fue aceptada. Pasa sus productos y condiciones al pedido.", "crear-pedido");
+        return indicar("Preparar una nueva cotización", "La cotización aceptada ya venció. Desde la oportunidad puedes preparar otra.");
+      }
+      return undefined;
+    }
+    if (d.estado === "Borrador") return indicar("Validar controles", "Comprueba la identificación, las existencias y el crédito cuando corresponda.", "validar-pedido");
+    if (d.estado === "Bloqueado") {
+      const motivo = d.controles?.motivos.join(". ") || "Revisa la causa del bloqueo antes de volver a validar.";
+      if (d.controles?.disponibilidad.some(l => !l.aprobado)) return indicar("Solicitar abastecimiento", motivo, "solicitar-abastecimiento");
+      return indicar("Volver a validar controles", motivo, "validar-pedido");
+    }
+    if (d.estado === "Pendiente de aprobación") return jefe
+      ? indicar("Revisar y aprobar", "Los controles pasaron. Revisa las condiciones antes de habilitar la preparación en Almacén.", "aprobar-pedido")
+      : indicar("Esperar la aprobación del pedido", "Jefatura revisa el pedido antes de que Almacén pueda reservarlo.");
+    if (["Aprobado", "Parcialmente atendido"].includes(d.estado)) {
+      if (logistica.puedeContinuarPedido(d.id)) {
+        return indicar("Continuar en Logística", "Abre la reserva existente o empieza una para preparar el pedido.", "continuar-logistica");
+      }
+      return indicar("Consultar seguimiento", "Almacén prepara el pedido. Usa esta consulta para actualizar las entregas y comprobantes registrados.", "seguimiento-pedido");
+    }
+    if (d.estado === "Atendido") return {
+      titulo: "Emitir el comprobante", detalle: "El pedido ya fue entregado. Facturación puede emitir su factura o boleta interna.",
+      boton: window.Permisos.tieneRol(sesion, ["Facturación", "Jefatura"]) ? '<a class="boton primario" href="#facturacion/comprobantes">Abrir Facturación</a>' : ""
+    };
+    if (d.estado === "Facturado") return { titulo: "Consultar la cuenta por cobrar", detalle: "Finanzas registra los cobros y muestra el saldo del comprobante." };
+    return undefined;
+  }
+
   function mostrarDocumento(tipo, id) {
     if (ampliacion.ficha(tipo, id)) return;
     if (tipo === "oportunidades") { mostrarOportunidad(id); return; }
     if (!["cotizaciones", "pedidos"].includes(tipo)) { navegar("comercial/resumen"); return; }
     const d = datos[tipo].find(documento => documento.id === id && documento.sede === sesion.sede);
     if (!d) { $("#contenido").innerHTML = '<p class="tarjeta vacio">No se encontró el documento en esta sede.</p>'; return; }
-    let botones = accion("Imprimir ficha", "imprimir", id);
-    if (tipo === "cotizaciones") {
-      if (d.estado === "Borrador") botones += accion("Marcar enviada", "enviar-cotizacion", id, "boton primario");
-      if (d.estado === "Enviada") botones += accion("Registrar aceptación", "aceptar-cotizacion", id, "boton primario") + accion("Registrar rechazo", "rechazar-cotizacion", id);
-      if (d.estado === "Aceptada") botones += accion(datos.pedidos.some(p => p.cotizacionId === id) ? "Ver pedido" : "Crear pedido", "crear-pedido", id, "boton primario");
-    }
-    botones += ampliacion.botones(d, tipo);
-    $("#contenido").innerHTML = cabecera(d.numero, tipo === "cotizaciones" ? "Ficha de cotización" : "Ficha de pedido", enlace("← Volver al listado", tipo)) + `<section class="tarjeta" style="padding:24px">${documentoHtml(d, tipo)}<div class="acciones-documento">${botones}</div></section>`;
+    const paso = pasoComercial(d, tipo);
+    let botones = ampliacion.botones(d, tipo, paso?.comando) + accion("Imprimir ficha", "imprimir", id);
+    if (tipo === "cotizaciones" && d.estado === "Enviada") botones += accion("Registrar rechazo", "rechazar-cotizacion", id);
+    $("#contenido").innerHTML = zonaTrabajo("Acciones del documento", rutaVenta(tipo) + cabecera(d.numero, (tipo === "cotizaciones" ? "Cotización" : "Pedido de venta") + " · " + d.estado, enlace("← Volver al listado", tipo))
+      + recorrido.siguiente(paso)
+      + `<details class="recorrido-detalles acciones-adicionales"><summary>Otras acciones</summary><div class="acciones-documento">${botones}</div></details>
+        `) + zonaTrabajo("Detalle del documento", `<section class="tarjeta ficha-completa">${documentoHtml(d, tipo)}</section>`);
     prepararImpresion(d, tipo);
   }
 
@@ -324,8 +420,7 @@
 
   function crearPedido(id) {
     const pedido = guardarCambios(actuales => reglas.crearPedido(actuales, id, sesion, fechaHoy()));
-    navegar(`comercial/pedidos/${pedido.id}`);
-    aviso("Pedido registrado. Valida los controles antes de solicitar aprobación.");
+    finalizarOperacion(`comercial/pedidos/${pedido.id}`, "Pedido registrado.");
   }
 
   function verCliente(id) { ampliacion.verCliente(id); }
@@ -333,15 +428,17 @@
   const contextoPantallas = {
     get datos() { return datos; }, get sesion() { return sesion; }, configuracion, reglas,
     $, esc, moneda, sedeNombre, fechaHoy, fechaCorta, fechaTexto, accion, enlace, opciones,
-    cabecera, tabla, etiqueta, formulario, abrirModal, guardarCambios, navegar, aviso,
+    cabecera, cabeceraVista, zonaTrabajo, tabla, etiqueta, formulario, abrirModal, guardarCambios, navegar, aviso, finalizarOperacion, recorrido, rutaVenta,
     detalleLineas, totales, mostrarHistorial, prepararImpresion, sumarDias,
     solicitarAbastecimiento(pedido) { logistica.solicitarDesdeComercial(pedido); }
   };
   const ampliacion = window.PantallasComerciales(contextoPantallas);
   const logistica = window.PantallasLogistica(contextoPantallas);
+  const libros = window.PantallasLibros(contextoPantallas);
 
   // Contratos públicos de solo consulta para las áreas que consumen documentos comerciales.
   window.ContratosComerciales = {
+    listarClientes() { return leerDatos().clientes.filter(reglas.aprobado); },
     listarProductos() { return structuredClone(leerDatos().productos); },
     listarPedidos(sede) { return structuredClone(leerDatos().pedidos.filter(p => !sede || p.sede === sede)); },
     listarDevoluciones(sede) {
@@ -373,6 +470,7 @@
       if (tipo === "aceptar-cotizacion") cambiarEstado(id, "Aceptada");
       if (tipo === "rechazar-cotizacion") cambiarEstado(id, "Rechazada");
       if (tipo === "crear-pedido") crearPedido(id);
+      if (tipo === "continuar-logistica") logistica.continuarPedido(id);
       if (tipo === "imprimir") window.print();
     } catch (error) { aviso(error.message); }
   });
@@ -414,6 +512,7 @@
   $("#salir").addEventListener("click", () => {
     try { sessionStorage.removeItem(CLAVE_SESION); }
     catch { aviso("No se pudo cerrar la sesión. Revisa el almacenamiento del navegador."); return; }
+    ayuda.cerrar();
     sesion = null;
     $("#sistema").hidden = true;
     $("#acceso").hidden = false;
@@ -428,7 +527,7 @@
   });
   window.addEventListener("hashchange", dibujarRuta);
   window.addEventListener("storage", eventoStorage => {
-    if ([CLAVE_DATOS, window.LogisticaAplicacion.CLAVE].includes(eventoStorage.key) && sesion) { cargarDatos(); dibujarRuta(); aviso("Datos actualizados desde otra pestaña."); }
+    if ([CLAVE_DATOS, window.LogisticaAplicacion.CLAVE, window.Libros.CLAVE].includes(eventoStorage.key) && sesion) { cargarDatos(); dibujarRuta(); aviso("Datos actualizados desde otra pestaña."); }
   });
   try {
     const anterior = JSON.parse(sessionStorage.getItem(CLAVE_SESION));

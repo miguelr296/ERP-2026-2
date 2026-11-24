@@ -11,7 +11,7 @@ function cargar() {
   const escrituras = [];
   const localStorage = { getItem: () => null, setItem: (...args) => escrituras.push(args) };
   const ctx = vm.createContext({ window: {}, structuredClone, crypto: webcrypto, Date, localStorage });
-  for (const archivo of ["datos-comercial.js", "reglas-comerciales.js", "datos-logistica.js", "logistica-reglas.js", "compras-reglas.js", "almacenes-reglas.js", "distribucion-reglas.js", "logistica-evaluacion.js"]) {
+  for (const archivo of ["permisos.js", "datos-comercial.js", "reglas-comerciales.js", "datos-logistica.js", "logistica-reglas.js", "compras-reglas.js", "almacenes-reglas.js", "distribucion-reglas.js", "logistica-evaluacion.js"]) {
     vm.runInContext(fs.readFileSync(path.join(raiz, archivo), "utf8"), ctx, { filename: archivo });
   }
   return { w: ctx.window, escrituras };

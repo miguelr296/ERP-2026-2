@@ -3,23 +3,35 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#3c5875">
+  <meta name="theme-color" content="#232845">
   <title>FAMIHOGAR · ERP</title>
-  <link rel="stylesheet" href="estilos.css">
-  <script src="datos-comercial.js" defer></script>
-  <script src="integraciones-locales.js" defer></script>
-  <script src="reglas-comerciales.js" defer></script>
-  <script src="pantallas-comerciales.js" defer></script>
-  <script src="datos-logistica.js" defer></script>
-  <script src="logistica-reglas.js" defer></script>
-  <script src="compras-reglas.js" defer></script>
-  <script src="almacenes-reglas.js" defer></script>
-  <script src="distribucion-reglas.js" defer></script>
-  <script src="logistica-aplicacion.js" defer></script>
-  <script src="logistica-evaluacion.js" defer></script>
-  <script src="pantallas-almacenes.js" defer></script>
-  <script src="pantallas-logistica.js" defer></script>
-  <script src="aplicaciones.js" defer></script>
+  <link rel="stylesheet" href="estilos.css?v=20261124.5">
+  <script src="permisos.js?v=20261124.1" defer></script>
+  <script src="datos-comercial.js?v=20261124.1" defer></script>
+  <script src="integraciones-locales.js?v=20261124.1" defer></script>
+  <script src="reglas-comerciales.js?v=20261124.1" defer></script>
+  <script src="pantallas-comerciales.js?v=20261124.4" defer></script>
+  <script src="datos-logistica.js?v=20261124.1" defer></script>
+  <script src="logistica-reglas.js?v=20261124.1" defer></script>
+  <script src="compras-reglas.js?v=20261124.1" defer></script>
+  <script src="almacenes-reglas.js?v=20261124.1" defer></script>
+  <script src="distribucion-reglas.js?v=20261124.1" defer></script>
+  <script src="logistica-aplicacion.js?v=20261124.1" defer></script>
+  <script src="logistica-evaluacion.js?v=20261124.1" defer></script>
+  <script src="pantallas-almacenes.js?v=20261124.1" defer></script>
+  <script src="recorridos.js?v=20261124.1" defer></script>
+  <script src="recorridos-logistica.js?v=20261124.1" defer></script>
+  <script src="pantallas-logistica.js?v=20261124.4" defer></script>
+  <script src="libros.js?v=20261124.1" defer></script>
+  <script src="finanzas-reglas.js?v=20261124.1" defer></script>
+  <script src="contabilidad-reglas.js?v=20261124.1" defer></script>
+  <script src="pantallas-libros.js?v=20261124.2" defer></script>
+  <script src="pantallas-facturacion.js?v=20261124.4" defer></script>
+  <script src="pantallas-finanzas.js?v=20261124.4" defer></script>
+  <script src="pantallas-contabilidad.js?v=20261124.4" defer></script>
+  <script src="ayuda-guias.js?v=20261124.1" defer></script>
+  <script src="ayuda.js?v=20261124.2" defer></script>
+  <script src="aplicaciones.js?v=20261124.4" defer></script>
 </head>
 <body>
   <svg class="simbolos" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -43,7 +55,7 @@
       <form id="formulario-acceso">
         <label for="nombre">Usuario</label><input id="nombre" name="nombre" maxlength="60" autocomplete="username" placeholder="Tu nombre de usuario" required>
         <label for="rol">Rol</label>
-        <select id="rol" name="rol" required><option value="">Selecciona tu rol</option><option>Asesor</option><option>Jefatura</option><option>Tesorería</option><option>Almacén</option><option>Transporte</option><option>Facturación</option><option>Contabilidad</option><option>Compras</option></select>
+        <select id="rol" name="rol" required><option value="">Selecciona tu rol</option><option>Asesor</option><option>Jefatura</option><option>Tesorería</option><option>Almacén</option><option>Transporte</option><option>Facturación</option><option>Contabilidad</option><option>Compras</option><option>Super Admin</option></select>
         <label for="sede-acceso">Sede</label><select id="sede-acceso" name="sede" required></select>
         <p id="error-acceso" class="error" role="alert"></p>
         <button class="boton primario ancho" type="submit">Ingresar <span aria-hidden="true">→</span></button>
@@ -86,6 +98,19 @@
   <dialog id="modal" aria-labelledby="titulo-modal">
     <div class="cabecera-modal"><h2 id="titulo-modal"></h2><button id="cerrar-modal" class="boton-icono" type="button" aria-label="Cerrar">×</button></div>
     <div id="cuerpo-modal"></div>
+  </dialog>
+  <dialog id="ayuda" aria-labelledby="titulo-ayuda">
+    <form class="cabecera-modal" method="dialog">
+      <h2 id="titulo-ayuda" tabindex="-1"></h2>
+      <button type="submit" class="boton-icono" aria-label="Cerrar ayuda">×</button>
+    </form>
+    <div class="cuerpo-ayuda">
+      <ol id="pasos-ayuda"></ol>
+      <section class="siguiente-ayuda" aria-labelledby="etiqueta-siguiente-ayuda">
+        <h3 id="etiqueta-siguiente-ayuda">Paso sugerido</h3>
+        <p id="siguiente-ayuda"></p>
+      </section>
+    </div>
   </dialog>
 </body>
 </html>

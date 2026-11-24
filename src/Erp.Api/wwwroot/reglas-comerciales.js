@@ -4,9 +4,10 @@ window.ReglasComerciales = (() => {
   const exigir = (condicion, mensaje) => { if (!condicion) throw new Error(mensaje); };
   const copiar = valor => structuredClone(valor);
   const identidad = nombre => String(nombre).trim().toLocaleLowerCase("es");
-  const comercial = actor => exigir(["Asesor", "Jefatura"].includes(actor.rol), "La operación corresponde a Comercial.");
-  const jefatura = actor => exigir(actor.rol === "Jefatura", "La operación requiere Jefatura.");
-  const otroResponsable = (actor, autor) => exigir(identidad(actor.nombre) !== identidad(autor), "Otra persona debe revisar la solicitud; no puedes aprobar ni rechazar la tuya.");
+  const { tieneRol, esSuperAdmin } = window.Permisos;
+  const comercial = actor => exigir(tieneRol(actor, ["Asesor", "Jefatura"]), "La operación corresponde a Comercial.");
+  const jefatura = actor => exigir(tieneRol(actor, ["Jefatura"]), "La operación requiere Jefatura.");
+  const otroResponsable = (actor, autor) => exigir(esSuperAdmin(actor) || identidad(actor.nombre) !== identidad(autor), "Otra persona debe revisar la solicitud; no puedes aprobar ni rechazar la tuya.");
   const evento = (actor, accion) => ({ fecha: new Date().toISOString(), usuario: actor.nombre, rol: actor.rol, accion });
   const motivoValido = motivo => { exigir(typeof motivo === "string" && motivo.trim().length >= 3, "Escribe un motivo de al menos tres caracteres."); return motivo.trim(); };
   const numero = (lista, prefijo) => `${prefijo}-${String(Math.max(0, ...lista.map(d => Number(d.numero?.split("-").at(-1))).filter(Number.isFinite)) + 1).padStart(5, "0")}`;
@@ -141,7 +142,7 @@ window.ReglasComerciales = (() => {
       const disponible = stock.lineas.find(r => r.codigo === l.codigo)?.disponible;
       return { codigo: l.codigo, solicitada: l.cantidad, disponible, aprobado: Number.isInteger(disponible) && disponible >= l.cantidad };
     });
-    const credito = pedido.condicion === "Contado" ? { origen: "No aplica: contado", aprobado: true } : puertos.consultarCredito(pedido.cliente.id);
+    const credito = pedido.condicion === "Contado" ? { origen: "No aplica: contado", aprobado: true } : puertos.consultarCredito(pedido.cliente.id, pedido.id);
     if (pedido.condicion !== "Contado") credito.aprobado = !!credito.datos && Number.isSafeInteger(credito.datos.limite) && credito.datos.limite >= 0 && Number.isSafeInteger(credito.datos.exposicion) && credito.datos.exposicion >= 0 && credito.datos.vencido === 0 && credito.datos.limite - credito.datos.exposicion >= pedido.total;
     const motivos = [];
     if (!identificacion) motivos.push("Cliente no aprobado o identificación incompleta");

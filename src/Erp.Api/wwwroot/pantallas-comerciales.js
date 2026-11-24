@@ -3,7 +3,8 @@
 window.PantallasComerciales = c => {
   const r = c.reglas, e = c.esc, b = c.accion;
   const datos = () => c.datos, actor = () => c.sesion;
-  const esJefatura = () => actor().rol === "Jefatura";
+  const esJefatura = () => window.Permisos.tieneRol(actor(), ["Jefatura"]);
+  const esSuperAdmin = () => window.Permisos.esSuperAdmin(actor());
   const deSede = lista => lista.filter(d => d.sede === actor().sede);
   const operacion = cambiar => c.guardarCambios(cambiar);
   const pesos = valor => Math.round(Number(valor) * 100);
@@ -29,7 +30,8 @@ window.PantallasComerciales = c => {
 
   function clientes() {
     const filas = datos().clientes.map(cliente => `<tr><td>${b(cliente.nombre, "ver-cliente", cliente.id, "enlace-boton")}</td><td>${e(cliente.tipoDocumento)} ${e(cliente.documento)}</td><td>${e(cliente.correo || "—")}<small>${e(cliente.telefono)}</small></td><td>${e(cliente.segmento)}</td><td>${c.etiqueta(cliente.estado)}</td></tr>`);
-    return c.cabecera("Clientes", "Directorio compartido entre sedes. Las altas y cambios requieren revisión.", b("+ Nuevo cliente", "nuevo-cliente", "", "boton primario")) + c.tabla("Directorio de clientes", ["Cliente", "Documento", "Contacto", "Segmento", "Estado"], filas);
+    return c.zonaTrabajo("Operaciones comerciales", c.cabecera("Clientes", "Directorio compartido entre sedes. Las altas y cambios requieren revisión.", b("+ Nuevo cliente", "nuevo-cliente", "", "boton primario")))
+      + c.zonaTrabajo("Registros de la sección", c.tabla("Directorio de clientes", ["Cliente", "Documento", "Contacto", "Segmento", "Estado"], filas));
   }
 
   function cliente(id = "") {
@@ -42,6 +44,7 @@ window.PantallasComerciales = c => {
       campo("Correo", "correo", texto("correo", actual.correo, 'type="email" maxlength="150"')),
       campo("Teléfono", "telefono", texto("telefono", actual.telefono, 'type="tel" maxlength="20"')),
       campo("Dirección de entrega", "direccion", texto("direccion", actual.direccion, 'maxlength="200" required')),
+      b("Copiar a las otras direcciones", "copiar-direcciones", "", "boton campo-completo"),
       campo("Dirección fiscal", "direccionFiscal", texto("direccionFiscal", actual.direccionFiscal, 'maxlength="200" required')),
       campo("Dirección de cobranza", "direccionCobranza", texto("direccionCobranza", actual.direccionCobranza, 'maxlength="200" required')),
       campo("Zona", "zona", texto("zona", actual.zona, 'maxlength="60"')),
@@ -69,12 +72,14 @@ window.PantallasComerciales = c => {
 
   function catalogo() {
     const filas = datos().productos.map(p => `<tr><td>${e(p.codigo)}</td><td>${e(p.nombre)}</td><td>${e(p.familia)}</td><td>${e(p.unidad)}</td>${esJefatura() ? `<td class="numero">${c.moneda(p.coste)}</td>` : ""}<td>${c.etiqueta(p.estado)}</td><td>${esJefatura() ? b("Editar", "editar-producto", p.id, "enlace-boton") : ""}</td></tr>`);
-    return c.cabecera("Catálogo de productos", "El precio comercial se administra en las listas por canal y segmento.", esJefatura() ? b("+ Nuevo producto", "nuevo-producto", "", "boton primario") : "") + c.tabla("Maestro de productos", ["Código", "Producto", "Familia", "Unidad", ...(esJefatura() ? ["Coste"] : []), "Estado", ""], filas);
+    return c.zonaTrabajo("Operaciones comerciales", c.cabecera("Catálogo de productos", "El precio comercial se administra en las listas por canal y segmento.", esJefatura() ? b("+ Nuevo producto", "nuevo-producto", "", "boton primario") : ""))
+      + c.zonaTrabajo("Registros de la sección", c.tabla("Maestro de productos", ["Código", "Producto", "Familia", "Unidad", ...(esJefatura() ? ["Coste"] : []), "Estado", ""], filas));
   }
 
   function producto(id = "") {
     const p = datos().productos.find(d => d.id === id) || {};
-    const campos = campo("Código", "codigo", texto("codigo", p.codigo, `pattern="[A-Z0-9-]{3,20}" required ${id ? "readonly" : ""}`)) + campo("Producto", "nombreMaestro", texto("nombreMaestro", p.nombre, 'maxlength="120" required')) + campo("Familia", "familia", texto("familia", p.familia, 'maxlength="60" required')) + campo("Unidad", "unidad", texto("unidad", p.unidad || "Unidad", 'maxlength="30" required')) + campo("Coste (PEN)", "coste", texto("coste", (p.coste || 0) / 100, 'type="number" min="0" max="9999999" step="0.01" required'));
+    const sugerencias = nombre => `<datalist id="opciones-${nombre}">${[...new Set(datos().productos.map(p => p[nombre]).filter(Boolean))].map(valor => `<option value="${e(valor)}"></option>`).join("")}</datalist>`;
+    const campos = campo("Código", "codigo", texto("codigo", p.codigo, `pattern="[A-Z0-9-]{3,20}" required ${id ? "readonly" : ""}`)) + campo("Producto", "nombreMaestro", texto("nombreMaestro", p.nombre, 'maxlength="120" required')) + campo("Familia", "familia", texto("familia", p.familia, 'maxlength="60" list="opciones-familia" required') + sugerencias("familia")) + campo("Unidad", "unidad", texto("unidad", p.unidad || "Unidad", 'maxlength="30" list="opciones-unidad" required') + sugerencias("unidad")) + campo("Coste (PEN)", "coste", texto("coste", (p.coste || 0) / 100, 'type="number" min="0" max="9999999" step="0.01" required'));
     c.formulario(id ? "Actualizar producto" : "Nuevo producto", `<div class="campos">${campos}</div>`, valores => {
       const valor = Object.fromEntries(valores); valor.nombre = valor.nombreMaestro.trim(); delete valor.nombreMaestro; valor.coste = pesos(valor.coste);
       operacion(actuales => r.solicitarMaestro(actuales, "producto", valor, id, actor())); return volver("aprobaciones");
@@ -84,7 +89,9 @@ window.PantallasComerciales = c => {
   function precios() {
     const listas = datos().listasPrecio.map(l => `<tr><td>${b(l.nombre, "ver-lista", l.id, "enlace-boton")}</td><td>${e(l.canal)}</td><td>${e(l.segmento)}</td><td>${c.fechaCorta(l.desde)} – ${c.fechaCorta(l.hasta)}</td><td>${c.etiqueta(l.activa ? "Activa" : "Inactiva")}</td><td>${esJefatura() ? b("Actualizar", "editar-lista", l.id, "enlace-boton") : ""}</td></tr>`);
     const promos = datos().promociones.map(p => `<tr><td>${e(p.nombre)}</td><td>${e(p.canal)} / ${e(p.segmento)}</td><td>${porcentaje(p.descuentoBps)}</td><td>${c.fechaCorta(p.desde)} – ${c.fechaCorta(p.hasta)}</td><td>${c.etiqueta(p.activa ? "Activa" : "Inactiva")}</td><td>${esJefatura() ? b("Actualizar", "editar-promocion", p.id, "enlace-boton") : ""}</td></tr>`);
-    return c.cabecera("Precios y promociones", "Listas vigentes por canal y segmento. Cambios sujetos a aprobación.", esJefatura() ? b("+ Nueva lista", "nueva-lista", "", "boton primario") : "") + c.tabla("Listas de precios", ["Lista", "Canal", "Segmento", "Vigencia", "Estado", ""], listas) + `<div class="separador-vista">${esJefatura() ? b("+ Nueva promoción", "nueva-promocion") : ""}</div>` + c.tabla("Promociones no acumulables", ["Promoción", "Aplicación", "Descuento", "Vigencia", "Estado", ""], promos, false);
+    return c.zonaTrabajo("Listas de precios", c.cabecera("Precios y promociones", "Listas vigentes por canal y segmento. Cambios sujetos a aprobación.", esJefatura() ? b("+ Nueva lista", "nueva-lista", "", "boton primario") : "") + c.tabla("Listas de precios", ["Lista", "Canal", "Segmento", "Vigencia",  "Estado", ""], listas))
+      + c.zonaTrabajo("Promociones", `<div class="acciones-documento">${esJefatura() ? b("+ Nueva promoción", "nueva-promocion") : ""}</div>`
+        + c.tabla("Promociones no acumulables", ["Promoción", "Aplicación", "Descuento", "Vigencia", "Estado", ""], promos, false));
   }
 
   function camposVigencia(valor) {
@@ -125,7 +132,7 @@ window.PantallasComerciales = c => {
     const hoy = c.fechaHoy();
     const seleccion = `<select id="oportunidad-cotizacion" name="oportunidadId" required><option value="">Selecciona una oportunidad</option>${oportunidades.map(o => `<option value="${e(o.id)}">${e(o.numero)} · ${e(datos().clientes.find(cliente => cliente.id === o.clienteId)?.nombre)} · ${e(o.asunto)}</option>`).join("")}</select>`;
     const campos = campo("Oportunidad de origen", "oportunidad-cotizacion", seleccion) + campo("Vigente hasta", "vigencia", texto("vigencia", c.sumarDias(hoy, c.configuracion.parametros.diasVigencia), `type="date" min="${hoy}" required`)) + campo("Entrega propuesta", "entrega", texto("entrega", c.sumarDias(hoy, 7), `type="date" min="${hoy}" required`)) + campo("Condición de pago", "condicion", selector("condicion", ["Contado", "Crédito 30 días"], "Contado")) + campo("Promoción", "promocion", '<select id="promocion" name="promocionId"><option value="">Sin promoción</option></select>') + campo("Descuento manual (%)", "descuento", texto("descuento", 0, 'type="number" min="0" max="20" step="0.01" required'));
-    c.formulario("Nueva cotización", `<div class="campos">${campos}</div><label for="motivo-descuento">Motivo del descuento</label><textarea id="motivo-descuento" name="motivo" maxlength="300"></textarea><p class="texto-suave">Más de 5 % requiere aprobación de otra persona de Jefatura. Máximo 20 %.</p><div id="vista-calculo"></div>`, valores => {
+    c.formulario("Nueva cotización", `<div class="campos">${campos}</div><label for="motivo-descuento">Motivo del descuento</label><textarea id="motivo-descuento" name="motivo" maxlength="300"></textarea><p class="texto-suave">${esSuperAdmin() ? "Más de 5 % requiere aprobación." : "Más de 5 % requiere aprobación de otra persona de Jefatura."} Máximo 20 %.</p><div id="vista-calculo"></div>`, valores => {
       const documento = operacion(actuales => r.crearCotizacion(actuales, { oportunidadId: valores.get("oportunidadId"), fecha: c.fechaHoy(), vigenteHasta: valores.get("vigencia"), entrega: valores.get("entrega"), condicion: valores.get("condicion"), descuentoBps: pesos(valores.get("descuento") || 0), promocionId: valores.get("promocionId"), motivo: valores.get("motivo") }, actor(), c.configuracion.parametros));
       return volver(`cotizaciones/${documento.id}`);
     }, "Guardar cotización");
@@ -133,7 +140,9 @@ window.PantallasComerciales = c => {
     function recalcular(cambiarOportunidad = false) {
       const op = oportunidades.find(o => o.id === c.$("#oportunidad-cotizacion").value);
       if (cambiarOportunidad) {
-        const segmento = datos().clientes.find(cliente => cliente.id === op?.clienteId)?.segmento;
+        const cliente = datos().clientes.find(cliente => cliente.id === op?.clienteId);
+        const segmento = cliente?.segmento;
+        c.$("#condicion").value = cliente?.condicionPreferida || "Contado";
         c.$("#promocion").innerHTML = '<option value="">Sin promoción</option>' + datos().promociones.filter(p => p.activa && r.aprobado(p) && p.desde <= hoy && hoy <= p.hasta && p.canal === op?.canal && p.segmento === segmento).map(p => `<option value="${e(p.id)}">${e(p.nombre)}</option>`).join("");
       }
       const promo = c.$("#promocion").value;
@@ -162,7 +171,8 @@ window.PantallasComerciales = c => {
     const maestros = datos().solicitudesMaestro.filter(propios).map(s => `<tr><td>${e(s.tipo)}</td><td>${b(s.datos.nombre || s.datos.codigo, "ver-maestro", s.id, "enlace-boton")}</td><td>${e(s.registradoPor)}</td><td>${c.etiqueta(s.estado)}</td><td>${esJefatura() && s.estado === "Pendiente" ? b("Aprobar", "aprobar-maestro", s.id) + b("Rechazar", "rechazar-maestro", s.id) : ""}</td></tr>`);
     const descuentos = deSede(datos().cotizaciones).filter(cot => cot.autorizacion !== "No requiere" && propios(cot)).map(cot => `<tr><td>${c.enlace(cot.numero, `cotizaciones/${cot.id}`)}</td><td>${porcentaje(cot.descuentoBps)}<small>${e(cot.motivoDescuento)}</small></td><td>${e(cot.registradoPor)}</td><td>${c.etiqueta(cot.autorizacion)}</td><td>${esJefatura() && cot.autorizacion === "Pendiente" ? b("Aprobar", "aprobar-descuento", cot.id) + b("Rechazar", "rechazar-descuento", cot.id) : ""}</td></tr>`);
     const pedidos = deSede(datos().pedidos).filter(p => p.estado === "Pendiente de aprobación").map(p => `<tr><td>${c.enlace(p.numero, `pedidos/${p.id}`)}</td><td>${e(p.cliente.nombre)}</td><td>${e(p.registradoPor)}</td><td class="numero">${c.moneda(p.total)}</td><td>${esJefatura() ? b("Revisar y aprobar", "aprobar-pedido", p.id) : "Pendiente de Jefatura"}</td></tr>`);
-    return c.cabecera("Aprobaciones", "Revisa la propuesta antes de decidir. No se permite resolver una solicitud propia.") + c.tabla("Altas y cambios de maestros", ["Tipo", "Registro", "Solicitante", "Estado", "Decisión"], maestros) + '<div class="separador-vista"></div>' + c.tabla("Excepciones de descuento", ["Cotización", "Descuento", "Solicitante", "Estado", "Decisión"], descuentos, false) + '<div class="separador-vista"></div>' + c.tabla("Pedidos con controles favorables", ["Pedido", "Cliente", "Registrado por", "Total", "Decisión"], pedidos, false);
+    return c.zonaTrabajo("Altas y cambios de maestros", c.cabecera("Aprobaciones", esSuperAdmin() ? "Puedes revisar y resolver tus propias solicitudes para la demostración." : "Revisa la propuesta antes de decidir. No se permite resolver una solicitud propia.") + c.tabla("Altas y cambios de maestros", ["Tipo", "Registro", "Solicitante", "Estado", "Decisión"], maestros))
+      + c.zonaTrabajo("Revisión de ventas", c.tabla("Excepciones de descuento", ["Cotización", "Descuento", "Solicitante", "Estado", "Decisión"], descuentos, false) + c.tabla("Pedidos con controles favorables", ["Pedido", "Cliente", "Registrado por", "Total", "Decisión"], pedidos, false));
   }
 
   function verMaestro(id) {
@@ -188,25 +198,27 @@ window.PantallasComerciales = c => {
     return `<section class="detalle-extra"><h3>Controles de aprobación</h3>${controles}<h3>Cantidades y atención parcial</h3>${c.tabla("Seguimiento", ["Producto", "Pedido", "Atendido", "Pendiente"], lineas, false)}<h3>Documentos informados por otras áreas</h3><ul>${derivados || "<li>Sin entregas ni facturas informadas.</li>"}</ul><h3>Solicitudes comerciales</h3><p>${solicitudes || "Sin solicitudes"}</p></section>`;
   }
 
-  function botones(d, tipo) {
+  function botones(d, tipo, principal) {
+    const opcion = (texto, comando, id, clase) => comando === principal ? "" : b(texto, comando, id, clase);
     if (tipo === "cotizaciones") {
-      return (["Borrador", "Enviada"].includes(d.estado) ? b("Anular cotización", "anular-cotizacion", d.id) : "") + (d.vigenteHasta < c.fechaHoy() && ["Borrador", "Enviada", "Pendiente de aprobación"].includes(d.estado) ? b("Marcar vencida", "vencer-cotizacion", d.id) : "") + (esJefatura() && d.autorizacion === "Pendiente" && d.vigenteHasta >= c.fechaHoy() ? b("Aprobar descuento", "aprobar-descuento", d.id) + b("Rechazar descuento", "rechazar-descuento", d.id) : "");
+      return (["Borrador", "Enviada"].includes(d.estado) ? opcion("Anular cotización", "anular-cotizacion", d.id) : "") + (d.vigenteHasta < c.fechaHoy() && ["Borrador", "Enviada", "Pendiente de aprobación"].includes(d.estado) ? opcion("Marcar vencida", "vencer-cotizacion", d.id) : "") + (esJefatura() && d.autorizacion === "Pendiente" && d.vigenteHasta >= c.fechaHoy() ? opcion("Aprobar descuento", "aprobar-descuento", d.id) + opcion("Rechazar descuento", "rechazar-descuento", d.id) : "");
     }
     if (tipo !== "pedidos" || d.estado === "Anulado") return "";
     let html = "";
-    if (d.estado === "Bloqueado" && d.controles?.disponibilidad.some(l => !l.aprobado)) html += b("Solicitar abastecimiento", "solicitar-abastecimiento", d.id);
-    if (["Borrador", "Bloqueado", "Pendiente de aprobación"].includes(d.estado)) html += b("Validar controles", "validar-pedido", d.id);
-    if (esJefatura() && ["Borrador", "Bloqueado", "Pendiente de aprobación"].includes(d.estado)) html += b("Revisar y aprobar", "aprobar-pedido", d.id, "boton primario");
-    if (esJefatura() && ["Borrador", "Pendiente de aprobación", "Aprobado"].includes(d.estado) && !d.entregas.length && !d.facturas.length) html += b("Bloquear", "bloquear-pedido", d.id);
-    if (["Aprobado", "Parcialmente atendido", "Atendido", "Facturado"].includes(d.estado)) html += b("Consultar seguimiento", "seguimiento-pedido", d.id);
-    if (!d.entregas.length && !d.facturas.length) html += b("Solicitar anulación", "solicitar-anulacion", d.id);
-    if (d.entregas.length) html += b("Solicitar devolución", "solicitar-devolucion", d.id);
+    if (d.estado === "Bloqueado" && d.controles?.disponibilidad.some(l => !l.aprobado)) html += opcion("Solicitar abastecimiento", "solicitar-abastecimiento", d.id);
+    if (["Borrador", "Bloqueado", "Pendiente de aprobación"].includes(d.estado)) html += opcion("Validar controles", "validar-pedido", d.id);
+    if (esJefatura() && ["Borrador", "Bloqueado", "Pendiente de aprobación"].includes(d.estado)) html += opcion("Revisar y aprobar", "aprobar-pedido", d.id, "boton primario");
+    if (esJefatura() && ["Borrador", "Pendiente de aprobación", "Aprobado"].includes(d.estado) && !d.entregas.length && !d.facturas.length) html += opcion("Bloquear", "bloquear-pedido", d.id);
+    if (["Aprobado", "Parcialmente atendido", "Atendido", "Facturado"].includes(d.estado)) html += opcion("Consultar seguimiento", "seguimiento-pedido", d.id);
+    if (!d.entregas.length && !d.facturas.length) html += opcion("Solicitar anulación", "solicitar-anulacion", d.id);
+    if (d.entregas.length) html += opcion("Solicitar devolución", "solicitar-devolucion", d.id);
     return html;
   }
 
   function solicitudes() {
     const filas = deSede(datos().solicitudes).map(s => `<tr><td>${c.enlace(s.numero, `solicitudes/${s.id}`)}</td><td>${e(s.tipo)}</td><td>${e(s.pedidoNumero)}</td><td>${e(s.cliente.nombre)}</td><td>${c.etiqueta(s.estado)}</td><td>${e(s.registradoPor)}</td></tr>`);
-    return c.cabecera("Postventa", "Anulaciones y devoluciones con motivo, revisión y documentos relacionados.") + c.tabla("Solicitudes comerciales", ["Solicitud", "Tipo", "Pedido", "Cliente", "Estado", "Solicitante"], filas);
+    return c.zonaTrabajo("Operaciones comerciales", c.cabecera("Postventa", "Anulaciones y devoluciones con motivo, revisión y documentos relacionados."))
+      + c.zonaTrabajo("Registros de la sección", c.tabla("Solicitudes comerciales", ["Solicitud", "Tipo", "Pedido", "Cliente", "Estado", "Solicitante"], filas));
   }
 
   function solicitar(id, tipo) {
@@ -242,7 +254,8 @@ window.PantallasComerciales = c => {
     if (!op) { c.$("#contenido").innerHTML = '<p class="tarjeta vacio">Oportunidad no encontrada en esta sede.</p>'; return; }
     const propuestas = datos().cotizaciones.filter(cot => cot.oportunidadId === id);
     const productos = c.tabla("Productos de interés", ["Código", "Producto", "Cantidad"], op.lineas.map(l => `<tr><td>${e(l.codigo)}</td><td>${e(productoNombre(l.codigo))}</td><td>${l.cantidad}</td></tr>`), false);
-    c.$("#contenido").innerHTML = c.cabecera(op.numero, op.asunto, b("Preparar cotización", "nueva-cotizacion", id, "boton primario")) + `<section class="tarjeta ficha-completa"><dl class="detalle-documento"><div><dt>Cliente</dt><dd>${e(datos().clientes.find(cliente => cliente.id === op.clienteId)?.nombre)}</dd></div><div><dt>Canal / sede</dt><dd>${e(op.canal)} / ${e(c.sedeNombre(op.sede))}</dd></div><div><dt>Responsable</dt><dd>${e(op.vendedor)}</dd></div><div><dt>Estado</dt><dd>${c.etiqueta(op.estado)}</dd></div></dl>${productos}<h3>Cotizaciones derivadas</h3><p>${propuestas.map(cot => c.enlace(cot.numero, `cotizaciones/${cot.id}`)).join(" · ") || "Sin cotizaciones"}</p>${c.mostrarHistorial(op.historial || [])}<div class="acciones-documento">${b("Registrar seguimiento", "seguimiento-oportunidad", id)}</div></section>`;
+    const siguiente = op.estado !== "Perdida" && c.recorrido.siguiente({ titulo: "Preparar cotización", detalle: "Usa la oportunidad para conservar el cliente y los productos seleccionados.", boton: b("Preparar cotización", "nueva-cotizacion", id, "boton primario") });
+    c.$("#contenido").innerHTML = c.rutaVenta("oportunidades") + c.cabecera(op.numero, op.asunto, c.enlace("← Volver al listado", "oportunidades")) + (siguiente || "") + `<section class="tarjeta ficha-completa"><dl class="detalle-documento"><div><dt>Cliente</dt><dd>${e(datos().clientes.find(cliente => cliente.id === op.clienteId)?.nombre)}</dd></div><div><dt>Canal / sede</dt><dd>${e(op.canal)} / ${e(c.sedeNombre(op.sede))}</dd></div><div><dt>Responsable</dt><dd>${e(op.vendedor)}</dd></div><div><dt>Estado</dt><dd>${c.etiqueta(op.estado)}</dd></div></dl>${productos}<h3>Cotizaciones derivadas</h3><p>${propuestas.map(cot => c.enlace(cot.numero, `cotizaciones/${cot.id}`)).join(" · ") || "Sin cotizaciones"}</p>${c.mostrarHistorial(op.historial || [])}<div class="acciones-documento">${b("Registrar seguimiento", "seguimiento-oportunidad", id)}</div></section>`;
   }
 
   function seguimientoOportunidad(id) {
@@ -281,6 +294,17 @@ window.PantallasComerciales = c => {
 
   function accion(nombre, id) {
     const comandos = {
+      "copiar-direcciones": () => {
+        const direccion = c.$("#direccion").value.trim();
+        if (!direccion) {
+          c.$("#direccion").focus();
+          c.$("#error-formulario").textContent = "Escribe primero la dirección de entrega.";
+          return;
+        }
+        c.$("#direccionFiscal").value = direccion;
+        c.$("#direccionCobranza").value = direccion;
+        c.$("#error-formulario").textContent = "";
+      },
       "nuevo-producto": () => producto(), "editar-producto": () => producto(id),
       "editar-cliente": () => cliente(id), "nueva-lista": () => listaPrecio(), "editar-lista": () => listaPrecio(id),
       "ver-lista": () => verLista(id), "nueva-promocion": () => promocion(), "editar-promocion": () => promocion(id), "ver-maestro": () => verMaestro(id),
@@ -289,12 +313,12 @@ window.PantallasComerciales = c => {
       "validar-pedido": () => validarPedido(id, false), "aprobar-pedido": () => validarPedido(id, true),
       "bloquear-pedido": () => registrar("Bloquear pedido", motivo => operacion(actuales => r.bloquearPedido(actuales, id, motivo, actor(), window.IntegracionesComerciales)), volver(`pedidos/${id}`)),
       "solicitar-abastecimiento": () => c.solicitarAbastecimiento(datos().pedidos.find(p => p.id === id && p.sede === actor().sede)),
-      "seguimiento-pedido": () => { operacion(actuales => r.sincronizarPedido(actuales, id, actor(), window.IntegracionesComerciales)); c.navegar(volver(`pedidos/${id}`)); },
+      "seguimiento-pedido": () => { operacion(actuales => r.sincronizarPedido(actuales, id, actor(), window.IntegracionesComerciales)); c.finalizarOperacion(volver(`pedidos/${id}`), "Seguimiento del pedido actualizado."); },
       "anular-cotizacion": () => registrar("Anular cotización", motivo => operacion(actuales => r.cambiarCotizacion(actuales, id, "Anulada", motivo, actor(), c.fechaHoy())), volver(`cotizaciones/${id}`)),
-      "vencer-cotizacion": () => { operacion(actuales => r.cambiarCotizacion(actuales, id, "Vencida", "", actor(), c.fechaHoy())); c.navegar(volver(`cotizaciones/${id}`)); },
+      "vencer-cotizacion": () => { operacion(actuales => r.cambiarCotizacion(actuales, id, "Vencida", "", actor(), c.fechaHoy())); c.finalizarOperacion(volver(`cotizaciones/${id}`), "Cotización marcada como vencida."); },
       "solicitar-anulacion": () => solicitar(id, "Anulación"), "solicitar-devolucion": () => solicitar(id, "Devolución"),
       "autorizar-solicitud": () => resolverSolicitud(id, true), "rechazar-solicitud": () => resolverSolicitud(id, false),
-      "seguimiento-devolucion": () => { operacion(actuales => r.seguirDevolucion(actuales, id, actor(), window.IntegracionesComerciales)); c.navegar(volver(`solicitudes/${id}`)); },
+      "seguimiento-devolucion": () => { operacion(actuales => r.seguirDevolucion(actuales, id, actor(), window.IntegracionesComerciales)); c.finalizarOperacion(volver(`solicitudes/${id}`), "Seguimiento de la devolución actualizado."); },
       "seguimiento-oportunidad": () => seguimientoOportunidad(id)
     };
     if (!comandos[nombre]) return false;
@@ -309,7 +333,7 @@ window.PantallasComerciales = c => {
   }
   function validarPedido(id, aprobar) {
     const p = operacion(actuales => aprobar ? r.aprobarPedido(actuales, id, actor(), window.IntegracionesComerciales) : r.validarPedido(actuales, id, actor(), window.IntegracionesComerciales));
-    c.navegar(volver(`pedidos/${id}`)); c.aviso(p.estado === "Bloqueado" ? p.controles.motivos.join(". ") : p.estado === "Aprobado" ? "Pedido aprobado comercialmente." : "Controles favorables; pendiente de otra persona de Jefatura.");
+    c.finalizarOperacion(volver(`pedidos/${id}`), p.estado === "Bloqueado" ? p.controles.motivos.join(". ") : p.estado === "Aprobado" ? "Pedido aprobado comercialmente." : esSuperAdmin() ? "Controles favorables. El pedido está pendiente de aprobación." : "Controles favorables; pendiente de otra persona de Jefatura.");
   }
   function resolverSolicitud(id, aceptar) {
     registrar(aceptar ? "Autorizar solicitud" : "Rechazar solicitud", motivo => operacion(actuales => r.resolverSolicitud(actuales, id, aceptar, motivo, actor(), window.IntegracionesComerciales)), volver(`solicitudes/${id}`));

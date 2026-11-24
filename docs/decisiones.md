@@ -59,3 +59,17 @@
 - [Reglas/fuente/prueba](reglas-logisticas.md), [guion](pantallas/logistica.md) y [evidencia del pulido](borradores/logistica-pulido.md). Finanzas, comprobantes, fabricación y servicios externos conservan sus límites anteriores.
 - Cierre posterior: Luis declaró 1 hora real adicional para el pulido, verificó el punto 1 de la guía nueva (administración de almacenes/ubicaciones) y solicitó el PR. La tarjeta nueva es #120. Inspección parcial, dañados, conteos y reubicaciones quedan pendientes de revisión manual con ayuda de Miguel, además de revisión de código e integración; no se interpreta la publicación como Done.
 
+## DEC-008 · Integración de Facturación, Finanzas y Contabilidad · 2026-11-24
+
+- La entrega completa y el costo verificable del Kardex habilitan la emisión de una factura o boleta interna. El comprobante, la cuenta por cobrar y el asiento de venta se registran en el mismo estado de Libros.
+- Compras verifica la factura de proveedor contra orden y recepción. Finanzas incorpora la cuenta por pagar y separa programación, aprobación, confirmación y conciliación. Contabilidad registra en libros después de verificar el cuadre.
+- Los activos se dan de alta desde una compra registrada y se deprecian por meses completos desde su puesta en uso. El cierre se valida por sede y período.
+- Los perfiles se evalúan en pantalla y en las reglas locales. Super Admin reúne permisos y permite revisar operaciones propias en la demostración.
+- [Detalle de operaciones y validaciones](pantallas/facturacion-finanzas-contabilidad.md).
+
+## DEC-009 · Navegación y diseño de los recorridos · 2026-11-24
+
+- Cada módulo mantiene sus acciones según el perfil. Los recorridos y el Paso sugerido orientan y ofrecen atajos. Guardar conserva la vista y deja un enlace para abrir la ficha cuando corresponde.
+- Los formularios ofrecen selectores y valores sugeridos desde el documento de origen. Los botones de ayuda contextual explican qué revisar y cómo seguir.
+- Las zonas de trabajo agrupan operaciones y registros con divisiones visibles. La paleta distingue navegación, acciones principales, orientación y estados.
+- La revisión del prototipo servirá de base para los diagramas TO-BE. Reportes, nota de crédito y ajuste financiero de devoluciones permanecen pendientes.

@@ -15,7 +15,7 @@ window.LogisticaAplicacion = (() => {
   // Un comando trabaja sobre una copia nueva y publica todos sus cambios en una escritura.
   // Si falla cualquier validación o localStorage, no persiste ningún movimiento parcial.
   function ejecutar(actor, comando) {
-    L.exigir(actor && ["Asesor", "Jefatura", "Compras", "Almacén", "Transporte"].includes(actor.rol), "Tu rol no registra operaciones logísticas.");
+    L.permitir(actor, ["Asesor", "Jefatura", "Compras", "Almacén", "Transporte"]);
     const datos = leer();
     const resultado = comando(datos, { config, productos: productos(), pedidos: pedidos(actor.sede), devoluciones: devoluciones(actor.sede) });
     comprobarSaldos(datos);
@@ -65,6 +65,35 @@ window.ContratosLogisticos = {
   },
   listarFacturasVerificadas(sede) {
     const datos = window.LogisticaAplicacion.leer();
-    return datos.facturas.filter(f => f.estado === "Verificada" && (!sede || f.sede === sede)).map(f => ({ id: f.id, numero: f.numero, documento: f.documento, proveedorId: f.proveedorId, ordenId: f.ordenId, base: f.baseCalculada, igv: f.igv, moneda: "PEN", estado: f.estado }));
+    return datos.facturas.filter(f => f.estado === "Verificada" && (!sede || f.sede === sede)).map(f => {
+      const orden = datos.ordenes.find(o => o.id === f.ordenId);
+      const recepciones = datos.recepciones.filter(r => r.ordenId === f.ordenId && r.lineas.some(l => l.conforme > 0));
+      return { id: f.id, numero: f.numero, documento: f.documento, proveedorId: f.proveedorId, ordenId: f.ordenId,
+        base: f.baseCalculada, igv: f.igv, moneda: "PEN", estado: f.estado, fecha: f.fecha, condicion: orden?.condicion,
+        proveedor: orden?.proveedor?.nombre || f.proveedorId, ordenNumero: orden?.numero, recepciones: recepciones.map(r => r.numero) };
+    });
+  },
+  listarProveedoresAprobados() {
+    return window.LogisticaAplicacion.leer().proveedores.filter(p => p.estado === "Aprobado").map(p => ({ id: p.id, nombre: p.nombre }));
+  },
+  consultarInventarioInicial(sede) {
+    const iniciales = window.LogisticaAplicacion.leer().movimientos.filter(m => m.sede === sede && m.tipo === "Saldo inicial");
+    return { fecha: iniciales.map(m => m.fecha).sort().at(-1), valor: iniciales.reduce((n, m) => n + m.cantidad * m.coste, 0) };
+  },
+  costoEntregado(pedidoId) {
+    const A = window.LogisticaAplicacion, d = A.leer();
+    const despachos = d.despachos.filter(x => x.pedidoId === pedidoId && ["Entregado", "Entrega parcial"].includes(x.estado));
+    if (!despachos.length) return null;
+    const kardex = window.LogisticaReglas.kardexValorizado(d, A.productos(), despachos[0].sede);
+    let costo = 0;
+    for (const despacho of despachos) {
+      const salidas = kardex.filter(m => m.tipo === "Salida por venta" && m.referencia === despacho.numero);
+      for (const l of despacho.lineas.filter(x => x.entregada > 0)) {
+        const m = salidas.find(m => m.codigo === l.codigo && m.lote === l.lote && m.ubicacion === l.ubicacion);
+        if (!m || -m.cantidad !== l.cantidad) return null;
+        costo += m.costoUnitarioMovimiento * l.entregada;
+      }
+    }
+    return costo;
   }
 };

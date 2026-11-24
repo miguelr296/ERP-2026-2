@@ -7,7 +7,7 @@ const { webcrypto } = require("node:crypto");
 const raiz = path.resolve(__dirname, "../src/Erp.Api/wwwroot");
 const salida = path.resolve(__dirname, "../TestResults");
 const ctx = vm.createContext({ window: {}, structuredClone, crypto: webcrypto, Date });
-for (const archivo of ["datos-comercial.js", "reglas-comerciales.js", "datos-logistica.js", "logistica-reglas.js", "compras-reglas.js", "almacenes-reglas.js", "distribucion-reglas.js", "logistica-evaluacion.js"]) {
+for (const archivo of ["permisos.js", "datos-comercial.js", "reglas-comerciales.js", "datos-logistica.js", "logistica-reglas.js", "compras-reglas.js", "almacenes-reglas.js", "distribucion-reglas.js", "logistica-evaluacion.js"]) {
   vm.runInContext(fs.readFileSync(path.join(raiz, archivo), "utf8"), ctx, { filename: archivo });
 }
 const reporte = ctx.window.EvaluacionKardex.ejecutar("2026-11-11");

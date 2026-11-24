@@ -2,7 +2,7 @@
 
 [Índice](../../README.md) · [Fuente](../fuentes/sesion-06-sistema-gestion-comercial.pdf) · [Reglas](../reglas-comerciales.md) · [Decisiones](../decisiones.md)
 
-**Estado:** alcance frontend de la [tarjeta #116](https://github.com/miguelr296/ERP-2026-2/issues/116) integrado por Miguel mediante el [PR #117](https://github.com/miguelr296/ERP-2026-2/pull/117), merge `d4f952f` comprobado. Incluye las funciones comerciales propias y consultas a contratos de otras áreas. Esta rama añade [Logística](logistica.md) para revisión local; Finanzas, Facturación y Contabilidad siguen pendientes. No se modifica el estado de tarjetas desde esta entrega.
+**Estado:** alcance frontend de la [tarjeta #116](https://github.com/miguelr296/ERP-2026-2/issues/116) integrado por Miguel mediante el [PR #117](https://github.com/miguelr296/ERP-2026-2/pull/117), merge `d4f952f` comprobado. Incluye las funciones comerciales propias y consultas a contratos de otras áreas. El prototipo actual conecta [Logística](logistica.md) con [Facturación, Finanzas y Contabilidad](facturacion-finanzas-contabilidad.md).
 
 Luis declaró **1 hora real en total**. Confirmó los límites 5 % / 20 %, explicó la revisión independiente y autorizó la tarjeta nueva y el PR. No se suman horas no declaradas a la continuación del trabajo.
 
@@ -10,7 +10,7 @@ Luis declaró **1 hora real en total**. Confirmó los límites 5 % / 20 %, expli
 
 | Pantalla | Operaciones | Fuente / decisión |
 |---|---|---|
-| Acceso y Aplicaciones | Usuario, ocho roles con Transporte incorporado por Logística, sede, sesión/salida, ocho módulos, búsqueda sin tildes | Bartolito e indicaciones de Luis |
+| Acceso y Aplicaciones | Usuario, nueve perfiles incluido Super Admin, sede, sesión y salida, ocho módulos y búsqueda sin tildes | Bartolito e indicaciones de Luis |
 | Panel Comercial | Operaciones por sede, accesos y contadores calculados | PDF pp. 3, 24 |
 | Clientes | Alta/actualización propuesta, DNI/RUC único, direcciones de entrega/fiscal/cobranza, segmento y condición preferida, revisión independiente | PDF pp. 6, 23 |
 | Productos | Alta/actualización con familia, unidad y coste separado del precio; publicación tras revisión | PDF pp. 6–7, 23 |
@@ -31,7 +31,7 @@ Luis declaró **1 hora real en total**. Confirmó los límites 5 % / 20 %, expli
 - **Finanzas:** informa límite, exposición y vencido. Comercial no cambia esos valores ni registra cobros.
 - **Facturación y Contabilidad:** emiten comprobantes y asientos. Comercial consulta referencias, sin emitirlos ni contabilizar.
 
-Los módulos propietarios, Compras y Reportes generales siguen mostrando En desarrollo. El panel de indicadores comerciales sí está disponible dentro de Comercial. [Contratos de consulta y datos de ejemplo](../contratos/integracion-comercial.md).
+El panel de indicadores se consulta dentro de Comercial. Reportes figura como módulo pendiente. [Contratos de consulta](../contratos/integracion-comercial.md).
 
 ## Reglas de operación
 
@@ -52,8 +52,12 @@ Los módulos propietarios, Compras y Reportes generales siguen mostrando En desa
 - Clientes y catálogo son compartidos; operaciones e indicadores se consultan por sede. Los costes y el margen estimado se muestran solo a Jefatura.
 - La información vive en este navegador. Borrar los datos del sitio elimina registros. No hay sincronización entre equipos, transacciones ni garantía de concurrencia entre pestañas.
 - Correlativos locales, no tributarios. No hay eliminación de documentos/eventos en pantalla; modificar manualmente localStorage puede alterar la información.
-- Respuestas de integración locales: Logística implementa existencias/reserva/salida/entrega/retorno en el mismo navegador mediante [contratos públicos](../contratos/integracion-logistica.md). Finanzas/Facturación aún usan respuestas de ejemplo, sin servicios bancarios/SUNAT. No se reutiliza la evidencia .NET/SQL de la etapa retirada.
+- Logística informa existencias, reservas, entregas y retornos. Finanzas informa el crédito y el seguimiento incorpora los comprobantes internos emitidos. La nota de crédito y el ajuste financiero de devolución siguen pendientes. [Contratos públicos](../contratos/integracion-comercial.md).
 - «Marcar enviada» registra la acción, no envía correo/WhatsApp. La entrega es propuesta. La facturación informada y el margen comercial no acreditan cobros ni asientos.
+
+## Orientación en pantalla
+
+**Recorrido de venta** permite abrir sus etapas y **Paso sugerido** destaca una acción según el estado. **Otras acciones** reúne las opciones adicionales de la ficha. Puedes seguir el proceso por el menú y las tablas y abrir el registro después de guardar. Las validaciones de descuentos, permisos, stock y crédito se aplican a cada operación.
 
 ## Recorrido manual
 
@@ -68,11 +72,11 @@ Los módulos propietarios, Compras y Reportes generales siguen mostrando En desa
 9. Revisar Indicadores, filtrar fecha/canal y cambiar sede. Entrar con Tesorería u otro rol ajeno: Comercial no permite operar.
 10. Imprimir cotización o solicitud: marca y ficha, sin controles de navegación. Desactivar encabezados/pies del navegador si se desea omitir URL/fecha.
 
-## Validación ejecutada
+## Validación de la entrega comercial inicial
 
 - **46 pruebas de reglas:** precios, límites, permisos, segregación, maestros, controles, cambios de respuestas, concurrencia secuencial/idempotencia local, parciales, anulación, devolución, vencimiento y migración de datos. No acredita concurrencia entre equipos.
 - **56 comprobaciones de pantalla:** Chrome con perfil de prueba y contexto aislado eliminado al terminar; recorrido completo, ocho roles (incluido Transporte), maestros/precios/promoción, excepciones, crédito, solicitudes, filtros de fecha/canal/sede, recarga, salida, impresión y móvil de 390 px. **0 excepciones JavaScript**. La prueba de consumidor aporta respuestas controladas por el contrato; el recorrido real entre pantallas/áreas se prueba adicionalmente en Logística.
 - Cotización con descuento, aprobación e historial: **PDF A4 de una página**. Capturas de escritorio/móvil e impresión revisadas visualmente.
 - Sintaxis JS, referencias HTML, enlaces de documentación y diff se comprueban en la validación final del cierre. [Comandos reproducibles](../../README.md).
 
-La primera entrega tuvo 41 comprobaciones de navegador. Se conservan como evidencia histórica en bitácora; el resultado vigente es la regresión anterior. No se atribuyen a Luis pruebas manuales que aún no haya confirmado. La explicación del autor y la hora declarada sí fueron proporcionadas por él.
+La [bitácora](../../BITACORA.md) conserva la evidencia histórica y la [validación del proyecto](../../README.md#validación) reúne los comandos actuales.

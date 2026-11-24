@@ -78,6 +78,15 @@ Registrar aquí solo actividades realizadas y comprobadas durante esta nueva eta
 - Límites: Jefatura, proveedor, factura y constancia son simulados; no se registran pagos ni operaciones reales. Revisión visual manual de Luis y revisión de Miguel pendientes; no se afirma una prueba de navegador. Evaluar con Contabilidad ajustes, traslados, devoluciones, reparación y bajas.
 - Publicación: se creó la [tarjeta #122](https://github.com/miguelr296/ERP-2026-2/issues/122) y la rama de test desde el `main` actualizado después de integrar #121. El [PR #123](https://github.com/miguelr296/ERP-2026-2/pull/123) está abierto con `Closes #122`; revisión de Miguel solicitada. No se fusiona ni marca Done.
 
+### 2026-11-24 · Prototipo integrado de FAMIHOGAR
+
+- Se habilitaron Facturación, Finanzas y Contabilidad. La entrega confirmada habilita el comprobante de venta. La factura verificada de proveedor se incorpora en Finanzas. Los documentos y movimientos proponen asientos con sus referencias de origen.
+- Se incorporó Super Admin para demostración. Los demás perfiles mantienen sus permisos, y se aplican revisiones independientes donde corresponde.
+- Comercial, Logística y los módulos de Libros incorporaron recorridos sugeridos, selectores de registros, ayuda contextual, guardado en la vista y zonas de trabajo con divisiones visibles.
+- Evidencia automatizada en Node y Chrome con contextos aislados. Se comprobó emisión, impresión, cobro, pago, conciliación, activos, contabilización, cierre mensual y vistas de escritorio y móvil. [Validación](README.md#validación).
+- Documentación vigente en [Arquitectura](docs/arquitectura.md), [Prueba integrada](docs/prueba-integrada.md) y [Facturación, Finanzas y Contabilidad](docs/pantallas/facturacion-finanzas-contabilidad.md).
+- Pendientes del prototipo: Reportes, nota de crédito y regularización financiera de devoluciones, diagramas TO-BE y conexiones externas.
+
 ### Plantilla
 
 Fecha · Persona · Trabajo realizado

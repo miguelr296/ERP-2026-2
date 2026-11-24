@@ -17,7 +17,7 @@ function entorno() {
   const memoria = new Map();
   const localStorage = { getItem: k => memoria.get(k) || null, setItem: (k, v) => memoria.set(k, v) };
   const ctx = vm.createContext({ window: {}, structuredClone, crypto: webcrypto, Date, localStorage });
-  for (const f of ["datos-comercial.js", "reglas-comerciales.js", "datos-logistica.js", "logistica-reglas.js", "compras-reglas.js", "almacenes-reglas.js", "distribucion-reglas.js"]) vm.runInContext(fs.readFileSync(path.join(raiz, f), "utf8"), ctx, { filename: f });
+  for (const f of ["permisos.js", "datos-comercial.js", "reglas-comerciales.js", "datos-logistica.js", "logistica-reglas.js", "compras-reglas.js", "almacenes-reglas.js", "distribucion-reglas.js"]) vm.runInContext(fs.readFileSync(path.join(raiz, f), "utf8"), ctx, { filename: f });
   const w = ctx.window, comercial = w.ReglasComerciales.prepararDatos(w.FAMIHOGAR, null);
   w.ContratosComerciales = { listarProductos: () => structuredClone(comercial.productos), listarPedidos: sede => structuredClone(comercial.pedidos.filter(p => !sede || p.sede === sede)), listarDevoluciones: sede => structuredClone(comercial.solicitudes.filter(s => !sede || s.sede === sede)) };
   for (const f of ["logistica-aplicacion.js", "integraciones-locales.js"]) vm.runInContext(fs.readFileSync(path.join(raiz, f), "utf8"), ctx, { filename: f });
