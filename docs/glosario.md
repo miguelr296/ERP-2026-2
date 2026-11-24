@@ -41,3 +41,15 @@
 | Reinspección | Revisión independiente posterior a la reparación, con evidencia y resultado antes de volver a disponible |
 | Baja autorizada | Salida física con motivo, aprobación y referencia; conserva registros y no genera por sí sola un asiento |
 | Reubicación interna | Movimiento entre posiciones del mismo almacén, conservando lote, estado y cantidad total |
+
+## Facturación, Finanzas y Contabilidad
+
+| Término | Uso en el ERP |
+|---|---|
+| Comprobante interno | Factura o boleta de demostración emitida a partir de un pedido entregado |
+| Cuenta por cobrar | Saldo a favor de la empresa generado al emitir el comprobante de venta |
+| Cuenta por pagar | Obligación registrada al incorporar una factura verificada o registrar una compra de activo |
+| Conciliación | Vinculación de una partida del extracto con su movimiento de banco |
+| Asiento pendiente | Líneas propuestas en el Debe y el Haber que esperan contabilización |
+| Período contable | Mes por sede que agrupa asientos, depreciación y controles de cierre |
+| Valor residual | Valor estimado al final de la vida útil. Se descuenta del costo para calcular la depreciación |

@@ -61,7 +61,17 @@ window.FormulariosAlmacen = f => {
   }
 
   function conteo() {
-    formulario("Registrar conteo físico", `<div class="campos">${campo("Almacén", "almacen", selectorAlmacen())}${campo("Estado de calidad", "calidad", selectSimple("calidad", estados))}${campo("Ubicación", "ubicacion", selectorUbicacion())}${campo("Producto", "codigo", select("codigo", A.productos().map(p => [p.codigo, p.nombre])))}${campo("Lote", "lote", input("lote", "INICIAL"))}${campo("Cantidad contada", "contado", input("contado", 0, 'type="number" min="0" step="1" required'))}${campo("Fecha", "fecha", fecha("fecha"))}</div>${razon}`, (d, s, valores) => L.crearConteo(d, { almacen: valores.get("almacen"), fecha: valores.get("fecha"), motivo: valores.get("motivo"), lineas: [{ codigo: valores.get("codigo"), ubicacion: valores.get("ubicacion"), lote: valores.get("lote"), calidad: valores.get("calidad"), contado: Number(valores.get("contado")), coste: s.productos.find(p => p.codigo === valores.get("codigo"))?.coste || 0 }] }, actor(), s.productos), "conteos"); enlazarCalidad();
+    formulario("Registrar conteo físico", `<div class="campos">${campo("Almacén", "almacen", selectorAlmacen())}${campo("Estado de calidad", "calidad", selectSimple("calidad", estados))}${campo("Ubicación", "ubicacion", selectorUbicacion())}${campo("Producto", "codigo", select("codigo", A.productos().map(p => [p.codigo, p.codigo + " · " + p.nombre])))}${campo("Lote", "lote", input("lote", "INICIAL", 'list="log-lotes-conteo" required') + '<datalist id="log-lotes-conteo"></datalist>')}${campo("Cantidad contada", "contado", input("contado", 0, 'type="number" min="0" step="1" required'))}${campo("Fecha", "fecha", fecha("fecha"))}</div>${razon}`, (d, s, valores) => L.crearConteo(d, { almacen: valores.get("almacen"), fecha: valores.get("fecha"), motivo: valores.get("motivo"), lineas: [{ codigo: valores.get("codigo"), ubicacion: valores.get("ubicacion"), lote: valores.get("lote"), calidad: valores.get("calidad"), contado: Number(valores.get("contado")), coste: s.productos.find(p => p.codigo === valores.get("codigo"))?.coste || 0 }] }, actor(), s.productos), "conteos");
+    enlazarCalidad();
+    const actualizarLotes = () => {
+      const valor = id => c.$("#log-" + id).value;
+      const lotes = [...new Set(datos().movimientos.filter(m => m.almacen === valor("almacen") && m.ubicacion === valor("ubicacion") &&
+        m.codigo === valor("codigo") && m.calidad === valor("calidad")).map(m => m.lote))];
+      c.$("#log-lotes-conteo").innerHTML = lotes.map(lote => opcion(lote, lote)).join("");
+      if (lotes.length === 1) c.$("#log-lote").value = lotes[0];
+    };
+    for (const campo of ["almacen", "ubicacion", "codigo", "calidad"]) c.$("#log-" + campo).addEventListener("change", actualizarLotes);
+    actualizarLotes();
   }
 
   return { almacen, ubicacion, reubicacion, tratamiento, reinspeccion, conteo };

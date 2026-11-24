@@ -25,9 +25,12 @@ Un pedido bloqueado por stock puede abrir Nueva necesidad con sus líneas y refe
 | `consultarDisponibilidad(pedido)` | Físico Disponible menos reservas ajenas y unidades retenidas por incidencias pendientes, por SKU y sede; excluye compromiso del propio pedido para no bloquear su revalidación. Comercial consulta de nuevo al aprobar |
 | `consultarSeguimiento(pedidoId)` | `salidas` con identidad/estado para impedir bloqueo/anulación posterior a salida; `entregas` solo con cantidades realmente entregadas, receptor y constancia. Preparado/En ruta/No entregado no generan entrega ficticia |
 | `consultarRecepcionDevolucion(solicitudId)` | Referencia `recepcion` cuando se recibe toda la cantidad autorizada; referencias parciales separadas. No produce nota de crédito ni ajuste financiero |
-| `listarFacturasVerificadas(sede)` | Facturas de proveedor cotejadas, base e IGV, identidad proveedor/OC. Puerto de consulta para Finanzas, sin registrar pago |
+| `listarFacturasVerificadas(sede)` | Identidad del cotejo, comprobante, base, IGV, fecha, proveedor, orden, condición y recepciones. Finanzas usa la referencia al incorporar la cuenta por pagar |
+| `listarProveedoresAprobados()` | Identificador y nombre. Finanzas lo usa para registrar compras de activos |
+| `consultarInventarioInicial(sede)` | Fecha y valor de las existencias iniciales. Contabilidad lo usa para abrir inventario |
+| `costoEntregado(pedidoId)` | Costo valorizado de las unidades entregadas. La emisión de venta exige que pueda verificarse |
 
-`IntegracionesComerciales` delega disponibilidad, salidas/entregas y recepción de devolución al propietario real de Logística. Crédito, facturas de venta, nota y ajuste mantienen sus respuestas de ejemplo separadas hasta implementar sus áreas. La ausencia de referencia significa pendiente, no cumplimiento.
+`IntegracionesComerciales` delega disponibilidad, salidas, entregas y recepción de devolución a Logística. Facturación valida entrega y costo antes de emitir. La ficha de factura verificada llama a `Finanzas.consultarPagoFactura(facturaId, sede)` para mostrar el estado. La nota de crédito y el ajuste financiero de devolución continúan pendientes.
 
 ## Persistencia y límites
 
@@ -37,4 +40,4 @@ Un pedido bloqueado por stock puede abrir Nueva necesidad con sus líneas y refe
 - Los movimientos se añaden, no se reescriben. Una devolución/ajuste agrega movimientos con referencia y responsable.
 - Los roles limitan los comandos de pantalla; el JavaScript y localStorage son accesibles al navegador. No se afirma autenticación de servidor ni servicio API.
 
-Evidencia: **77 pruebas de reglas y 71 comprobaciones de pantalla de Logística**, incluida venta creada en Comercial, reserva/salida/entrega, recepción de devolución, inspección parcial y reparación/reinspección vinculada a compra. Una reparación conforme aumenta la cantidad aceptada para el cotejo; no duplica la recepción ni registra pago. Los scripts crean datos aislados y eliminan su contexto; no acreditan que Luis haya ejecutado el guion manual nuevo.
+El [recorrido automatizado](../../tests/interfaz/logistica-navegador.cjs) usa datos aislados y verifica compras, recepción, inspección, reparación, reservas, entrega, emisión interna y consulta de pago de proveedor. La reparación conforme aumenta la cantidad aceptada que utiliza el cotejo y conserva la referencia a su recepción.

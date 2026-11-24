@@ -3,12 +3,12 @@
 window.PantallasLogistica = c => {
   const A = window.LogisticaAplicacion, L = window.LogisticaReglas, C = window.ComprasReglas, D = window.DistribucionReglas, M = window.AlmacenesReglas;
   const e = c.esc, actor = () => c.sesion, datos = () => A.leer(), productos = () => A.productos();
-  const jefatura = () => actor()?.rol === "Jefatura";
-  const compra = () => ["Compras", "Jefatura"].includes(actor()?.rol);
-  const almacen = () => ["Almacén", "Jefatura"].includes(actor()?.rol);
-  const transporte = () => ["Transporte", "Jefatura"].includes(actor()?.rol);
+  const permitir = roles => window.Permisos.tieneRol(actor(), roles);
+  const jefatura = () => permitir(["Jefatura"]);
+  const compra = () => permitir(["Compras", "Jefatura"]);
+  const almacen = () => permitir(["Almacén", "Jefatura"]);
+  const transporte = () => permitir(["Transporte", "Jefatura"]);
   let modulo = "logistica", vistaActual = "resumen", productoKardex = "", evaluacionKardex = null;
-  const permitir = roles => roles.includes(actor()?.rol);
   const b = (titulo, comando, id = "", clase = "boton") => `<button type="button" class="${clase}" data-log-accion="${comando}" data-id="${e(id)}">${e(titulo)}</button>`;
   const enlace = (titulo, destino) => `<button type="button" class="enlace-boton" data-log-vista="${e(destino)}">${e(titulo)}</button>`;
   const ir = destino => c.navegar(`${modulo}/${destino}`);
@@ -22,7 +22,8 @@ window.PantallasLogistica = c => {
   const campo = (titulo, id, contenido) => `<div><label for="log-${id}">${titulo}</label>${contenido}</div>`;
   const input = (id, valor = "", extra = "required") => `<input id="log-${id}" name="${id}" value="${e(valor)}" ${extra}>`;
   const selectSimple = (id, valores, seleccionado) => select(id, valores.map(v => [v, v]), seleccionado);
-  const razon = campo("Motivo / evidencia", "motivo", '<textarea id="log-motivo" name="motivo" minlength="3" maxlength="500" required></textarea>');
+  const campoRazon = titulo => campo(titulo, "motivo", '<textarea id="log-motivo" name="motivo" minlength="3" maxlength="500" required></textarea>');
+  const razon = campoRazon("Motivo / evidencia");
   const cantidad = id => input(id, 0, 'type="number" min="0" step="1" required');
   const fecha = (id, valor = hoy()) => input(id, valor, 'type="date" required');
   const monedas = valor => c.moneda(valor || 0);
@@ -55,13 +56,35 @@ window.PantallasLogistica = c => {
     control: ["Indicadores logísticos", "Control", ["Compras", "Almacén", "Transporte", "Jefatura"]]
   };
 
+  const pasosCompra = [
+    ["requisiciones", "Solicitar compra", "Compras"], ["peticionesOferta", "Pedir y comparar ofertas", "Compras"],
+    ["ordenes", "Emitir orden", "Compras"], ["recepciones", "Recibir e inspeccionar", "Almacén"], ["facturas", "Verificar factura", "Compras"]
+  ];
+  const pasosDespacho = [["reservas", "Reservar", "Almacén"], ["picking", "Preparar y embalar", "Almacén"], ["despachos", "Despachar y entregar", "Transporte"]];
+  const flujo = window.RecorridosLogistica({ c, C, e, accion: b, enlace, compra, almacen, transporte, jefatura });
+  const tramoCompra = vista => vista === "ofertas" ? "peticionesOferta" : vista;
+
+  function mostrarRuta(titulo, pasos, actual) {
+    if (!pasos.some(([id]) => permitir(secciones[id][2]))) return "";
+    return c.recorrido.etapas(titulo, pasos.map(([id, etiqueta, responsable]) => ({
+      id, etiqueta, responsable, ruta: permitir(secciones[id][2]) ? modulo + "/" + id : ""
+    })), actual);
+  }
+
+  function rutaDe(vista) {
+    const etapa = tramoCompra(vista);
+    if (pasosCompra.some(([id]) => id === etapa)) return mostrarRuta("Recorrido de compra", pasosCompra, etapa);
+    if (pasosDespacho.some(([id]) => id === vista)) return mostrarRuta("Recorrido de entrega", pasosDespacho, vista);
+    return "";
+  }
+
   function admite(id) {
     if (!actor()) return false;
     return id === "compras" ? compra() : id === "despachos" ? permitir(["Almacén", "Transporte", "Jefatura"]) : permitir(["Asesor", "Compras", "Almacén", "Transporte", "Jefatura"]);
   }
 
-  function cabecera(titulo, texto = "", botones = "") {
-    return `<div class="encabezado-vista"><div><p class="ceja">LOGÍSTICA / ${e(c.sedeNombre(actor().sede))}</p><h1>${e(titulo)}</h1><p>${e(texto)}</p></div><div class="acciones-documento">${botones}</div></div>`;
+  function cabecera(titulo, texto, botones) {
+    return c.cabeceraVista(titulo, texto, botones, "LOGÍSTICA / " + c.sedeNombre(actor().sede));
   }
 
   function dibujar(idModulo, partes) {
@@ -78,8 +101,12 @@ window.PantallasLogistica = c => {
     const grupo = secciones[vistaActual]?.[1] || "Inicio";
     c.$("#navegacion").setAttribute("aria-label", "Procesos logísticos");
     const grupos = [...new Set(permitidas.map(([, s]) => s[1]))];
-    c.$("#navegacion").innerHTML = grupos.map(g => `<button type="button" data-log-vista="${permitidas.find(([, s]) => s[1] === g)[0]}" ${g === grupo ? 'aria-current="page"' : ""}>${g}</button>`).join("");
-    const sub = `<div class="log-submenu">${permitidas.filter(([, s]) => s[1] === grupo).map(([id, s]) => `<button type="button" data-log-vista="${id}" ${id === vistaActual ? 'aria-current="page"' : ""}>${s[0]}</button>`).join("")}</div>`;
+    c.$("#navegacion").innerHTML = grupos.map(g => `<button type="button" data-log-vista="${permitidas.find(([, s]) => s[1] === g)[0]}" data-log-grupo="${e(g)}" ${g === grupo ? 'aria-current="page"' : ""}>${g}</button>`).join("");
+    const ruta = rutaDe(vistaActual);
+    const etapas = grupo === "Distribución" ? pasosDespacho : pasosCompra;
+    const otras = permitidas.filter(([id, s]) => id !== "resumen" && s[1] === grupo && (!ruta || !etapas.some(([etapa]) => etapa === id)));
+    const menu = otras.length ? `<div class="log-submenu" aria-label="Otras opciones del proceso">${otras.map(([id, s]) => `<button type="button" data-log-vista="${id}" ${id === vistaActual ? 'aria-current="page"' : ""}>${s[0]}</button>`).join("")}</div>` : "";
+    const sub = ruta + menu;
     try {
       if (partes[1] === "pedido" && partes[2]) { fichaPedido(partes[2]); return; }
       L.exigir(permitir(secciones[vistaActual][2]), "No tienes acceso a ese proceso logístico.");
@@ -117,18 +144,28 @@ window.PantallasLogistica = c => {
       evaluaciones: b("+ Evaluar proveedor", "evaluacion", "", "boton primario"),
       acciones: b("+ Nueva acción", "accion", "", "boton primario")
     };
-    if (["almacenes", "ubicaciones"].includes(vista)) return cabecera(secciones[vista][0], "Maestros de la sede; los cambios conservan historial.", nuevos[vista]) + c.tabla(secciones[vista][0], ["Nombre", "Almacén / código", "Capacidad / estados", "Estado"], filas.map(r => `<tr><td>${enlace(r.nombre, `${vista}/${r.id}`)}</td><td>${e(r.almacen ? nombreAlmacen(r.almacen) + " / " + r.codigo : r.numero || r.id)}</td><td>${r.capacidad ? `${r.capacidad} unidades · ${e(r.estados.join(", "))}` : e(r.direccion)}</td><td>${c.etiqueta(r.activo === false ? "Inactivo" : "Activo")}</td></tr>`));
-    if (vista === "ofertas") return cabecera(secciones[vista][0], "Compara precio, plazo y calidad antes de adjudicar.", nuevos[vista]) + c.tabla("Ofertas recibidas", ["Oferta", "Proveedor", "Petición", "Base sin IGV", "Plazo / calidad", "Vigencia", "Estado"], filas.map(o => `<tr><td>${enlace(o.numero, `ofertas/${o.id}`)}</td><td>${e(nombreProveedor(o.proveedorId))}</td><td>${e(d.peticionesOferta.find(p => p.id === o.peticionId)?.numero)}</td><td class="numero">${monedas(o.base)}</td><td>${o.plazoDias} días / ${o.calidad} de 5</td><td>${c.fechaCorta(o.vigenteHasta)}</td><td>${c.etiqueta(o.estado)}</td></tr>`));
-    if (vista === "proveedores") return cabecera(secciones[vista][0], "Altas y modificaciones con revisión independiente.", nuevos[vista]) + c.tabla("Proveedores", ["Proveedor", "RUC", "Contacto", "Condición", "Estado"], filas.map(p => `<tr><td>${enlace(p.nombre, `proveedores/${p.id}`)}</td><td>${e(p.ruc)}</td><td>${e(p.correo)}<small>${e(p.telefono)}</small></td><td>${e(p.condicion)}</td><td>${c.etiqueta(p.estado)}${p.propuesta ? " · Cambio pendiente" : ""}</td></tr>`));
-    const descripcion = { recepciones: "La mercancía recibida queda en cuarentena hasta inspeccionarse.", facturas: "Cotejo orden–recepción–factura. El pago corresponde a Finanzas.", reservas: "La reserva compromete stock; la salida se registra al despachar.", despachos: "Picking, salida, transporte y confirmación de entrega.", retornos: "La recepción física no emite notas de crédito ni registra pagos.", traslados: "Salida y recepción independientes entre almacenes.", conteos: "Ajustes con motivo, revisión y control de reservas." };
-    return cabecera(secciones[vista][0], descripcion[vista] || "Documentos, responsables y seguimiento de la sede.", nuevos[vista]) + c.tabla(secciones[vista][0], ["Documento", "Referencia", "Responsable", "Estado"], filas.map(registro => `<tr><td>${enlace(registro.numero || registro.nombre, `${vista}/${registro.id}`)}</td><td>${e(registro.pedidoNumero || registro.origen || registro.documento || registro.descripcion || registro.motivo || registro.causa || "—")}</td><td>${e(registro.registradoPor)}</td><td>${c.etiqueta(registro.estado)}</td></tr>`));
+    if (["almacenes", "ubicaciones"].includes(vista)) return c.zonaTrabajo("Operaciones logísticas", cabecera(secciones[vista][0], "Maestros de la sede; los cambios conservan historial.", nuevos[vista]))
+      + c.zonaTrabajo("Registros de la sección", c.tabla(secciones[vista][0], ["Nombre", "Almacén / código", "Capacidad / estados", "Estado"], filas.map(r => `<tr><td>${enlace(r.nombre, `${vista}/${r.id}`)}</td><td>${e(r.almacen ? nombreAlmacen(r.almacen) + " / " + r.codigo : r.numero || r.id)}</td><td>${r.capacidad ? `${r.capacidad} unidades · ${e(r.estados.join(", "))}` : e(r.direccion)}</td><td>${c.etiqueta(r.activo === false ? "Inactivo" : "Activo")}</td></tr>`)));
+    if (vista === "ofertas") return c.zonaTrabajo("Operaciones logísticas", cabecera(secciones[vista][0], "Compara precio, plazo y calidad antes de adjudicar.", nuevos[vista]))
+      + c.zonaTrabajo("Registros de la sección", c.tabla("Ofertas recibidas", ["Oferta", "Proveedor", "Petición", "Base sin IGV", "Plazo / calidad", "Vigencia", "Estado"], filas.map(o => `<tr><td>${enlace(o.numero, `ofertas/${o.id}`)}</td><td>${e(nombreProveedor(o.proveedorId))}</td><td>${e(d.peticionesOferta.find(p => p.id === o.peticionId)?.numero)}</td><td class="numero">${monedas(o.base)}</td><td>${o.plazoDias} días / ${o.calidad} de 5</td><td>${c.fechaCorta(o.vigenteHasta)}</td><td>${c.etiqueta(o.estado)}</td></tr>`)));
+    if (vista === "proveedores") return c.zonaTrabajo("Operaciones logísticas", cabecera(secciones[vista][0], "Altas y modificaciones con revisión independiente.", nuevos[vista]))
+      + c.zonaTrabajo("Registros de la sección", c.tabla("Proveedores", ["Proveedor", "RUC", "Contacto", "Condición", "Estado"], filas.map(p => `<tr><td>${enlace(p.nombre, `proveedores/${p.id}`)}</td><td>${e(p.ruc)}</td><td>${e(p.correo)}<small>${e(p.telefono)}</small></td><td>${e(p.condicion)}</td><td>${c.etiqueta(p.estado)}${p.propuesta ? " · Cambio pendiente" : ""}</td></tr>`)));
+    const descripcion = { requisiciones: "Empieza aquí si necesitas comprar. Abre una solicitud para aprobarla o seguir con las ofertas.",
+      peticionesOferta: "Abre la petición para registrar y comparar las ofertas de la misma compra.",
+      ordenes: "Prepara la orden desde una oferta adjudicada o acuerdo vigente. En la ficha puedes aprobarla, emitirla y registrar la confirmación.",
+      recepciones: "Selecciona una orden con unidades pendientes. Después de registrar el ingreso, inspecciona el lote.",
+      facturas: "Coteja la factura con una orden y su recepción conforme. Una factura verificada pasa a Finanzas.", reservas: "La reserva compromete stock; la salida se registra al despachar.", despachos: "Picking, salida, transporte y confirmación de entrega.", retornos: "La recepción física no emite notas de crédito ni registra pagos.", traslados: "Salida y recepción independientes entre almacenes.", conteos: "Ajustes con motivo, revisión y control de reservas." };
+    return c.zonaTrabajo("Operaciones logísticas", cabecera(secciones[vista][0], descripcion[vista] || "Documentos, responsables y seguimiento de la sede.", nuevos[vista]))
+      + c.zonaTrabajo("Registros de la sección", c.tabla(secciones[vista][0], ["Documento", "Referencia", "Responsable", "Estado"], filas.map(registro => `<tr><td>${enlace(registro.numero || registro.nombre, `${vista}/${registro.id}`)}</td><td>${e(registro.pedidoNumero || registro.origen || registro.documento || registro.descripcion || registro.motivo || registro.causa || "—")}</td><td>${e(registro.registradoPor)}</td><td>${c.etiqueta(registro.estado)}</td></tr>`)));
   }
 
   function resumen() {
     const d = datos();
     const valores = [["Solicitudes de pedido pendientes", propios(d.requisiciones).filter(r => r.estado === "Pendiente").length], ["Órdenes vigentes", propios(d.ordenes).filter(o => !["Anulada", "Rechazada"].includes(o.estado)).length], ["Órdenes de ingreso por inspeccionar", propios(d.recepciones).filter(r => r.lineas.some(l => C.pendienteInspeccion(l) > 0)).length], ["Entregas en ruta", propios(d.despachos).filter(d => d.estado === "En ruta").length]];
     const grupos = Object.entries(secciones).filter(([id, s]) => id !== "resumen" && permitir(s[2]));
-    return cabecera("Panel logístico", "Solicitudes de pedido, compras e inventario conectados con las órdenes de salida.") + `<div class="indicadores">${valores.map(([titulo, cantidad]) => `<div class="tarjeta indicador"><small>${titulo}</small><strong>${cantidad}</strong></div>`).join("")}</div><div class="grupos">${[...new Set(grupos.map(([, s]) => s[1]))].map(grupo => `<section class="tarjeta grupo"><h2>${grupo}</h2>${grupos.filter(([, s]) => s[1] === grupo).map(([id, s]) => `<button type="button" data-log-vista="${id}">${s[0]} <span>→</span></button>`).join("")}</section>`).join("")}</div>`;
+    return c.zonaTrabajo("Procesos logísticos", cabecera("Panel logístico", "Elige una etapa para empezar o retomar un proceso.")
+      + mostrarRuta("Recorrido de compra", pasosCompra) + mostrarRuta("Recorrido de entrega", pasosDespacho))
+      + c.zonaTrabajo("Actividad y operaciones logísticas", `<div class="indicadores">${valores.map(([titulo, cantidad]) => `<div class="tarjeta indicador"><small>${titulo}</small><strong>${cantidad}</strong></div>`).join("")}</div><details class="recorrido-detalles"><summary>Todas las operaciones logísticas</summary><div class="grupos">${[...new Set(grupos.map(([, s]) => s[1]))].map(grupo => `<section class="tarjeta grupo"><h2>${grupo}</h2>${grupos.filter(([, s]) => s[1] === grupo).map(([id, s]) => `<button type="button" data-log-vista="${id}">${s[0]} <span>→</span></button>`).join("")}</section>`).join("")}</div></details>`);
   }
 
   function inventario() {
@@ -139,7 +176,8 @@ window.PantallasLogistica = c => {
     const selector = campo("Producto de la tarjeta", "kardexProducto", select("kardexProducto", productosAprobados.map(p => [p.codigo, `${p.codigo} · ${p.nombre}`]), productoKardex, 'data-kardex-producto'));
     const kardex = L.kardexValorizado(d, productos(), actor().sede).filter(m => m.codigo === productoKardex).slice().reverse();
     const botones = (jefatura() ? b("Resolver cuarentena", "cuarentena") : "") + b("Ejecutar escenario de evaluación", "evaluacion-kardex");
-    return cabecera("Kardex valorizado", "Existencias por almacén y tarjeta cronológica del producto seleccionado.", botones) + tabla + '<div class="separador-vista"></div>' + `<section class="tarjeta"><div class="barra-tabla"><h2>Kardex valorizado</h2>${selector}</div><p class="texto-suave">Método aplicado: promedio ponderado móvil por producto y sede.</p><div class="tabla-desplazable"><table class="kardex-valorizado"><thead><tr><th scope="col" rowspan="2">Fecha</th><th scope="col" rowspan="2">Tipo de movimiento</th><th scope="colgroup" colspan="3">Entradas</th><th scope="colgroup" colspan="3">Salidas</th><th scope="colgroup" colspan="3">Saldos finales</th><th scope="col" rowspan="2">Almacén</th><th scope="col" rowspan="2">Ubicación / lote</th><th scope="col" rowspan="2">Estado</th><th scope="col" rowspan="2">Documento</th></tr><tr><th scope="col">Cantidad</th><th scope="col">Costo unitario</th><th scope="col">Costo total</th><th scope="col">Cantidad</th><th scope="col">Costo unitario</th><th scope="col">Costo total</th><th scope="col">Cantidad</th><th scope="col">Costo unitario</th><th scope="col">Costo total</th></tr></thead><tbody>${kardex.map(m => `<tr><td>${c.fechaCorta(m.fecha)}</td><td>${e(m.tipo)}</td>${m.cantidad > 0 ? `<td>${m.cantidad}</td><td class="numero">${monedas(m.costoUnitarioMovimiento)}</td><td class="numero">${monedas(m.importeMovimiento)}</td><td>—</td><td>—</td><td>—</td>` : `<td>—</td><td>—</td><td>—</td><td>${Math.abs(m.cantidad)}</td><td class="numero">${monedas(m.costoUnitarioMovimiento)}</td><td class="numero">${monedas(Math.abs(m.importeMovimiento))}</td>`}<td>${m.saldoFinalCantidad}</td><td class="numero">${monedas(m.costoUnitarioFinal)}</td><td class="numero">${monedas(m.saldoFinal)}</td><td>${e(nombreAlmacen(m.almacen))}</td><td>${e(m.ubicacion)} / ${e(m.lote)}</td><td>${e(m.calidad)}</td><td>${e(m.referencia || m.numero)}</td></tr>`).join("") || '<tr><td colspan="15" class="vacio">No hay movimientos para este producto en la sede.</td></tr>'}</tbody></table></div></section>`;
+    return c.zonaTrabajo("Existencias y acciones de inventario", cabecera("Kardex valorizado", "Existencias por almacén y tarjeta cronológica del producto seleccionado.", botones) + tabla)
+      + c.zonaTrabajo("Movimientos valorizados", `<section class="tarjeta"><div class="barra-tabla"><h2>Kardex valorizado</h2>${selector}</div><p class="texto-suave">Método aplicado: promedio ponderado móvil por producto y sede.</p><div class="tabla-desplazable"><table class="kardex-valorizado"><thead><tr><th scope="col" rowspan="2">Fecha</th><th scope="col" rowspan="2">Tipo de movimiento</th><th scope="colgroup" colspan="3">Entradas</th><th scope="colgroup" colspan="3">Salidas</th><th scope="colgroup" colspan="3">Saldos finales</th><th scope="col" rowspan="2">Almacén</th><th scope="col" rowspan="2">Ubicación / lote</th><th scope="col" rowspan="2">Estado</th><th scope="col" rowspan="2">Documento</th></tr><tr><th scope="col">Cantidad</th><th scope="col">Costo unitario</th><th scope="col">Costo total</th><th scope="col">Cantidad</th><th scope="col">Costo unitario</th><th scope="col">Costo total</th><th scope="col">Cantidad</th><th scope="col">Costo unitario</th><th scope="col">Costo total</th></tr></thead><tbody>${kardex.map(m => `<tr><td>${c.fechaCorta(m.fecha)}</td><td>${e(m.tipo)}</td>${m.cantidad > 0 ? `<td>${m.cantidad}</td><td class="numero">${monedas(m.costoUnitarioMovimiento)}</td><td class="numero">${monedas(m.importeMovimiento)}</td><td>—</td><td>—</td><td>—</td>` : `<td>—</td><td>—</td><td>—</td><td>${Math.abs(m.cantidad)}</td><td class="numero">${monedas(m.costoUnitarioMovimiento)}</td><td class="numero">${monedas(Math.abs(m.importeMovimiento))}</td>`}<td>${m.saldoFinalCantidad}</td><td class="numero">${monedas(m.costoUnitarioFinal)}</td><td class="numero">${monedas(m.saldoFinal)}</td><td>${e(nombreAlmacen(m.almacen))}</td><td>${e(m.ubicacion)} / ${e(m.lote)}</td><td>${e(m.calidad)}</td><td>${e(m.referencia || m.numero)}</td></tr>`).join("") || '<tr><td colspan="15" class="vacio">No hay movimientos para este producto en la sede.</td></tr>'}</tbody></table></div></section>`);
   }
 
   function vistaEvaluacionKardex() {
@@ -155,7 +193,8 @@ window.PantallasLogistica = c => {
   function planificacion() {
     const d = datos(), periodo = hoy().slice(0, 7);
     const plan = L.planificar(d, productos(), A.pedidos(actor().sede), A.config, actor().sede, periodo);
-    return cabecera("Planificación y reposición", "Demanda comercial, previsión, inventario y compras en camino.", b("Registrar previsión", "prevision") + (jefatura() ? b("Parámetros de reposición", "parametros") : "")) + c.tabla(`Necesidades de ${periodo}`, ["Producto", "Disponible", "Demanda pendiente", "En camino", "Proyectado", "Mín. / objetivo", "Sugerido"], plan.map(p => `<tr><td>${e(nombreProducto(p.codigo))}</td><td>${p.disponible}</td><td>${p.demanda}</td><td>${p.enCamino}</td><td>${p.proyectado}</td><td>${p.minimo} / ${p.objetivo}</td><td>${p.sugerido ? b(`Solicitar ${p.sugerido}`, "sugerencia", `${p.almacen}|${p.codigo}|${p.sugerido}`) : "—"}</td></tr>`));
+    return c.zonaTrabajo("Operaciones logísticas", cabecera("Planificación y reposición", "Demanda comercial, previsión, inventario y compras en camino.", b("Registrar previsión", "prevision") + (jefatura() ? b("Parámetros de reposición", "parametros") : "")))
+      + c.zonaTrabajo("Registros de la sección", c.tabla(`Necesidades de ${periodo}`, ["Producto", "Disponible", "Demanda pendiente", "En camino", "Proyectado", "Mín. / objetivo", "Sugerido"], plan.map(p => `<tr><td>${e(nombreProducto(p.codigo))}</td><td>${p.disponible}</td><td>${p.demanda}</td><td>${p.enCamino}</td><td>${p.proyectado}</td><td>${p.minimo} / ${p.objetivo}</td><td>${p.sugerido ? b(`Solicitar ${p.sugerido}`, "sugerencia", `${p.almacen}|${p.codigo}|${p.sugerido}`) : "—"}</td></tr>`)));
   }
 
   function control() {
@@ -203,9 +242,29 @@ window.PantallasLogistica = c => {
   function ficha(vista, id, sub) {
     const d = datos(), registro = d[vista]?.find(r => r.id === id && (!r.sede || r.sede === actor().sede || vista === "traslados" && r.sedeDestino === actor().sede));
     L.exigir(registro && (actor().rol !== "Asesor" || registro.registradoPor === actor().nombre), "Documento no encontrado en esta sede.");
-    let contenido = `<article class="ficha"><div class="cabecera-documento"><h3>${e(registro.numero || registro.nombre)}</h3>${c.etiqueta(registro.estado)}</div>${registro.proveedorId ? `<p>Proveedor: ${e(registro.proveedor?.nombre || nombreProveedor(registro.proveedorId))}</p>` : ""}${detalles(registro)}${registro.lineas ? lineasTabla(registro.lineas, ["ofertas", "ordenes", "acuerdos", "facturas"].includes(vista)) : ""}${registro.base != null ? `<p class="numero"><strong>Base sin IGV: ${monedas(registro.base)}</strong></p>` : ""}${registro.observaciones?.length ? `<h3>Diferencias del cotejo</h3><ul>${registro.observaciones.map(o => `<li>${e(o)}</li>`).join("")}</ul>` : ""}${registro.propuesta ? `<h3>Cambio propuesto</h3>${detalles(registro.propuesta)}<p>${e(registro.propuesta.nombre)}</p>` : ""}${registro.recibidas ? `<h3>Recepción del traslado</h3><p>${Object.entries(registro.recibidas).map(([codigo, cantidad]) => `${e(nombreProducto(codigo))}: ${cantidad}`).join(" · ") || "Pendiente en destino"}</p>` : ""}${relacionados(vista, registro)}${c.mostrarHistorial(registro.historial || [])}</article>`;
-    c.$("#contenido").innerHTML = sub + cabecera(secciones[vista][0], registro.numero || registro.nombre, enlace("← Volver", vista)) + `<section class="tarjeta ficha-completa">${contenido}<div class="acciones-documento">${accionesFicha(vista, registro)}${b("Imprimir ficha", "imprimir")}</div></section>`;
+    if (vista === "facturas") {
+      const pago = window.Finanzas?.consultarPagoFactura(registro.id, registro.sede);
+      if (pago) registro.pago = pago.estado;
+    }
+    const paso = flujo.siguiente(vista, d, registro);
+    const contenido = `<article class="ficha"><div class="cabecera-documento"><h3>${e(registro.numero || registro.nombre)}</h3>${c.etiqueta(registro.estado)}</div>${registro.proveedorId ? `<p>Proveedor: ${e(registro.proveedor?.nombre || nombreProveedor(registro.proveedorId))}</p>` : ""}${detalles(registro)}${registro.lineas ? lineasTabla(registro.lineas, ["ofertas", "ordenes", "acuerdos", "facturas"].includes(vista)) : ""}${registro.base != null ? `<p class="numero"><strong>Base sin IGV: ${monedas(registro.base)}</strong></p>` : ""}${registro.observaciones?.length ? `<h3>Diferencias del cotejo</h3><ul>${registro.observaciones.map(o => `<li>${e(o)}</li>`).join("")}</ul>` : ""}${registro.propuesta ? `<h3>Cambio propuesto</h3>${detalles(registro.propuesta)}<p>${e(registro.propuesta.nombre)}</p>` : ""}${registro.recibidas ? `<h3>Recepción del traslado</h3><p>${Object.entries(registro.recibidas).map(([codigo, cantidad]) => `${e(nombreProducto(codigo))}: ${cantidad}`).join(" · ") || "Pendiente en destino"}</p>` : ""}${relacionados(vista, registro)}<details class="recorrido-detalles"><summary>Historial del documento</summary>${c.mostrarHistorial(registro.historial || [])}</details></article>`;
+    const secundarias = accionesFicha(vista, registro, paso?.comando) + b("Imprimir ficha", "imprimir");
+    const acciones = `<div class="acciones-documento">${secundarias}</div>`;
+    const mostrarSecundarias = paso ? `<details class="recorrido-detalles acciones-adicionales"><summary>Otras acciones</summary>${acciones}</details>`
+      : `<div class="tarjeta acciones-adicionales">${acciones}</div>`;
+    c.$("#contenido").innerHTML = c.zonaTrabajo("Acciones del documento", sub
+      + cabecera(secciones[vista][0], registro.numero || registro.nombre, enlace("← Volver al listado", vista))
+      + c.recorrido.siguiente(paso) + mostrarSecundarias)
+      + c.zonaTrabajo("Detalle del documento", (vista === "peticionesOferta" ? ofertasPeticion(d, registro) : "")
+        + `<section class="tarjeta ficha-completa">${contenido}</section>`);
     prepararImpresion(contenido);
+  }
+
+  function ofertasPeticion(d, registro) {
+    const ofertas = d.ofertas.filter(o => o.peticionId === registro.id);
+    if (!ofertas.length) return "";
+    return c.tabla("Ofertas de esta petición", ["Oferta", "Proveedor", "Base sin IGV", "Plazo", "Calidad", "Estado"], ofertas.map(o =>
+      `<tr><td>${enlace(o.numero, "ofertas/" + o.id)}</td><td>${e(nombreProveedor(o.proveedorId))}</td><td>${monedas(o.base)}</td><td>${o.plazoDias} días</td><td>${o.calidad} de 5</td><td>${c.etiqueta(o.estado)}</td></tr>`), false);
   }
 
   function fichaPedido(id) {
@@ -219,52 +278,54 @@ window.PantallasLogistica = c => {
     const ficha = document.createElement("div"); ficha.className = "vista-imprimir";
     ficha.innerHTML = c.$(".marca").outerHTML + contenido;
     ficha.querySelectorAll("button").forEach(boton => boton.replaceWith(document.createTextNode(boton.textContent)));
+    ficha.querySelectorAll("details").forEach(detalle => { detalle.open = true; });
     document.body.append(ficha); document.body.classList.add("imprimir-documento");
   }
 
-  function accionesFicha(vista, r) {
+  function accionesFicha(vista, r, principal) {
+    const opcion = (texto, comando, id) => comando === principal ? "" : b(texto, comando, id);
     let html = "";
-    if (vista === "almacenes" && jefatura()) html += b("Editar almacén", "almacen", r.id);
-    if (vista === "ubicaciones" && jefatura()) html += b("Editar ubicación", "ubicacion", r.id);
+    if (vista === "almacenes" && jefatura()) html += opcion("Editar almacén", "almacen", r.id);
+    if (vista === "ubicaciones" && jefatura()) html += opcion("Editar ubicación", "ubicacion", r.id);
     if (vista === "tratamientos") {
-      if (jefatura() && r.estado === "Pendiente") html += b("Autorizar tratamiento", "aprobar-tratamiento", r.id) + b("Rechazar", "rechazar-tratamiento", r.id);
-      if (almacen() && r.estado === "En reparación") html += b("Presentar reparación", "terminar-reparacion", r.id);
-      if (jefatura() && r.estado === "Por reinspeccionar") html += b("Reinspeccionar", "reinspeccion", r.id);
+      if (jefatura() && r.estado === "Pendiente") html += opcion("Autorizar tratamiento", "aprobar-tratamiento", r.id) + opcion("Rechazar", "rechazar-tratamiento", r.id);
+      if (almacen() && r.estado === "En reparación") html += opcion("Presentar reparación", "terminar-reparacion", r.id);
+      if (jefatura() && r.estado === "Por reinspeccionar") html += opcion("Reinspeccionar", "reinspeccion", r.id);
     }
-    if (vista === "proveedores" && compra() && r.estado === "Aprobado" && !r.propuesta) html += b("Proponer actualización", "proveedor", r.id);
-    if (vista === "proveedores" && jefatura() && (r.estado === "Pendiente" || r.propuesta)) html += b("Aprobar", "aprobar-proveedor", r.id) + b("Rechazar", "rechazar-proveedor", r.id);
-    if (vista === "requisiciones" && jefatura() && r.estado === "Pendiente") html += b("Aprobar solicitud de pedido", "aprobar-requisicion", r.id) + b("Rechazar", "rechazar-requisicion", r.id);
-    if (vista === "ofertas" && jefatura() && r.estado === "Recibida") html += b("Adjudicar proveedor", "adjudicar", r.id);
-    if (vista === "acuerdos" && jefatura() && r.estado === "Pendiente") html += b("Aprobar acuerdo", "aprobar-acuerdo", r.id) + b("Rechazar", "rechazar-acuerdo", r.id);
+    if (vista === "proveedores" && compra() && r.estado === "Aprobado" && !r.propuesta) html += opcion("Proponer actualización", "proveedor", r.id);
+    if (vista === "proveedores" && jefatura() && (r.estado === "Pendiente" || r.propuesta)) html += opcion("Aprobar", "aprobar-proveedor", r.id) + opcion("Rechazar", "rechazar-proveedor", r.id);
+    if (vista === "requisiciones" && jefatura() && r.estado === "Pendiente") html += opcion("Aprobar solicitud de pedido", "aprobar-requisicion", r.id) + opcion("Rechazar", "rechazar-requisicion", r.id);
+    if (vista === "ofertas" && jefatura() && r.estado === "Recibida") html += opcion("Adjudicar proveedor", "adjudicar", r.id);
+    if (vista === "acuerdos" && jefatura() && r.estado === "Pendiente") html += opcion("Aprobar acuerdo", "aprobar-acuerdo", r.id) + opcion("Rechazar", "rechazar-acuerdo", r.id);
     if (vista === "ordenes") {
-      if (jefatura() && r.estado === "Pendiente") html += b("Aprobar orden", "aprobar-orden", r.id) + b("Rechazar", "rechazar-orden", r.id);
-      if (compra() && r.estado === "Aprobada") html += b("Marcar emitida", "emitir-orden", r.id);
-      if (compra() && r.estado === "Emitida") html += b("Confirmación del proveedor", "confirmar-orden", r.id);
-      if (jefatura() && !["Anulada", "Rechazada"].includes(r.estado)) html += b("Anular orden", "anular-orden", r.id);
+      if (jefatura() && r.estado === "Pendiente") html += opcion("Aprobar orden", "aprobar-orden", r.id) + opcion("Rechazar", "rechazar-orden", r.id);
+      if (compra() && r.estado === "Aprobada") html += opcion("Marcar emitida", "emitir-orden", r.id);
+      if (compra() && r.estado === "Emitida") html += opcion("Confirmación del proveedor", "confirmar-orden", r.id);
+      if (jefatura() && !["Anulada", "Rechazada"].includes(r.estado)) html += opcion("Anular orden", "anular-orden", r.id);
     }
     if (vista === "recepciones" && almacen()) {
-      if (r.lineas.some(l => C.pendienteInspeccion(l) > 0)) html += b("Registrar inspección", "inspeccion", r.id);
-      if (r.lineas.some(l => l.noConforme > 0)) html += b("Devolver al proveedor", "devolver-proveedor", r.id) + b("Tratar no conformes", "tratamiento-recepcion", r.id);
+      if (r.lineas.some(l => C.pendienteInspeccion(l) > 0)) html += opcion("Registrar inspección", "inspeccion", r.id);
+      if (r.lineas.some(l => l.noConforme > 0)) html += opcion("Devolver al proveedor", "devolver-proveedor", r.id) + opcion("Tratar no conformes", "tratamiento-recepcion", r.id);
     }
-    if (vista === "reservas" && almacen() && r.estado === "Activa") html += b("Liberar reserva", "liberar-reserva", r.id);
-    if (vista === "facturas" && compra() && r.estado === "Observada") html += b("Revalidar cotejo", "revalidar-factura", r.id);
+    if (vista === "reservas" && almacen() && r.estado === "Activa") html += opcion("Liberar reserva", "liberar-reserva", r.id);
+    if (vista === "facturas" && compra() && r.estado === "Observada") html += opcion("Revalidar cotejo", "revalidar-factura", r.id);
     if (vista === "picking" && almacen()) {
-      if (r.estado === "Pendiente") html += b("Confirmar preparación", "preparar-picking", r.id);
-      if (r.estado === "Preparado") html += b("Confirmar embalaje", "embalar-picking", r.id);
-      if (["Pendiente", "Preparado", "Embalado"].includes(r.estado)) html += b("Anular picking", "anular-picking", r.id);
+      if (r.estado === "Pendiente") html += opcion("Confirmar preparación", "preparar-picking", r.id);
+      if (r.estado === "Preparado") html += opcion("Confirmar embalaje", "embalar-picking", r.id);
+      if (["Pendiente", "Preparado", "Embalado"].includes(r.estado)) html += opcion("Anular picking", "anular-picking", r.id);
     }
     if (vista === "despachos" && transporte()) {
-      if (r.estado === "Preparado") html += b("Confirmar salida a ruta", "ruta", r.id);
-      if (r.estado === "En ruta") html += b("Confirmar entrega", "entrega", r.id);
+      if (r.estado === "Preparado") html += opcion("Confirmar salida a ruta", "ruta", r.id);
+      if (r.estado === "En ruta") html += opcion("Confirmar entrega", "entrega", r.id);
     }
-    if (vista === "retornos" && almacen() && r.estado === "Pendiente" && !r.comercial) html += b("Recibir retorno físico", "recibir-retorno", r.id);
+    if (vista === "retornos" && almacen() && r.estado === "Pendiente" && !r.comercial) html += opcion("Recibir retorno físico", "recibir-retorno", r.id);
     if (vista === "traslados") {
-      if (jefatura() && r.sede === actor().sede && r.estado === "Pendiente") html += b("Aprobar traslado", "aprobar-traslado", r.id) + b("Rechazar", "rechazar-traslado", r.id);
-      if (almacen() && r.sede === actor().sede && r.estado === "Aprobado") html += b("Despachar traslado", "salida-traslado", r.id);
-      if (almacen() && r.sedeDestino === actor().sede && ["En tránsito", "Parcialmente recibido"].includes(r.estado)) html += b("Recibir en destino", "recibir-traslado", r.id);
+      if (jefatura() && r.sede === actor().sede && r.estado === "Pendiente") html += opcion("Aprobar traslado", "aprobar-traslado", r.id) + opcion("Rechazar", "rechazar-traslado", r.id);
+      if (almacen() && r.sede === actor().sede && r.estado === "Aprobado") html += opcion("Despachar traslado", "salida-traslado", r.id);
+      if (almacen() && r.sedeDestino === actor().sede && ["En tránsito", "Parcialmente recibido"].includes(r.estado)) html += opcion("Recibir en destino", "recibir-traslado", r.id);
     }
-    if (vista === "conteos" && jefatura() && r.estado === "Pendiente") html += b("Aprobar ajuste", "aprobar-conteo", r.id) + b("Rechazar", "rechazar-conteo", r.id);
-    if (vista === "acciones" && r.estado !== "Completada") html += b(r.estado === "Pendiente" ? "Iniciar acción" : r.estado === "En curso" ? "Presentar evidencia" : "Verificar cierre", "avanzar-accion", r.id);
+    if (vista === "conteos" && jefatura() && r.estado === "Pendiente") html += opcion("Aprobar ajuste", "aprobar-conteo", r.id) + opcion("Rechazar", "rechazar-conteo", r.id);
+    if (vista === "acciones" && r.estado !== "Completada") html += opcion(r.estado === "Pendiente" ? "Iniciar acción" : r.estado === "En curso" ? "Presentar evidencia" : "Verificar cierre", "avanzar-accion", r.id);
     return html;
   }
 
@@ -273,18 +334,21 @@ window.PantallasLogistica = c => {
   function opcionesUbicacion(almacen, calidad) { return datos().ubicaciones.filter(u => u.almacen === almacen && u.activo !== false && u.estados.includes(calidad)).map(u => [u.codigo, u.nombre]); }
   function selectorUbicacion(id = "ubicacion", calidad = "Disponible", almacen = almacenActual()) { return select(id, opcionesUbicacion(almacen, calidad)); }
   function selectorProveedor(id = "proveedorId") { return select(id, datos().proveedores.filter(p => p.estado === "Aprobado").map(p => [p.id, p.nombre])); }
-  function selectDocumento(id, lista, filtro = () => true) { return select(id, [["", "Selecciona un documento"], ...propios(lista, id === "trasladoId").filter(filtro).map(r => [r.id, `${r.numero} · ${r.estado}`])], "", "required"); }
+  function selectDocumento(id, lista, filtro = () => true, seleccionado = "", descripcion = r => r.estado) {
+    const disponibles = propios(lista, id === "trasladoId").filter(filtro);
+    return select(id, [["", disponibles.length ? "Selecciona un documento" : "No hay documentos disponibles"], ...disponibles.map(r => [r.id, `${r.numero} · ${descripcion(r)}`])], seleccionado, "required");
+  }
   function formulario(titulo, campos, comando, coleccion) {
     c.formulario(titulo, campos, valores => { const registro = ejecutar((d, servicios) => comando(d, servicios, valores)); return `${modulo}/${coleccion}${registro?.id ? "/" + registro.id : ""}`; });
   }
-  function decidir(titulo, coleccion, id, comando) { formulario(titulo, razon, (d, s, f) => { comando(d, f.get("motivo"), s); return d[coleccion].find(r => r.id === id); }, coleccion); }
+  function decidir(titulo, coleccion, id, comando, campos = razon) { formulario(titulo, campos, (d, s, f) => { comando(d, f.get("motivo"), s); return d[coleccion].find(r => r.id === id); }, coleccion); }
 
-  function filasProducto(lineas = [], precios = false, fijo = false, cero = false) {
-    return `<div id="log-lineas" data-precios="${precios}" data-fijo="${fijo}">${lineas.map(l => filaProducto(l, precios, fijo, cero)).join("") || filaProducto({}, precios, fijo, cero)}</div>${!fijo ? b("+ Agregar producto", "agregar-linea") : ""}`;
+  function filasProducto(lineas = [], precios = false, fijo = false, cero = false, cantidadFija = false) {
+    return `<div id="log-lineas" data-precios="${precios}" data-fijo="${fijo}">${lineas.map(l => filaProducto(l, precios, fijo, cero, cantidadFija)).join("") || (fijo ? '<p class="texto-suave">No hay líneas disponibles para este documento.</p>' : filaProducto({}, precios, fijo, cero))}</div>${!fijo ? b("+ Agregar producto", "agregar-linea") : ""}`;
   }
-  function filaProducto(linea, precios, fijo, cero = false) {
-    const seleccion = fijo ? `<input type="hidden" name="codigo" value="${e(linea.codigo)}"><span>${e(linea.nombre || nombreProducto(linea.codigo))}</span>` : `<select name="codigo" required><option value="">Selecciona un producto</option>${productos().filter(p => p.estado === "Aprobado").map(p => opcion(p.codigo, p.nombre, linea.codigo)).join("")}</select>`;
-    return `<div class="log-linea ${precios ? "con-precio" : ""}"><label>Producto${seleccion}</label><label>Cantidad<input name="cantidad" type="number" min="${cero ? 0 : 1}" step="1" value="${cero ? 0 : linea.cantidad || 1}" ${fijo && linea.cantidad != null ? `max="${linea.cantidad}"` : ""} required></label>${precios ? `<label>Precio sin IGV<input name="precio" type="number" min="0.01" step="0.01" value="${(linea.precio || 0) / 100}" required></label>` : ""}${!fijo ? b("×", "quitar-linea", "", "boton-icono") : ""}</div>`;
+  function filaProducto(linea, precios, fijo, cero = false, cantidadFija = false) {
+    const seleccion = fijo ? `<input type="hidden" name="codigo" value="${e(linea.codigo)}"><span>${e(linea.nombre || nombreProducto(linea.codigo))}</span>` : `<select name="codigo" required><option value="">Selecciona un producto</option>${productos().filter(p => p.estado === "Aprobado").map(p => opcion(p.codigo, p.codigo + " · " + p.nombre, linea.codigo)).join("")}</select>`;
+    return `<div class="log-linea ${precios ? "con-precio" : ""}"><label>Producto${seleccion}</label><label>Cantidad<input name="cantidad" type="number" min="${cero ? 0 : 1}" step="1" value="${linea.cantidad ?? (cero ? 0 : 1)}" ${cantidadFija ? "readonly" : ""} ${fijo && linea.cantidad != null ? `max="${linea.maxCantidad ?? linea.cantidad}"` : ""} required></label>${precios ? `<label>Precio sin IGV<input name="precio" type="number" min="0.01" step="0.01" value="${(linea.precio || 0) / 100}" required></label>` : ""}${!fijo ? b("×", "quitar-linea", "", "boton-icono") : ""}</div>`;
   }
   function leerLineas(f, precios = false) {
     const cantidades = f.getAll("cantidad"), importes = f.getAll("precio");
@@ -305,32 +369,45 @@ window.PantallasLogistica = c => {
     formulario("Nueva solicitud de pedido", `<div class="campos">${campo("Almacén receptor", "almacen", selectorAlmacen())}${campo("Fecha requerida", "requerida", fecha("requerida", c.sumarDias(hoy(), 7)))}</div>${razon}${filasProducto(lineas)}`, (d, s, f) => C.crearRequisicion(d, { almacen: f.get("almacen"), requerida: f.get("requerida"), motivo: f.get("motivo"), origenPedido: precarga?.pedidoId || null, lineas: leerLineas(f) }, actor(), s.productos), "requisiciones");
   }
 
-  function peticionFormulario() {
+  function peticionFormulario(requisicionId) {
     const d = datos();
-    formulario("Petición de ofertas", campo("Necesidad aprobada", "requisicionId", selectDocumento("requisicionId", d.requisiciones, r => r.estado === "Aprobada")) + `<fieldset class="log-proveedores"><legend>Proveedores invitados</legend>${d.proveedores.filter(p => p.estado === "Aprobado").map(p => `<label><input type="checkbox" name="proveedor" value="${p.id}"> ${e(p.nombre)}</label>`).join("")}</fieldset>`, (actuales, s, f) => C.crearPeticion(actuales, { requisicionId: f.get("requisicionId"), proveedores: f.getAll("proveedor") }, actor()), "peticionesOferta");
+    formulario("Petición de ofertas", campo("Necesidad aprobada", "requisicionId", selectDocumento("requisicionId", d.requisiciones, r => r.estado === "Aprobada" &&
+      !d.peticionesOferta.some(p => p.requisicionId === r.id && p.estado !== "Anulada") &&
+      !d.ordenes.some(o => o.requisicionId === r.id && !["Anulada", "Rechazada"].includes(o.estado)), requisicionId, r => r.motivo)) + `<fieldset class="log-proveedores"><legend>Proveedores invitados</legend>${d.proveedores.filter(p => p.estado === "Aprobado").map(p => `<label><input type="checkbox" name="proveedor" value="${p.id}"> ${e(p.nombre)}</label>`).join("")}</fieldset>`, (actuales, s, f) => C.crearPeticion(actuales, { requisicionId: f.get("requisicionId"), proveedores: f.getAll("proveedor") }, actor()), "peticionesOferta");
   }
 
-  function ofertaFormulario() {
+  function ofertaFormulario(peticionId) {
     const d = datos();
-    formulario("Registrar oferta recibida", `<div class="campos">${campo("Petición", "peticionId", selectDocumento("peticionId", d.peticionesOferta, r => r.estado === "Abierta"))}${campo("Proveedor", "proveedorId", '<select id="log-proveedorId" name="proveedorId" required></select>')}${campo("Vigente hasta", "vigenteHasta", fecha("vigenteHasta", c.sumarDias(hoy(), 15)))}${campo("Plazo (días)", "plazoDias", input("plazoDias", 7, 'type="number" min="1" step="1" required'))}${campo("Calidad ofrecida (1 a 5)", "calidad", input("calidad", 3, 'type="number" min="1" max="5" step="1" required'))}${campo("Condición de pago", "condicion", selectSimple("condicion", ["Contado", "Crédito 30 días"]))}</div><div id="log-detalle"></div>`, (actuales, s, f) => C.registrarOferta(actuales, { peticionId: f.get("peticionId"), proveedorId: f.get("proveedorId"), vigenteHasta: f.get("vigenteHasta"), plazoDias: Number(f.get("plazoDias")), calidad: Number(f.get("calidad")), condicion: f.get("condicion"), lineas: leerLineas(f, true) }, actor(), hoy()), "ofertas");
-    enlazarDetalle("peticionId", id => { const p = d.peticionesOferta.find(p => p.id === id); c.$("#log-proveedorId").innerHTML = (p?.proveedores || []).map(id => opcion(id, nombreProveedor(id))).join(""); c.$("#log-detalle").innerHTML = p ? filasProducto(p.lineas, true, true) : ""; });
+    formulario("Registrar oferta recibida", `<div class="campos">${campo("Petición", "peticionId", selectDocumento("peticionId", d.peticionesOferta, r => r.estado === "Abierta" && flujo.proveedoresPendientes(d, r).length, peticionId))}${campo("Proveedor", "proveedorId", '<select id="log-proveedorId" name="proveedorId" required></select>')}${campo("Vigente hasta", "vigenteHasta", fecha("vigenteHasta", c.sumarDias(hoy(), 15)))}${campo("Plazo (días)", "plazoDias", input("plazoDias", 7, 'type="number" min="1" step="1" required'))}${campo("Calidad ofrecida (1 a 5)", "calidad", select("calidad", [["1", "1 · Muy baja"], ["2", "2 · Baja"], ["3", "3 · Aceptable"], ["4", "4 · Buena"], ["5", "5 · Muy buena"]], "3", "required"))}${campo("Condición de pago", "condicion", selectSimple("condicion", ["Contado", "Crédito 30 días"]))}</div><div id="log-detalle"></div>`, (actuales, s, f) => C.registrarOferta(actuales, { peticionId: f.get("peticionId"), proveedorId: f.get("proveedorId"), vigenteHasta: f.get("vigenteHasta"), plazoDias: Number(f.get("plazoDias")), calidad: Number(f.get("calidad")), condicion: f.get("condicion"), lineas: leerLineas(f, true) }, actor(), hoy()), "ofertas");
+    enlazarDetalle("peticionId", id => {
+      const p = d.peticionesOferta.find(p => p.id === id);
+      const pendientes = p ? flujo.proveedoresPendientes(d, p) : [];
+      c.$("#log-proveedorId").innerHTML = pendientes.map(id => opcion(id, nombreProveedor(id))).join("");
+      c.$("#log-detalle").innerHTML = p ? filasProducto(p.lineas, true, true, false, true) : "";
+    });
   }
 
   function acuerdoFormulario() {
     formulario("Acuerdo marco", `<div class="campos">${campo("Proveedor", "proveedorId", selectorProveedor())}${campo("Desde", "desde", fecha("desde"))}${campo("Hasta", "hasta", fecha("hasta", c.sumarDias(hoy(), 90)))}${campo("Condición", "condicion", selectSimple("condicion", ["Contado", "Crédito 30 días"]))}</div><p class="texto-suave">Indica cantidades máximas cubiertas por este acuerdo.</p>${filasProducto([], true)}`, (d, s, f) => C.guardarAcuerdo(d, { proveedorId: f.get("proveedorId"), desde: f.get("desde"), hasta: f.get("hasta"), condicion: f.get("condicion"), lineas: leerLineas(f, true) }, actor(), s.productos), "acuerdos");
   }
 
-  function ordenFormulario() {
+  function ordenFormulario(origen) {
     const d = datos();
-    const fuentes = [...propios(d.ofertas).filter(o => o.estado === "Seleccionada").map(o => [`oferta|${o.id}`, `${o.numero} · ${nombreProveedor(o.proveedorId)}`]), ...propios(d.acuerdos).filter(a => a.estado === "Aprobado").map(a => [`acuerdo|${a.id}`, `${a.numero} · Acuerdo marco`])];
-    formulario("Preparar orden de compra", campo("Documento de origen", "fuente", select("fuente", [["", "Selecciona un origen"], ...fuentes], "", "required")) + campo("Necesidad (para acuerdo marco)", "requisicionId", selectDocumento("requisicionId", d.requisiciones, r => r.estado === "Aprobada")) + campo("Entrega prevista", "entregaPrevista", fecha("entregaPrevista", c.sumarDias(hoy(), 7))), (actuales, s, f) => { const [tipo, id] = f.get("fuente").split("|"); return C.crearOrden(actuales, { ...(tipo === "oferta" ? { ofertaId: id } : { acuerdoId: id, requisicionId: f.get("requisicionId") }), entregaPrevista: f.get("entregaPrevista") }, actor(), hoy()); }, "ordenes");
+    const fuentes = [...propios(d.ofertas).filter(o => o.estado === "Seleccionada" && o.vigenteHasta >= hoy()).map(o => [`oferta|${o.id}`, `${o.numero} · ${nombreProveedor(o.proveedorId)}`]), ...propios(d.acuerdos).filter(a => a.estado === "Aprobado" && a.desde <= hoy() && hoy() <= a.hasta).map(a => [`acuerdo|${a.id}`, `${a.numero} · Acuerdo marco`])];
+    formulario("Preparar orden de compra", campo("Documento de origen", "fuente", select("fuente", [["", fuentes.length ? "Selecciona un origen" : "Sin ofertas adjudicadas ni acuerdos vigentes"], ...fuentes], origen, "required")) + campo("Necesidad (para acuerdo marco)", "requisicionId", selectDocumento("requisicionId", d.requisiciones, r => r.estado === "Aprobada")) + campo("Entrega prevista", "entregaPrevista", fecha("entregaPrevista", c.sumarDias(hoy(), 7))), (actuales, s, f) => { const [tipo, id] = f.get("fuente").split("|"); return C.crearOrden(actuales, { ...(tipo === "oferta" ? { ofertaId: id } : { acuerdoId: id, requisicionId: f.get("requisicionId") }), entregaPrevista: f.get("entregaPrevista") }, actor(), hoy()); }, "ordenes");
     c.$("#log-requisicionId").required = false;
-    enlazarDetalle("fuente", valor => { c.$("#log-requisicionId").required = valor.startsWith("acuerdo|"); c.$("#log-requisicionId").disabled = !valor.startsWith("acuerdo|"); });
+    enlazarDetalle("fuente", valor => {
+      const requiereSolicitud = valor.startsWith("acuerdo|");
+      const selector = c.$("#log-requisicionId");
+      selector.required = requiereSolicitud;
+      selector.disabled = !requiereSolicitud;
+      selector.parentElement.hidden = !requiereSolicitud;
+    });
   }
 
-  function recepcionFormulario() {
+  function recepcionFormulario(ordenId) {
     const d = datos();
-    formulario("Orden de ingreso", `<div class="campos">${campo("Orden de compra", "ordenId", selectDocumento("ordenId", d.ordenes, o => ["Emitida", "Confirmada", "Parcialmente recibida", "Recibida"].includes(o.estado)))}${campo("Documento de proveedor", "documento", input("documento"))}${campo("Fecha", "fecha", fecha("fecha"))}${campo("Lote / identificación", "lote", input("lote"))}</div><div id="log-detalle"></div>`, (actuales, s, f) => C.recibir(actuales, { ordenId: f.get("ordenId"), documento: f.get("documento").trim(), fecha: f.get("fecha"), lote: f.get("lote").trim(), lineas: leerLineas(f) }, actor(), s.config), "recepciones");
+    formulario("Orden de ingreso", `<div class="campos">${campo("Orden de compra", "ordenId", selectDocumento("ordenId", d.ordenes, o => ["Emitida", "Confirmada", "Parcialmente recibida", "Recibida"].includes(o.estado) && flujo.cantidadPorRecibir(d, o), ordenId, o => o.proveedor?.nombre || o.estado))}${campo("Documento de proveedor", "documento", input("documento"))}${campo("Fecha", "fecha", fecha("fecha"))}${campo("Lote / identificación", "lote", input("lote"))}</div><p class="texto-suave">Se sugieren las unidades pendientes. Confirma la cantidad que llegó físicamente antes de guardar.</p><div id="log-detalle"></div>`, (actuales, s, f) => C.recibir(actuales, { ordenId: f.get("ordenId"), documento: f.get("documento").trim(), fecha: f.get("fecha"), lote: f.get("lote").trim(), lineas: leerLineas(f) }, actor(), s.config), "recepciones");
     enlazarDetalle("ordenId", id => { const o = d.ordenes.find(o => o.id === id); c.$("#log-detalle").innerHTML = o ? filasProducto(o.lineas.map(l => ({ ...l, cantidad: l.cantidad - C.recibido(d, o.id, l.codigo) })).filter(l => l.cantidad > 0), false, true, true) : ""; });
   }
 
@@ -344,42 +421,47 @@ window.PantallasLogistica = c => {
     }));
   }
 
-  function facturaFormulario() {
+  function facturaFormulario(ordenId) {
     const d = datos();
-    formulario("Cotejar factura de proveedor", `<div class="campos">${campo("Orden de compra", "ordenId", selectDocumento("ordenId", d.ordenes, o => ["Emitida", "Confirmada", "Parcialmente recibida", "Recibida"].includes(o.estado)))}${campo("Serie y número", "documento", input("documento"))}${campo("Fecha", "fecha", fecha("fecha"))}${campo("Base informada (sin IGV)", "baseInformada", input("baseInformada", 0, 'type="number" min="0" step="0.01" required'))}</div><div id="log-detalle"></div>`, (actuales, s, f) => C.verificarFactura(actuales, { ordenId: f.get("ordenId"), documento: f.get("documento").trim(), fecha: f.get("fecha"), baseInformada: Math.round(Number(f.get("baseInformada")) * 100), lineas: leerLineas(f, true) }, actor(), s.config), "facturas");
-    enlazarDetalle("ordenId", id => { const o = d.ordenes.find(o => o.id === id); c.$("#log-detalle").innerHTML = o ? filasProducto(o.lineas, true, true, true) : ""; });
-  }
-
-  function reservaFormulario() {
-    const pedidos = A.pedidos(actor().sede).filter(p => ["Aprobado", "Parcialmente atendido"].includes(p.estado));
-    formulario("Reservar pedido comercial", campo("Pedido aprobado", "pedidoId", select("pedidoId", [["", "Selecciona un pedido"], ...pedidos.map(p => [p.id, `${p.numero} · ${p.cliente.nombre}`])], "", "required")) + campo("Almacén", "almacen", selectorAlmacen()) + '<div id="log-detalle"></div>', (d, s, f) => D.reservar(d, { pedidoId: f.get("pedidoId"), almacen: f.get("almacen"), lineas: leerLineas(f) }, actor(), s.pedidos, s.config), "reservas");
-    enlazarDetalle("pedidoId", id => { const p = pedidos.find(p => p.id === id), d = datos(); c.$("#log-detalle").innerHTML = p ? filasProducto(p.lineas.map(l => ({ ...l, cantidad: l.cantidad - D.despachada(d, id, l.codigo) })).filter(l => l.cantidad > 0), false, true) : ""; });
-  }
-
-  function pickingFormulario() {
-    const d = datos();
-    formulario("Generar lista de picking", campo("Reserva activa", "reservaId", selectDocumento("reservaId", d.reservas, r => r.estado === "Activa")) + '<div id="log-detalle"></div>', (actuales, s, f) => D.crearPicking(actuales, { reservaId: f.get("reservaId"), lineas: leerLineas(f) }, actor(), s.pedidos), "picking");
-    enlazarDetalle("reservaId", id => {
-      const reserva = d.reservas.find(r => r.id === id), lineas = [];
-      for (const codigo of new Set(reserva?.lineas.map(l => l.codigo) || [])) {
-        const reservada = reserva.lineas.filter(l => l.codigo === codigo).reduce((n, l) => n + l.cantidad - l.consumida - l.liberada, 0);
-        const preparando = d.picking.filter(p => p.reservaId === id && !["Despachado", "Anulado"].includes(p.estado)).flatMap(p => p.lineas).filter(l => l.codigo === codigo).reduce((n, l) => n + l.cantidad, 0);
-        if (reservada > preparando) lineas.push({ codigo, cantidad: reservada - preparando });
-      }
-      c.$("#log-detalle").innerHTML = filasProducto(lineas, false, true);
+    formulario("Cotejar factura de proveedor", `<div class="campos">${campo("Orden de compra", "ordenId", selectDocumento("ordenId", d.ordenes, o => ["Emitida", "Confirmada", "Parcialmente recibida", "Recibida"].includes(o.estado) && flujo.porFacturar(d, o).length, ordenId, o => o.proveedor?.nombre || o.estado))}${campo("Serie y número", "documento", input("documento"))}${campo("Fecha", "fecha", fecha("fecha"))}${campo("Base informada (sin IGV)", "baseInformada", input("baseInformada", 0, 'type="number" min="0" step="0.01" required'))}</div><p class="texto-suave">Compara las cantidades, precios y base sugeridos con la factura del proveedor. Puedes corregirlos si difieren.</p><div id="log-detalle"></div>`, (actuales, s, f) => C.verificarFactura(actuales, { ordenId: f.get("ordenId"), documento: f.get("documento").trim(), fecha: f.get("fecha"), baseInformada: Math.round(Number(f.get("baseInformada")) * 100), lineas: leerLineas(f, true) }, actor(), s.config), "facturas");
+    enlazarDetalle("ordenId", id => {
+      const o = d.ordenes.find(o => o.id === id);
+      const conformes = o ? flujo.porFacturar(d, o, true) : [];
+      const disponibles = o ? flujo.porFacturar(d, o) : [];
+      const lineas = conformes.length ? disponibles.map(l => ({ ...l, maxCantidad: l.cantidad,
+        cantidad: conformes.find(x => x.codigo === l.codigo)?.cantidad ?? 0 })) : disponibles;
+      c.$("#log-detalle").innerHTML = o ? filasProducto(lineas, true, true, true) : "";
+      c.$("#log-baseInformada").value = (lineas.reduce((n, l) => n + l.cantidad * l.precio, 0) / 100).toFixed(2);
     });
   }
 
-  function despachoFormulario() {
+  function reservaFormulario(pedidoId) {
+    const pedidos = A.pedidos(actor().sede).filter(p => ["Aprobado", "Parcialmente atendido"].includes(p.estado));
+    formulario("Reservar pedido comercial", campo("Pedido aprobado", "pedidoId", select("pedidoId", [["", "Selecciona un pedido"], ...pedidos.map(p => [p.id, `${p.numero} · ${p.cliente.nombre}`])], pedidoId, "required")) + campo("Almacén", "almacen", selectorAlmacen()) + '<div id="log-detalle"></div>', (d, s, f) => D.reservar(d, { pedidoId: f.get("pedidoId"), almacen: f.get("almacen"), lineas: leerLineas(f) }, actor(), s.pedidos, s.config), "reservas");
+    enlazarDetalle("pedidoId", id => { const p = pedidos.find(p => p.id === id), d = datos(); c.$("#log-detalle").innerHTML = p ? filasProducto(p.lineas.map(l => ({ ...l, cantidad: l.cantidad - D.despachada(d, id, l.codigo) })).filter(l => l.cantidad > 0), false, true) : ""; });
+  }
+
+  function pickingFormulario(reservaId) {
     const d = datos();
-    formulario("Orden de salida", campo("Picking embalado", "pickingId", selectDocumento("pickingId", d.picking, p => p.estado === "Embalado")) + `<div class="campos">${campo("Fecha de salida", "fecha", fecha("fecha"))}${campo("Transportista / conductor", "transportista", input("transportista"))}${campo("Placa de vehículo", "placa", input("placa", "", 'maxlength="15" required'))}${campo("Destino del pedido", "destino", input("destino", "", "readonly required"))}</div>`, (actuales, s, f) => D.crearDespacho(actuales, Object.fromEntries(f), actor(), s.pedidos, s.config), "despachos");
+    formulario("Generar lista de picking", campo("Reserva activa", "reservaId", selectDocumento("reservaId", d.reservas, r => r.estado === "Activa" && flujo.reservadoSinPreparar(d, r).length, reservaId, r => r.pedidoNumero || r.estado)) + '<div id="log-detalle"></div>', (actuales, s, f) => D.crearPicking(actuales, { reservaId: f.get("reservaId"), lineas: leerLineas(f) }, actor(), s.pedidos), "picking");
+    enlazarDetalle("reservaId", id => {
+      const reserva = d.reservas.find(r => r.id === id);
+      c.$("#log-detalle").innerHTML = reserva ? filasProducto(flujo.reservadoSinPreparar(d, reserva), false, true) : "";
+    });
+  }
+
+  function despachoFormulario(pickingId) {
+    const d = datos();
+    const anteriores = propios(d.despachos);
+    const sugerencias = nombre => `<datalist id="log-opciones-${nombre}">${[...new Set(anteriores.map(x => x[nombre]).filter(Boolean))].map(valor => opcion(valor, valor)).join("")}</datalist>`;
+    formulario("Orden de salida", campo("Picking embalado", "pickingId", selectDocumento("pickingId", d.picking, p => p.estado === "Embalado", pickingId, p => p.pedidoNumero || p.estado)) + `<div class="campos">${campo("Fecha de salida", "fecha", fecha("fecha"))}${campo("Transportista / conductor", "transportista", input("transportista", "", 'list="log-opciones-transportista" required') + sugerencias("transportista"))}${campo("Placa de vehículo", "placa", input("placa", "", 'maxlength="15" list="log-opciones-placa" required') + sugerencias("placa"))}${campo("Destino del pedido", "destino", input("destino", "", "readonly required"))}</div>`, (actuales, s, f) => D.crearDespacho(actuales, Object.fromEntries(f), actor(), s.pedidos, s.config), "despachos");
     enlazarDetalle("pickingId", id => { const p = d.picking.find(p => p.id === id); c.$("#log-destino").value = A.pedidos(actor().sede).find(pedido => pedido.id === p?.pedidoId)?.cliente.direccion || ""; });
   }
 
   function entregaFormulario(id) {
     const d = datos().despachos.find(d => d.id === id), cantidades = new Map();
     d.lineas.forEach(l => cantidades.set(l.codigo, (cantidades.get(l.codigo) || 0) + l.cantidad));
-    formulario("Confirmar entrega al cliente", `<div class="campos">${campo("Fecha de entrega", "fecha", fecha("fecha"))}${campo("Nombre del receptor", "receptor", input("receptor"))}${campo("Constancia / referencia", "evidencia", input("evidencia"))}</div>${filasProducto([...cantidades].map(([codigo, cantidad]) => ({ codigo, cantidad })), false, true)}${campo("Incidencia si no se entrega todo", "motivo", '<textarea id="log-motivo" name="motivo" maxlength="500"></textarea>')}`, (actuales, s, f) => D.confirmarEntrega(actuales, { despachoId: id, fecha: f.get("fecha"), receptor: f.get("receptor"), evidencia: f.get("evidencia"), motivo: f.get("motivo"), lineas: leerLineasConCeros(f) }, actor()), "despachos");
+    formulario("Confirmar entrega al cliente", `<div class="campos">${campo("Fecha de entrega", "fecha", fecha("fecha"))}${campo("Confirma quién recibió el pedido", "receptor", input("receptor", A.pedidos(actor().sede).find(p => p.id === d.pedidoId)?.cliente.nombre))}${campo("Constancia / referencia", "evidencia", input("evidencia"))}</div>${filasProducto([...cantidades].map(([codigo, cantidad]) => ({ codigo, cantidad })), false, true)}${campo("Incidencia si no se entrega todo", "motivo", '<textarea id="log-motivo" name="motivo" maxlength="500"></textarea>')}`, (actuales, s, f) => D.confirmarEntrega(actuales, { despachoId: id, fecha: f.get("fecha"), receptor: f.get("receptor"), evidencia: f.get("evidencia"), motivo: f.get("motivo"), lineas: leerLineasConCeros(f) }, actor()), "despachos");
     document.querySelectorAll('#log-lineas input[name="cantidad"]').forEach(input => { input.min = 0; });
   }
 
@@ -449,7 +531,7 @@ window.PantallasLogistica = c => {
     formulario("Evaluar desempeño de proveedor", campo("Proveedor", "proveedorId", selectorProveedor()) + campo("Conclusión / mejora propuesta", "comentario", '<textarea id="log-comentario" name="comentario" minlength="3" required></textarea>'), (d, s, f) => C.evaluarProveedor(d, Object.fromEntries(f), actor()), "evaluaciones");
   }
 
-  function accion(nombre, id) {
+  function accion(nombre, id, titulo) {
     const decisiones = {
       "aprobar-tratamiento": ["tratamientos", (d, m, s) => M.resolverTratamiento(d, id, true, m, actor(), s.config)], "rechazar-tratamiento": ["tratamientos", (d, m, s) => M.resolverTratamiento(d, id, false, m, actor(), s.config)], "terminar-reparacion": ["tratamientos", (d, m) => M.terminarReparacion(d, id, m, actor())],
       "aprobar-proveedor": ["proveedores", (d, m) => C.resolverProveedor(d, id, true, m, actor())], "rechazar-proveedor": ["proveedores", (d, m) => C.resolverProveedor(d, id, false, m, actor())],
@@ -464,22 +546,22 @@ window.PantallasLogistica = c => {
       "aprobar-traslado": ["traslados", (d, m) => D.aprobarTraslado(d, id, true, m, actor())], "rechazar-traslado": ["traslados", (d, m) => D.aprobarTraslado(d, id, false, m, actor())],
       "aprobar-conteo": ["conteos", (d, m, s) => L.aprobarConteo(d, id, true, m, actor(), s.config)], "rechazar-conteo": ["conteos", (d, m, s) => L.aprobarConteo(d, id, false, m, actor(), s.config)]
     };
-    if (decisiones[nombre]) { const [col, resolver] = decisiones[nombre]; decidir("Revisión logística", col, id, resolver); return; }
-    const comandos = { proveedor: () => proveedorFormulario(id), requisicion: () => requisicionFormulario(), peticion: peticionFormulario, oferta: ofertaFormulario, acuerdo: acuerdoFormulario, orden: ordenFormulario, recepcion: recepcionFormulario, inspeccion: () => inspeccionFormulario(id), factura: facturaFormulario,
+    if (decisiones[nombre]) { const [col, resolver] = decisiones[nombre]; decidir(titulo, col, id, resolver, nombre === "confirmar-orden" ? campoRazon("Referencia de confirmación del proveedor") : razon); return; }
+    const comandos = { proveedor: () => proveedorFormulario(id), requisicion: () => requisicionFormulario(), peticion: () => peticionFormulario(id), oferta: () => ofertaFormulario(id), acuerdo: acuerdoFormulario, orden: () => ordenFormulario(id), recepcion: () => recepcionFormulario(id), inspeccion: () => inspeccionFormulario(id), factura: () => facturaFormulario(id),
       "evaluacion-kardex": () => { evaluacionKardex = window.EvaluacionKardex.ejecutar(hoy()); ir("inventario"); },
       "cerrar-evaluacion-kardex": () => { evaluacionKardex = null; ir("inventario"); },
-      imprimir: () => window.print(), "emitir-orden": () => { ejecutar(d => C.emitirOrden(d, id, actor(), hoy())); ir(`ordenes/${id}`); },
-      "revalidar-factura": () => { ejecutar((d, s) => C.revalidarFactura(d, id, actor(), s.config)); ir(`facturas/${id}`); },
+      imprimir: () => window.print(), "emitir-orden": () => { ejecutar(d => C.emitirOrden(d, id, actor(), hoy())); c.finalizarOperacion(`${modulo}/ordenes/${id}`, "Orden emitida."); },
+      "revalidar-factura": () => { ejecutar((d, s) => C.revalidarFactura(d, id, actor(), s.config)); c.finalizarOperacion(`${modulo}/facturas/${id}`, "Factura revisada."); },
       "agregar-linea": () => { const lista = c.$("#log-lineas"); lista.insertAdjacentHTML("beforeend", filaProducto({}, lista.dataset.precios === "true", false)); },
     };
     if (comandos[nombre]) comandos[nombre](); else operacionesAlmacen(nombre, id);
   }
 
   function operacionesAlmacen(nombre, id) {
-    const comandos = { almacen: () => formulariosAlmacen.almacen(id), ubicacion: () => formulariosAlmacen.ubicacion(id), reubicacion: formulariosAlmacen.reubicacion, tratamiento: () => formulariosAlmacen.tratamiento(), "tratamiento-recepcion": () => formulariosAlmacen.tratamiento(id), reinspeccion: () => formulariosAlmacen.reinspeccion(id), reserva: reservaFormulario, picking: pickingFormulario, despacho: despachoFormulario, entrega: () => entregaFormulario(id), devolucion: devolucionFormulario, "recibir-retorno": () => retornoFormulario(id), traslado: trasladoFormulario, "recibir-traslado": () => recibirTrasladoFormulario(id), conteo: conteoFormulario, cuarentena: cuarentenaFormulario, prevision: previsionFormulario, parametros: parametrosFormulario, accion: accionFormulario, evaluacion: evaluacionFormulario,
+    const comandos = { almacen: () => formulariosAlmacen.almacen(id), ubicacion: () => formulariosAlmacen.ubicacion(id), reubicacion: formulariosAlmacen.reubicacion, tratamiento: () => formulariosAlmacen.tratamiento(), "tratamiento-recepcion": () => formulariosAlmacen.tratamiento(id), reinspeccion: () => formulariosAlmacen.reinspeccion(id), reserva: () => reservaFormulario(id), picking: () => pickingFormulario(id), despacho: () => despachoFormulario(id), entrega: () => entregaFormulario(id), devolucion: devolucionFormulario, "recibir-retorno": () => retornoFormulario(id), traslado: trasladoFormulario, "recibir-traslado": () => recibirTrasladoFormulario(id), conteo: conteoFormulario, cuarentena: cuarentenaFormulario, prevision: previsionFormulario, parametros: parametrosFormulario, accion: accionFormulario, evaluacion: evaluacionFormulario,
       sugerencia: () => { const [almacen, codigo, unidades] = id.split("|"); requisicionFormulario({ lineas: [{ codigo, cantidad: Number(unidades) }] }); c.$("#log-almacen").value = almacen; },
-      ruta: () => { ejecutar(d => D.iniciarRuta(d, id, actor())); ir(`despachos/${id}`); },
-      "salida-traslado": () => { ejecutar((d, s) => D.despacharTraslado(d, id, actor(), s.config)); ir(`traslados/${id}`); },
+      ruta: () => { ejecutar(d => D.iniciarRuta(d, id, actor())); c.finalizarOperacion(`${modulo}/despachos/${id}`, "Ruta iniciada."); },
+      "salida-traslado": () => { ejecutar((d, s) => D.despacharTraslado(d, id, actor(), s.config)); c.finalizarOperacion(`${modulo}/traslados/${id}`, "Salida del traslado registrada."); },
       "avanzar-accion": () => decidir("Actualizar acción de mejora", "acciones", id, (d, motivo) => { const a = d.acciones.find(a => a.id === id); L.avanzarAccion(d, id, a.estado === "Pendiente" ? "En curso" : a.estado === "En curso" ? "Por verificar" : "Completada", motivo, actor()); })
     };
     L.exigir(comandos[nombre], "Operación logística no reconocida."); comandos[nombre]();
@@ -497,9 +579,23 @@ window.PantallasLogistica = c => {
     if (boton.dataset.logAccion === "quitar-linea") {
       if (document.querySelectorAll("#log-lineas .log-linea").length > 1) boton.closest(".log-linea").remove(); else c.aviso("Mantén al menos una línea."); return;
     }
-    try { accion(boton.dataset.logAccion, boton.dataset.id); }
+    try { accion(boton.dataset.logAccion, boton.dataset.id, boton.textContent.trim()); }
     catch (error) { c.aviso(error.message); }
   });
 
-  return { dibujar, admite, solicitarDesdeComercial(pedido) { modulo = "logistica"; requisicionFormulario({ pedidoId: pedido.id, lineas: pedido.lineas.map(l => ({ codigo: l.codigo, cantidad: l.cantidad })) }); } };
+  function puedeContinuarPedido(id) {
+    if (!almacen()) return false;
+    try { return !window.ContratosLogisticos.consultarSeguimiento(id).salidas.length; }
+    catch { return false; }
+  }
+
+  function continuarPedido(id) {
+    L.exigir(almacen(), "Almacén debe preparar este pedido.");
+    const reserva = datos().reservas.find(r => r.pedidoId === id && r.sede === actor().sede && r.estado === "Activa");
+    modulo = "logistica";
+    if (reserva) ir("reservas/" + reserva.id);
+    else reservaFormulario(id);
+  }
+
+  return { dibujar, admite, puedeContinuarPedido, continuarPedido, solicitarDesdeComercial(pedido) { modulo = "logistica"; requisicionFormulario({ pedidoId: pedido.id, lineas: pedido.lineas.map(l => ({ codigo: l.codigo, cantidad: l.cantidad })) }); } };
 };

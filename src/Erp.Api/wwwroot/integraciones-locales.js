@@ -24,16 +24,19 @@ window.IntegracionesComerciales = {
       lineas: pedido.lineas.map(linea => ({ codigo: linea.codigo, disponible: stock?.[linea.codigo] ?? null }))
     };
   },
-  consultarCredito(clienteId) {
-    const respuesta = window.FAMIHOGAR_RESPUESTAS.credito[clienteId];
-    return { origen: "Finanzas · respuesta local", consultadoEn: new Date().toISOString(), datos: respuesta ? structuredClone(respuesta) : null };
+  consultarCredito(clienteId, pedidoId) {
+    const inicial = window.FAMIHOGAR_RESPUESTAS.credito[clienteId];
+    const datos = window.Finanzas ? window.Finanzas.consultarCredito(clienteId, pedidoId, inicial) : inicial;
+    return { origen: "Finanzas", consultadoEn: new Date().toISOString(), datos: datos ? structuredClone(datos) : null };
   },
   consultarSeguimiento(pedidoId) {
-    if (window.ContratosLogisticos) return { ...window.ContratosLogisticos.consultarSeguimiento(pedidoId), facturas: structuredClone(window.FAMIHOGAR_RESPUESTAS.facturas[pedidoId] || []) };
+    const comprobantes = window.Finanzas?.consultarComprobantes(pedidoId) || [];
+    const facturas = comprobantes.length ? comprobantes : structuredClone(window.FAMIHOGAR_RESPUESTAS.facturas[pedidoId] || []);
+    if (window.ContratosLogisticos) return { ...window.ContratosLogisticos.consultarSeguimiento(pedidoId), facturas };
     return {
       origen: "Despachos / Facturación · respuesta local", consultadoEn: new Date().toISOString(),
       entregas: structuredClone(window.FAMIHOGAR_RESPUESTAS.entregas[pedidoId] || []),
-      facturas: structuredClone(window.FAMIHOGAR_RESPUESTAS.facturas[pedidoId] || [])
+      facturas
     };
   },
   consultarDevolucion(solicitudId) {

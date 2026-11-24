@@ -52,7 +52,11 @@ async function ejecutar() {
     const clic = selector => evaluar(`document.querySelector(${JSON.stringify(selector)}).click()`);
     const rellenar = async valores => { for (const [selector, valor] of Object.entries(valores)) await evaluar(`document.querySelector(${JSON.stringify(selector)}).value=${JSON.stringify(valor)}`); };
     const cambiar = selector => evaluar(`document.querySelector(${JSON.stringify(selector)}).dispatchEvent(new Event('change',{bubbles:true}))`);
-    const guardar = () => evaluar("document.querySelector('#formulario-registro').requestSubmit()");
+    const abrirGuardado = () => evaluar("document.querySelector('.resultado-operacion a')?.click()");
+    const guardar = async (abrir = true) => {
+      await evaluar("document.querySelector('#formulario-registro').requestSubmit()");
+      if (abrir && await evaluar("!document.querySelector('#modal').open")) await abrirGuardado();
+    };
     const almacen = expresion => evaluar(`(()=>{const d=JSON.parse(localStorage.getItem('famihogar.comercial.v1'));return ${expresion}})()`);
     const ir = async destino => { await evaluar(`location.hash=${JSON.stringify("comercial/" + destino)}`); await esperar(`location.hash===${JSON.stringify("#comercial/" + destino)}`); await evaluar("new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))"); };
     const foto = async nombre => {
@@ -79,7 +83,9 @@ async function ejecutar() {
     };
     const aceptarYCrearPedido = async () => {
       await clic("[data-accion=enviar-cotizacion]"); await clic("[data-accion=aceptar-cotizacion]");
-      await clic("[data-accion=crear-pedido]"); await esperar("document.querySelector('#contenido h1')?.textContent.startsWith('PV-')");
+      await clic("[data-accion=crear-pedido]");
+      await comprobar("location.hash.includes('/cotizaciones/') && !!document.querySelector('.resultado-operacion a[href*=\"/pedidos/\"]')", "Crear pedido conserva la cotización y ofrece abrir el pedido");
+      await abrirGuardado(); await esperar("document.querySelector('#contenido h1')?.textContent.startsWith('PV-')");
       return almacen("d.pedidos.at(-1)");
     };
 
@@ -87,14 +93,36 @@ async function ejecutar() {
     await enviar("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
     await enviar("Page.navigate", { url: origen });
     await esperar("!!window.ReglasComerciales && document.querySelector('#sede-acceso').options.length===3");
+    await clic("#acceso [data-guia=acceso]");
+    await comprobar("document.querySelector('#ayuda').open && document.querySelector('#siguiente-ayuda').textContent.includes('Ingresar')", "Ayuda de acceso con el siguiente paso");
+    await clic("#ayuda button[type=submit]");
+    await esperar("!document.querySelector('#ayuda').open");
     await foto("01-acceso"); await login("Luis", "Asesor");
     await comprobar("document.querySelectorAll('[data-modulo]').length===8", "Selector de ocho módulos");
+    const abrirAyuda = clave => clic("#modulos [data-guia=" + clave + "]");
+    for (const modulo of ["comercial", "logistica", "compras", "despachos", "finanzas", "facturacion", "contabilidad", "reportes"]) {
+      await abrirAyuda(modulo);
+      await comprobar("document.querySelector('#ayuda').open && document.querySelectorAll('#pasos-ayuda li').length===2 && !!document.querySelector('#siguiente-ayuda').textContent && location.hash==='#aplicaciones'", "Guía disponible desde Aplicaciones: " + modulo);
+      await clic("#ayuda button[type=submit]");
+      await esperar("!document.querySelector('#ayuda').open");
+    }
+    await abrirAyuda("facturacion");
+    await comprobar("document.querySelector('#pasos-ayuda').textContent.includes('pedido entregado') && document.querySelector('#siguiente-ayuda').textContent.includes('Finanzas')", "La guía de Facturación explica emisión y cobro");
+    await enviar("Page.bringToFront");
+    await enviar("Input.dispatchKeyEvent", { type: "rawKeyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+    await enviar("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+    await esperar("!document.querySelector('#ayuda').open && document.activeElement?.dataset.guia==='facturacion'");
     await rellenar({ "#buscar-aplicacion": "facturacion" }); await evaluar("document.querySelector('#buscar-aplicacion').dispatchEvent(new Event('input',{bubbles:true}))");
     await comprobar("document.querySelectorAll('[data-modulo]').length===1", "Búsqueda sin tildes");
     await rellenar({ "#buscar-aplicacion": "" }); await evaluar("document.querySelector('#buscar-aplicacion').dispatchEvent(new Event('input',{bubbles:true}))");
     await foto("02-aplicaciones"); await clic("[data-modulo=comercial]"); await esperar("document.querySelector('#contenido h1')?.textContent==='Panel comercial'");
+    await clic("#navegacion [data-guia='comercial/clientes']");
+    await comprobar("document.querySelector('#ayuda').open && document.querySelector('#titulo-ayuda').textContent.includes('Clientes') && !document.querySelector('#modal').open && !localStorage.getItem('famihogar.comercial.v1')", "Ayuda de sección independiente de navegación y registro");
+    await clic("#ayuda button[type=submit]");
     await clic("[data-accion=nuevo-cliente]");
-    await rellenar({ "#documento": "70000003", "#nombreCliente": "Cliente de revisión", "#direccion": "Av. Ejemplo 100", "#direccionFiscal": "Av. Ejemplo 100", "#direccionCobranza": "Av. Ejemplo 100" });
+    await rellenar({ "#documento": "70000003", "#nombreCliente": "Cliente de revisión", "#direccion": "Av. Ejemplo 100" });
+    await clic("[data-accion=copiar-direcciones]");
+    await comprobar("document.querySelector('#direccionFiscal').value==='Av. Ejemplo 100' && document.querySelector('#direccionCobranza').value==='Av. Ejemplo 100'", "Cliente puede copiar la dirección sin escribirla tres veces");
     await guardar(); await esperar("!document.querySelector('#modal').open");
     const clienteId = await almacen("d.clientes.at(-1).id"), maestroId = await almacen("d.solicitudesMaestro.at(-1).id");
     await comprobar("document.querySelector('#contenido').textContent.includes('Pendiente')", "Alta de cliente pendiente de revisión");
@@ -112,8 +140,12 @@ async function ejecutar() {
     await comprobar("!document.querySelector('#formulario-registro').checkValidity()", "Cantidad cero rechazada");
     await rellenar({ "input[name=cantidad]": "2" }); await clic("[data-accion=agregar-producto]"); await evaluar("document.querySelectorAll('select[name=producto]')[1].value='SOF-001'"); await guardar();
     await comprobar("document.querySelector('#error-formulario').textContent.includes('repetido')", "Producto repetido rechazado");
-    await evaluar("document.querySelectorAll('select[name=producto]')[1].value='MES-001'"); await guardar(); await esperar("!document.querySelector('#modal').open");
+    await evaluar("document.querySelectorAll('select[name=producto]')[1].value='MES-001'"); await guardar(false); await esperar("!document.querySelector('#modal').open");
+    await comprobar("location.hash==='#comercial/oportunidades' && document.querySelector('.resultado-operacion a').textContent.includes('Ver registro guardado')", "Al guardar una oportunidad, la lista se conserva hasta que se abre el registro");
+    await abrirGuardado();
     const oportunidadId = await almacen("d.oportunidades.at(-1).id");
+    await esperar("location.hash.endsWith(" + JSON.stringify(oportunidadId) + ")");
+    await comprobar("!!document.querySelector('.recorrido-siguiente [data-accion=nueva-cotizacion]') && document.querySelector('.recorrido [aria-current=step]').textContent.includes('Oportunidad')", "La ficha de la oportunidad sugiere preparar la cotización");
     await abrirCotizacion(oportunidadId, "10");
     await comprobar("document.querySelector('#vista-calculo').textContent.includes('3,766.91')", "Cálculo de excepción de 10 %");
     const cotizacion = await guardarCotizacion();
@@ -196,9 +228,25 @@ async function ejecutar() {
     for (const rol of ["Tesorería", "Almacén", "Transporte", "Facturación", "Contabilidad", "Compras"]) {
       await login("Usuario " + rol, rol); await clic("[data-modulo=comercial]"); await esperar("document.querySelector('#contenido').textContent.includes('Disponible para Asesor')");
       await comprobar("document.querySelector('#accesos-rapidos').hidden && !document.querySelector('#contenido .ficha')", "Separación de rol " + rol);
-      await clic("#ir-aplicaciones"); await esperar("!document.querySelector('#aplicaciones').hidden"); await clic("[data-modulo=finanzas]"); await esperar("document.querySelector('#contenido h1')?.textContent==='Finanzas'");
-      await comprobar("!document.querySelector('#contenido form') && document.querySelector('#contenido').textContent.includes('En desarrollo')", "Sin registro de cobro en áreas pendientes: " + rol);
+      await clic("#ir-aplicaciones"); await esperar("!document.querySelector('#aplicaciones').hidden"); await clic("[data-modulo=finanzas]"); await esperar("document.querySelector('#contenido h1')?.textContent===" + JSON.stringify(rol === "Tesorería" ? "Por cobrar" : "Finanzas"));
+      if (rol === "Tesorería") {
+        await esperar("document.querySelector('#contenido h1')?.textContent==='Por cobrar'");
+        await comprobar("document.querySelector('#contenido').textContent.includes('comprobantes emitidos en Facturación') && !document.querySelector('[data-libro=emitir-comprobante]')", "Tesorería consulta cuentas por cobrar");
+      } else {
+        await comprobar("!document.querySelector('#contenido [data-libro]') && document.querySelector('#contenido').textContent.includes('Disponible para Tesorería')", "Separación de Finanzas: " + rol);
+      }
     }
+    await login("Persona de demostración", "Super Admin"); await ir("catalogo");
+    await comprobar("document.querySelector('#rol-actual').textContent==='Super Admin' && !!document.querySelector('[data-accion=nuevo-producto]')", "Super Admin tiene acceso a controles de Jefatura en Comercial");
+    await clic("[data-accion=nuevo-cliente]");
+    await rellenar({ "#documento": "70000005", "#nombreCliente": "Cliente de demostración", "#direccion": "Av. Ejemplo 100", "#direccionFiscal": "Av. Ejemplo 100", "#direccionCobranza": "Av. Ejemplo 100" });
+    await guardar();
+    const solicitudDemo = await almacen("d.solicitudesMaestro.at(-1).id");
+    await ir("aprobaciones");
+    await decidir("[data-accion=aprobar-maestro][data-id='" + solicitudDemo + "']", "Aprobación de demostración");
+    const maestroDemo = await almacen("d.solicitudesMaestro.at(-1)");
+    await comprobar(String(maestroDemo.estado === "Aprobada" && maestroDemo.historial.at(-1).rol === "Super Admin"), "Super Admin aprueba su propia alta y conserva el rol en el historial");
+
     await login("Miguel", "Jefatura"); await enviar("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     await comprobar("document.documentElement.scrollWidth<=innerWidth", "Selector móvil sin desbordamiento"); await foto("06-movil-aplicaciones");
     await ir("indicadores"); await comprobar("document.documentElement.scrollWidth<=innerWidth", "Indicadores móviles sin desbordamiento"); await foto("07-movil-indicadores");

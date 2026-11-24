@@ -3,12 +3,13 @@
 window.LogisticaReglas = (() => {
   const exigir = (condicion, mensaje) => { if (!condicion) throw new Error(mensaje); };
   const copiar = dato => structuredClone(dato);
-  const permitir = (actor, roles) => exigir(actor && roles.includes(actor.rol), "Tu rol no puede realizar esta operación logística.");
+  const { tieneRol, esSuperAdmin } = window.Permisos;
+  const permitir = (actor, roles) => exigir(tieneRol(actor, roles), "Tu rol no puede realizar esta operación logística.");
   const motivo = valor => { exigir(typeof valor === "string" && valor.trim().length >= 3, "Indica un motivo de al menos tres caracteres."); return valor.trim(); };
   const entero = valor => Number.isSafeInteger(valor) && valor > 0;
   const dinero = valor => Number.isSafeInteger(valor) && valor >= 0;
   const fechaValida = valor => typeof valor === "string" && /^\d{4}-\d{2}-\d{2}$/.test(valor) && !Number.isNaN(Date.parse(valor)) && new Date(valor).toISOString().slice(0, 10) === valor;
-  const independiente = (actor, autor) => exigir(actor.nombre.trim().toLocaleLowerCase("es") !== autor.trim().toLocaleLowerCase("es"), "Otra persona debe revisar la solicitud.");
+  const independiente = (actor, autor) => exigir(esSuperAdmin(actor) || actor.nombre.trim().toLocaleLowerCase("es") !== autor.trim().toLocaleLowerCase("es"), "Otra persona debe revisar la solicitud.");
   const evento = (actor, accion) => ({ fecha: new Date().toISOString(), usuario: actor.nombre, rol: actor.rol, accion });
   const numerar = (lista, prefijo) => `${prefijo}-${String(Math.max(0, ...lista.map(d => Number(d.numero?.split("-").at(-1))).filter(Number.isFinite)) + 1).padStart(5, "0")}`;
   const obtener = (lista, id, actor, otraSede = false) => { const registro = lista.find(d => d.id === id); exigir(registro && (otraSede || !registro.sede || registro.sede === actor.sede), "Registro no encontrado en esta sede."); return registro; };
@@ -241,7 +242,7 @@ window.LogisticaReglas = (() => {
     motivo(evidencia);
     exigir((accion.estado === "Pendiente" && estado === "En curso") || (accion.estado === "En curso" && estado === "Por verificar") || (accion.estado === "Por verificar" && estado === "Completada"), "Transición de acción no válida.");
     if (estado === "Completada") { permitir(actor, ["Jefatura"]); independiente(actor, accion.responsable); }
-    else exigir(actor.rol === "Jefatura" || actor.nombre === accion.responsable, "La actualización corresponde al responsable.");
+    else exigir(tieneRol(actor, ["Jefatura"]) || actor.nombre === accion.responsable, "La actualización corresponde al responsable.");
     accion.estado = estado; accion.historial.push(evento(actor, `${estado}: ${evidencia}`));
   }
 

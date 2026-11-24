@@ -1,50 +1,59 @@
 # ERP FAMIHOGAR
 
-Interfaz para una mueblería retail con varias sedes, desarrollada con HTML, CSS y JavaScript. Fuentes funcionales: [Sesión 06 — Gestión Comercial](docs/fuentes/sesion-06-sistema-gestion-comercial.pdf) y [Sesión 10 — Gestión Logística](docs/fuentes/sesion-10-gestion-logistica.pdf). Bartolito ERP aporta la referencia visual y de navegación.
+Prototipo de gestión para una mueblería retail con tres sedes. Conecta ventas y compras con inventario, entregas, comprobantes, tesorería y contabilidad. Funciona en el navegador con HTML, CSS y JavaScript.
 
-## Abrir las pantallas
+## Ejecutar desde VS Code
 
-Desde la raíz del repositorio:
+1. Abre la carpeta del repositorio en VS Code y elige **Terminal → Nueva terminal**.
+2. Desde la raíz, ejecuta este comando de Python.
 
-```powershell
-python -m http.server 5300 --bind 127.0.0.1 --directory src/Erp.Api/wwwroot
-```
+   ```powershell
+   python -m http.server 5300 --bind 127.0.0.1 --directory src/Erp.Api/wwwroot
+   ```
 
-Abrir `http://localhost:5300/`, elegir usuario, rol y sede. Asesor y Jefatura acceden a Comercial. Compras, Almacén, Transporte y Jefatura operan sus procesos de Logística; Asesor puede solicitar abastecimiento. Las otras áreas muestran su estado de desarrollo. Los registros se guardan en el navegador; no se comparten entre equipos.
+3. Mantén la terminal abierta. Entra al [ERP en localhost](http://localhost:5300/) y selecciona nombre, perfil y sede.
+4. Elige **Super Admin** para presentar varios módulos en la misma sesión o usa perfiles distintos para revisar los permisos. Si ves una versión anterior de la interfaz, recarga con **Ctrl + F5**.
 
-## Recorrido disponible
+Usa el mismo perfil de navegador y la misma dirección para acceder a tus registros. Cada integrante tiene sus propios datos locales.
 
-Aplicaciones → Comercial → Clientes y productos revisados → Oportunidades → Cotizaciones → Controles/aprobación de pedidos → Seguimiento y postventa. Incluye precios por canal, promociones, descuentos, indicadores y fichas imprimibles. Comercial consume [contratos públicos](docs/contratos/integracion-comercial.md).
+## Funcionalidades
 
-Aplicaciones → Logística/Compras/Despachos → Necesidades → Ofertas y OC → Recepción/calidad → Inventario → Reserva/picking/embalaje → Salida/entrega. Incluye inspección parcial, reparación/reinspección/bajas, administración de almacenes/ubicaciones, reubicaciones, retornos, traslados, conteos por calidad, cotejo de factura, evaluación e indicadores. [Guion por rol y límites](docs/pantallas/logistica.md) · [Reglas](docs/reglas-logisticas.md) · [Contratos](docs/contratos/integracion-logistica.md).
+| Área | Operaciones |
+|---|---|
+| Comercial | Clientes y productos, oportunidades, listas de precios y promociones, cotizaciones, aprobación de pedidos, seguimiento, postventa e indicadores |
+| Logística y Compras | Planificación, proveedores, solicitudes, ofertas, órdenes, recepción y calidad, Kardex valorizado, conteos, reubicaciones, traslados y cotejo |
+| Despachos | Reserva, picking, embalaje, orden de salida, ruta, confirmación y retornos, con el inventario compartido de Logística |
+| Facturación | Factura o boleta interna desde un pedido entregado, ficha imprimible, cuenta por cobrar y asiento pendiente |
+| Finanzas | Cuentas por cobrar y pagar, crédito, programación y confirmación de pagos, caja, bancos y conciliación |
+| Contabilidad | Asientos, apertura de inventario, activos, depreciación, balance de comprobación, diario, mayor y cierre |
+| Reportes | Entrada en Aplicaciones, pendiente de implementación |
 
-En **Logística → Kardex valorizado**, el botón **Ejecutar escenario de evaluación** muestra una corrida temporal de compra a distinto costo y salida para observar el promedio móvil. El escenario no altera los datos guardados. [Detalle y tarjeta #122](docs/borradores/evaluacion-kardex-valorizado.md).
+Las pantallas agrupan tareas y registros en zonas diferenciadas. Los botones **?** explican la interfaz y **Paso sugerido** orienta el recorrido. Al guardar se mantiene la vista actual y se ofrece **Ver registro guardado** cuando corresponde.
 
-Comercial (#116) se integró mediante el [PR #117](https://github.com/miguelr296/ERP-2026-2/pull/117) y Logística (#118/#120) mediante los [PR #119](https://github.com/miguelr296/ERP-2026-2/pull/119) y [#121](https://github.com/miguelr296/ERP-2026-2/pull/121). El pulido de #120 está integrado; sus comprobaciones manuales pendientes siguen descritas en su tarjeta. El [test de funcionamiento del Kardex valorizado](docs/borradores/evaluacion-kardex-valorizado.md) presenta un escenario temporal sin alterar datos reales. Cobros/pagos, comprobantes y asientos siguen a cargo de sus áreas.
+## Documentación para el equipo
 
-## Cómo leer este repositorio
+| Documento | Para qué sirve |
+|---|---|
+| [Prueba integrada](docs/prueba-integrada.md) | Guion para demostrar venta, compra, tesorería y contabilidad |
+| [Arquitectura](docs/arquitectura.md) | Componentes, archivos, datos, perfiles e integración |
+| [Comercial](docs/pantallas/comercial.md) · [Logística](docs/pantallas/logistica.md) | Pantallas, reglas y recorridos por área |
+| [Facturación, Finanzas y Contabilidad](docs/pantallas/facturacion-finanzas-contabilidad.md) | Operaciones, requisitos, asientos y cierre |
+| [Contratos de Comercial](docs/contratos/integracion-comercial.md) · [Contratos de Logística](docs/contratos/integracion-logistica.md) | Consultas y referencias intercambiadas |
+| [Reglas comerciales](docs/reglas-comerciales.md) · [Reglas logísticas](docs/reglas-logisticas.md) | Validaciones y casos de prueba |
+| [Contexto](docs/contexto.md) · [Decisiones](docs/decisiones.md) · [Bitácora](BITACORA.md) · [Glosario](docs/glosario.md) · [Fuentes](docs/fuentes/README.md) | Antecedentes, términos y referencias de trabajo |
 
-1. Lee `docs/contexto.md` para conocer el propósito y punto de partida.
-2. Lee `docs/decisiones.md` para conocer los acuerdos vigentes.
-3. Lee `BITACORA.md` para consultar el trabajo comprobado.
-4. Consulta la [fuente y su uso](docs/fuentes/README.md) antes de definir reglas o recorridos.
-5. Revisa los guiones de [Comercial](docs/pantallas/comercial.md) y [Logística](docs/pantallas/logistica.md).
-6. La entrada es `src/Erp.Api/wwwroot/index.html`; parámetros y datos iniciales están en `datos-comercial.js` y `datos-logistica.js`.
-7. Consulta las [reglas y pruebas](docs/reglas-comerciales.md), el [glosario](docs/glosario.md) y la [preparación del PR](docs/borradores/interfaz-comercial-pr.md).
+El prototipo sirve como insumo para construir los diagramas TO-BE. Los perfiles y comprobantes son de demostración. Consulta el [alcance pendiente](docs/arquitectura.md#alcance-pendiente).
 
 ## Validación
 
-Reglas con Node.js, sin dependencias adicionales:
+
+Con Node.js 24, ejecuta las pruebas de reglas desde la raíz:
 
 ```powershell
-node --test --test-isolation=none tests/interfaz/comercial.test.cjs
-node --test --test-isolation=none tests/interfaz/logistica.test.cjs
-node --test --test-isolation=none tests/interfaz/kardex-evaluacion.test.cjs
+node --test --test-isolation=none tests/interfaz/comercial.test.cjs tests/interfaz/logistica.test.cjs tests/interfaz/kardex-evaluacion.test.cjs tests/interfaz/libros.test.cjs
 ```
 
-Resultado local: **46 Comercial + 77 Logística = 123 superadas, 0 fallidas, 0 omitidas**. El aislamiento de procesos del runner falló con EPERM en el entorno restringido; los comandos anteriores ejecutan los casos en el mismo proceso.
-
-Para la prueba de pantalla, dejar el servidor estático activo e iniciar un Chrome headless de prueba con perfil temporal:
+Para las pruebas de pantalla, mantén activo el servidor estático e inicia Chrome headless con un perfil temporal.
 
 ```powershell
 $perfilPruebas = Join-Path $env:TEMP ('famihogar-pruebas-' + [guid]::NewGuid().ToString('N'))
@@ -53,9 +62,8 @@ node tests/interfaz/navegador.cjs 9245
 node tests/interfaz/logistica-navegador.cjs 9245
 ```
 
-Si Chrome está en otra carpeta, ajustar su ruta. Cada script exige headless, crea su propio contexto y lo elimina al terminar. Resultado local: **56 comprobaciones Comercial y 71 Logística, 0 excepciones JavaScript**; cotización, despacho y reparación de prueba, cada uno en A4 de una página. Capturas/PDF/resultados en `%TEMP%/famihogar-comercial-validacion` y `%TEMP%/famihogar-logistica-validacion`, fuera del repositorio. Se ejecutaron en el puerto de depuración 9247; los comandos aceptan el puerto como argumento. Cerrar únicamente ese navegador de prueba al terminar. No se afirma CI: el reinicio de Miguel retiró el workflow anterior.
+Si Chrome está en otra carpeta, ajusta su ruta. Cada script usa Chrome headless y elimina su contexto al finalizar. Las capturas, PDF y resultados se guardan en carpetas temporales fuera del repositorio. Al terminar, cierra solo el Chrome de prueba.
 
-## Flujo
+Verificación local del 24 de noviembre de 2026 con datos aislados. Pasaron 132 pruebas de reglas y 205 comprobaciones de navegador (74 de Comercial y 131 del recorrido integrado), con cero excepciones JavaScript.
 
-- Inicio de sesión: `docs/comandos/iniciar.md` (`.opencode/command/iniciar.md`).
-- Cierre: `docs/comandos/cierre.md` (`.opencode/command/cierre.md`).
+El [escenario de evaluación del Kardex valorizado](docs/borradores/evaluacion-kardex-valorizado.md) también está disponible desde la aplicación y trabaja con datos en memoria.
