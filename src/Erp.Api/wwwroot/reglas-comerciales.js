@@ -294,14 +294,22 @@ window.ReglasComerciales = (() => {
     } else exigir(false, "Tipo de maestro no válido.");
   }
 
+  function registrarCliente(datos, valor, actor) {
+    comercial(actor);
+    validarMaestro(datos, "cliente", valor);
+    const cliente = { ...copiar(valor), id: crypto.randomUUID(), estado: "Aprobado", historial: [evento(actor, "Cliente registrado")] };
+    datos.clientes.push(cliente);
+    return cliente;
+  }
+
   function solicitarMaestro(datos, tipo, valor, id, actor) {
     comercial(actor); if (tipo !== "cliente") jefatura(actor);
+    exigir(tipo !== "cliente" || id, "Selecciona un cliente existente para solicitar su actualización.");
     validarMaestro(datos, tipo, valor, id);
     exigir(!datos.solicitudesMaestro.some(s => s.tipo === tipo && s.objetivoId === id && id && s.estado === "Pendiente"), "Ya hay un cambio pendiente para este registro.");
     const objetivoId = id || crypto.randomUUID();
     const solicitud = { id: crypto.randomUUID(), tipo, objetivoId, datos: copiar(valor), registradoPor: actor.nombre, sede: actor.sede, estado: "Pendiente", historial: [evento(actor, `Solicitud de ${id ? "actualización" : "alta"} de ${tipo}`)] };
     datos.solicitudesMaestro.push(solicitud);
-    if (tipo === "cliente" && !id) datos.clientes.push({ ...copiar(valor), id: objetivoId, estado: "Pendiente", historial: copiar(solicitud.historial) });
     return solicitud;
   }
 
@@ -320,5 +328,5 @@ window.ReglasComerciales = (() => {
     s.estado = aceptar ? "Aprobada" : "Rechazada"; s.historial.push(evento(actor, `${s.estado}: ${razon}`));
   }
 
-  return { prepararDatos, listaVigente, calcular, crearCotizacion, resolverDescuento, cambiarCotizacion, crearPedido, validarPedido, aprobarPedido, bloquearPedido, cantidadesAtendidas, sincronizarPedido, crearSolicitud, resolverSolicitud, seguirDevolucion, solicitarMaestro, resolverMaestro, evento, motivoValido, numero, aprobado, referenciaValida };
+  return { prepararDatos, listaVigente, calcular, crearCotizacion, resolverDescuento, cambiarCotizacion, crearPedido, validarPedido, aprobarPedido, bloquearPedido, cantidadesAtendidas, sincronizarPedido, crearSolicitud, resolverSolicitud, seguirDevolucion, registrarCliente, solicitarMaestro, resolverMaestro, evento, motivoValido, numero, aprobado, referenciaValida };
 })();

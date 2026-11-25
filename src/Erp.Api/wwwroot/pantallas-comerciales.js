@@ -30,7 +30,7 @@ window.PantallasComerciales = c => {
 
   function clientes() {
     const filas = datos().clientes.map(cliente => `<tr><td>${b(cliente.nombre, "ver-cliente", cliente.id, "enlace-boton")}</td><td>${e(cliente.tipoDocumento)} ${e(cliente.documento)}</td><td>${e(cliente.correo || "—")}<small>${e(cliente.telefono)}</small></td><td>${e(cliente.segmento)}</td><td>${c.etiqueta(cliente.estado)}</td></tr>`);
-    return c.zonaTrabajo("Operaciones comerciales", c.cabecera("Clientes", "Directorio compartido entre sedes. Las altas y cambios requieren revisión.", b("+ Nuevo cliente", "nuevo-cliente", "", "boton primario")))
+    return c.zonaTrabajo("Operaciones comerciales", c.cabecera("Clientes", "Directorio compartido entre sedes. Los nuevos clientes quedan disponibles al guardar. Las actualizaciones pasan por revisión.", b("+ Nuevo cliente", "nuevo-cliente", "", "boton primario")))
       + c.zonaTrabajo("Registros de la sección", c.tabla("Directorio de clientes", ["Cliente", "Documento", "Contacto", "Segmento", "Estado"], filas));
   }
 
@@ -54,9 +54,11 @@ window.PantallasComerciales = c => {
       const valor = Object.fromEntries(valores);
       valor.nombre = valor.nombreCliente.trim(); delete valor.nombreCliente;
       for (const clave of Object.keys(valor)) valor[clave] = valor[clave].trim();
-      operacion(actuales => r.solicitarMaestro(actuales, "cliente", valor, id, actor()));
+      operacion(actuales => id
+        ? r.solicitarMaestro(actuales, "cliente", valor, id, actor())
+        : r.registrarCliente(actuales, valor, actor()));
       return volver("clientes");
-    }, "Enviar a revisión");
+    }, id ? "Enviar a revisión" : "Registrar cliente");
     const formatoDocumento = () => {
       const cantidad = c.$("#tipoDocumento").value === "DNI" ? 8 : 11;
       c.$("#documento").pattern = `[0-9]{${cantidad}}`; c.$("#documento").maxLength = cantidad;

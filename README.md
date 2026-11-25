@@ -14,7 +14,13 @@ Prototipo de gestión para una mueblería retail con tres sedes. Conecta ventas 
 3. Mantén la terminal abierta. Entra al [ERP en localhost](http://localhost:5300/) y selecciona nombre, perfil y sede.
 4. Elige **Super Admin** para presentar varios módulos en la misma sesión o usa perfiles distintos para revisar los permisos. Si ves una versión anterior de la interfaz, recarga con **Ctrl + F5**.
 
-Usa el mismo perfil de navegador y la misma dirección para acceder a tus registros. Cada integrante tiene sus propios datos locales.
+### Datos iniciales de demostración
+
+En el primer acceso con un perfil de navegador sin registros del ERP se cargan **411 registros ficticios en 41 tablas**, con cinco o más por tabla. Todos parten del mismo escenario incluido en el repositorio.
+
+Entra como **Super Admin → Lima Centro** para ver los ejemplos en todos los módulos. En **Facturación** encontrarás un pedido entregado listo para emitir. Los comprobantes simulados corresponden a **noviembre de 2026**. Si consultas **Reportes** en otra fecha, selecciona ese mes en los filtros.
+
+Si el perfil ya tiene registros, el ERP los conserva al abrir. Para reemplazarlos, elige **Cargar datos de demostración** en la pantalla de acceso. Descarga primero el respaldo y luego pulsa **Reemplazar con datos simulados**. Los cambios que cada integrante haga después se guardan en su navegador.
 
 ## Funcionalidades
 
@@ -51,7 +57,7 @@ El prototipo sirve como insumo para construir los diagramas TO-BE. Los perfiles 
 Con Node.js 24, ejecuta las pruebas de reglas desde la raíz:
 
 ```powershell
-node --test --test-isolation=none tests/interfaz/comercial.test.cjs tests/interfaz/logistica.test.cjs tests/interfaz/kardex-evaluacion.test.cjs tests/interfaz/libros.test.cjs
+node --test --test-isolation=none tests/interfaz/comercial.test.cjs tests/interfaz/logistica.test.cjs tests/interfaz/kardex-evaluacion.test.cjs tests/interfaz/libros.test.cjs tests/interfaz/datos-demo.test.cjs
 ```
 
 Para las pruebas de pantalla, mantén activo el servidor estático e inicia Chrome headless con un perfil temporal.

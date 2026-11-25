@@ -12,7 +12,7 @@ Luis declaró **1 hora real en total**. Confirmó los límites 5 % / 20 %, expli
 |---|---|---|
 | Acceso y Aplicaciones | Usuario, nueve perfiles incluido Super Admin, sede, sesión y salida, ocho módulos y búsqueda sin tildes | Bartolito e indicaciones de Luis |
 | Panel Comercial | Operaciones por sede, accesos y contadores calculados | PDF pp. 3, 24 |
-| Clientes | Alta/actualización propuesta, DNI/RUC único, direcciones de entrega/fiscal/cobranza, segmento y condición preferida, revisión independiente | PDF pp. 6, 23 |
+| Clientes | Alta directa, DNI/RUC único, direcciones de entrega/fiscal/cobranza, segmento y condición preferida. Revisión independiente de las actualizaciones | PDF pp. 6, 23; ajuste del flujo de alta |
 | Productos | Alta/actualización con familia, unidad y coste separado del precio; publicación tras revisión | PDF pp. 6–7, 23 |
 | Oportunidades | Cliente aprobado, canal, vendedor, sede, productos/cantidades, seguimiento y cierre como perdida con motivo | PDF pp. 3–6; indicación de Luis |
 | Precios | Listas por canal/segmento, fechas inclusivas, rechazo de solapamiento, activación/desactivación y cambios sujetos a revisión | PDF pp. 6–7 |

@@ -92,6 +92,11 @@ async function ejecutar() {
     await enviar("Runtime.enable"); await enviar("Page.enable");
     await enviar("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
     await enviar("Page.navigate", { url: origen });
+    await esperar("document.readyState==='complete' && !!window.ReglasComerciales");
+    await comprobar("['comercial','logistica','libros'].flatMap(k=>Object.values(JSON.parse(localStorage.getItem('famihogar.'+k+'.v1'))).filter(Array.isArray)).length===41", "La versión distribuida carga las tablas de demostración en un perfil nuevo");
+    const sinDemo = await enviar("Page.addScriptToEvaluateOnNewDocument", { source: "window.FAMIHOGAR_OMITIR_DEMO = true;" });
+    await evaluar("['comercial','logistica','libros'].forEach(k=>localStorage.removeItem('famihogar.'+k+'.v1'))");
+    await enviar("Page.navigate", { url: origen });
     await esperar("!!window.ReglasComerciales && document.querySelector('#sede-acceso').options.length===3");
     await clic("#acceso [data-guia=acceso]");
     await comprobar("document.querySelector('#ayuda').open && document.querySelector('#siguiente-ayuda').textContent.includes('Ingresar')", "Ayuda de acceso con el siguiente paso");
@@ -123,18 +128,24 @@ async function ejecutar() {
     await rellenar({ "#documento": "70000003", "#nombreCliente": "Cliente de revisión", "#direccion": "Av. Ejemplo 100" });
     await clic("[data-accion=copiar-direcciones]");
     await comprobar("document.querySelector('#direccionFiscal').value==='Av. Ejemplo 100' && document.querySelector('#direccionCobranza').value==='Av. Ejemplo 100'", "Cliente puede copiar la dirección sin escribirla tres veces");
+    await comprobar("document.querySelector('#formulario-registro button[type=submit]').textContent.trim()==='Registrar cliente'", "El formulario permite registrar directamente");
     await guardar(); await esperar("!document.querySelector('#modal').open");
-    const clienteId = await almacen("d.clientes.at(-1).id"), maestroId = await almacen("d.solicitudesMaestro.at(-1).id");
-    await comprobar("document.querySelector('#contenido').textContent.includes('Pendiente')", "Alta de cliente pendiente de revisión");
+    const clienteId = await almacen("d.clientes.at(-1).id");
+    await comprobar(String(await almacen("d.clientes.at(-1).estado==='Aprobado' && d.solicitudesMaestro.length===0")), "Alta directa sin solicitud de aprobación");
     await clic("[data-accion=nueva-oportunidad]");
-    await comprobar(`!Array.from(document.querySelector('#cliente-oportunidad').options).some(o=>o.value===${JSON.stringify(clienteId)})`, "Cliente pendiente no se usa en oportunidad"); await clic("#cerrar-modal");
+    await comprobar(`Array.from(document.querySelector('#cliente-oportunidad').options).some(o=>o.value===${JSON.stringify(clienteId)})`, "El cliente se puede usar de inmediato en una oportunidad"); await clic("#cerrar-modal");
+    await clic(`[data-accion=ver-cliente][data-id='${clienteId}']`);
+    await clic("[data-accion=editar-cliente]");
+    await rellenar({ "#direccion": "Av. Ejemplo 200" }); await guardar();
+    const maestroId = await almacen("d.solicitudesMaestro.at(-1).id");
+    await comprobar(String(await almacen("d.clientes.at(-1).direccion==='Av. Ejemplo 100' && d.solicitudesMaestro.at(-1).estado==='Pendiente'")), "La actualización queda pendiente y se conserva la dirección vigente");
     await login("Luis", "Jefatura"); await ir("aprobaciones");
     await decidir(`[data-accion=aprobar-maestro][data-id='${maestroId}']`, "Revisión propia");
     await comprobar("document.querySelector('#error-formulario').textContent.includes('Otra persona')", "No autoaprobar maestro"); await clic("#cerrar-modal");
     await login("Miguel", "Jefatura"); await ir("aprobaciones");
     await clic(`[data-accion=ver-maestro][data-id='${maestroId}']`); await comprobar("document.querySelector('#cuerpo-modal').textContent.includes('Cliente de revisión')", "Propuesta visible antes de aprobar"); await clic("#cerrar-modal");
     await decidir(`[data-accion=aprobar-maestro][data-id='${maestroId}']`, "Identificación y direcciones revisadas");
-    await comprobar(`JSON.parse(localStorage.getItem('famihogar.comercial.v1')).clientes.find(c=>c.id===${JSON.stringify(clienteId)}).estado==='Aprobado'`, "Otra Jefatura aprueba maestro");
+    await comprobar(`JSON.parse(localStorage.getItem('famihogar.comercial.v1')).clientes.find(c=>c.id===${JSON.stringify(clienteId)}).direccion==='Av. Ejemplo 200'`, "Otra Jefatura publica la actualización del cliente");
     await login("Luis", "Asesor"); await ir("oportunidades"); await clic("[data-accion=nueva-oportunidad]");
     await rellenar({ "#cliente-oportunidad": clienteId, "#asunto": "Renovación de sala", "select[name=producto]": "SOF-001", "input[name=cantidad]": "0" });
     await comprobar("!document.querySelector('#formulario-registro').checkValidity()", "Cantidad cero rechazada");
@@ -238,14 +249,14 @@ async function ejecutar() {
     }
     await login("Persona de demostración", "Super Admin"); await ir("catalogo");
     await comprobar("document.querySelector('#rol-actual').textContent==='Super Admin' && !!document.querySelector('[data-accion=nuevo-producto]')", "Super Admin tiene acceso a controles de Jefatura en Comercial");
-    await clic("[data-accion=nuevo-cliente]");
-    await rellenar({ "#documento": "70000005", "#nombreCliente": "Cliente de demostración", "#direccion": "Av. Ejemplo 100", "#direccionFiscal": "Av. Ejemplo 100", "#direccionCobranza": "Av. Ejemplo 100" });
+    await clic("[data-accion=nuevo-producto]");
+    await rellenar({ "#codigo": "DEMO-001", "#nombreMaestro": "Producto de demostración", "#familia": "Sala", "#coste": "10" });
     await guardar();
     const solicitudDemo = await almacen("d.solicitudesMaestro.at(-1).id");
     await ir("aprobaciones");
     await decidir("[data-accion=aprobar-maestro][data-id='" + solicitudDemo + "']", "Aprobación de demostración");
     const maestroDemo = await almacen("d.solicitudesMaestro.at(-1)");
-    await comprobar(String(maestroDemo.estado === "Aprobada" && maestroDemo.historial.at(-1).rol === "Super Admin"), "Super Admin aprueba su propia alta y conserva el rol en el historial");
+    await comprobar(String(maestroDemo.estado === "Aprobada" && maestroDemo.historial.at(-1).rol === "Super Admin"), "Super Admin aprueba su propia alta de producto y conserva el rol en el historial");
 
     await login("Miguel", "Jefatura"); await enviar("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     await comprobar("document.documentElement.scrollWidth<=innerWidth", "Selector móvil sin desbordamiento"); await foto("06-movil-aplicaciones");
@@ -253,6 +264,25 @@ async function ejecutar() {
     await ir("precios"); await comprobar("document.documentElement.scrollWidth<=innerWidth", "Precios móviles sin desbordamiento");
     await comprobar("!/prototipo|acad[eé]mico/i.test(document.body.innerText)", "Textos de pantalla acordados");
     await clic("#salir"); await comprobar("!sessionStorage.getItem('famihogar.sesion') && document.querySelector('#sistema').hidden", "Salida de sesión");
+    const datosPrevios = await almacen("d.clientes.map(c=>c.id)");
+    await enviar("Page.removeScriptToEvaluateOnNewDocument", sinDemo);
+    await browser.enviar("Browser.setDownloadBehavior", { behavior: "allow", browserContextId, downloadPath: carpeta });
+    await clic("a[href='cargar-demo.html']");
+    await esperar("document.querySelector('#descargar-respaldo')?.disabled===false");
+    await comprobar("document.querySelector('#formulario-demo button[type=submit]').disabled", "La carga manual exige preparar un respaldo");
+    const archivosPrevios = new Set(fs.readdirSync(carpeta));
+    await clic("#descargar-respaldo");
+    let respaldo;
+    for (let i = 0; i < 60 && !respaldo; i++) {
+      respaldo = fs.readdirSync(carpeta).find(nombre => !archivosPrevios.has(nombre) && /^famihogar-respaldo-.*\.json$/.test(nombre));
+      if (!respaldo) await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    const copia = JSON.parse(fs.readFileSync(path.join(carpeta, respaldo), "utf8"));
+    const copiaClientes = JSON.parse(copia.datos["famihogar.comercial.v1"]).clientes.map(c => c.id);
+    await comprobar(String(JSON.stringify(copiaClientes) === JSON.stringify(datosPrevios)), "El archivo de respaldo conserva los clientes del perfil anterior");
+    await clic("#formulario-demo button[type=submit]");
+    await comprobar("document.querySelector('[role=status]').textContent.includes('411 registros guardados en 41 tablas')", "La carga manual reemplaza los registros del perfil");
+    await comprobar(String(await almacen("d.clientes.length===14 && d.clientes.some(c=>c.nombre==='Isabel Paredes')")), "Los clientes simulados quedan disponibles en el perfil existente");
     if (pagina.errores.length) throw Error(pagina.errores.join("\n"));
     const resultado = { comprobaciones: comprobaciones.length, superadas: comprobaciones, excepcionesJavaScript: pagina.errores.length, paginasPdf, carpeta };
     fs.writeFileSync(path.join(carpeta, "resultado.json"), JSON.stringify(resultado, null, 2));

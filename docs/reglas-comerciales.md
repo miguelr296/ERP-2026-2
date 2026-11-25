@@ -6,7 +6,8 @@ La evidencia corresponde al frontend y a contratos locales de consulta. Las regl
 
 | Regla | Fuente / decisión | Evidencia ejecutada |
 |---|---|---|
-| Revisar altas y cambios de maestros antes de utilizarlos; otra persona resuelve | PDF pp. 6, 23; decisión de esta interfaz | Cliente pendiente no cotiza; producto no se publica antes de revisar; cambio de lista mantiene versión vigente hasta aprobación |
+| Habilitar al cliente en el momento del alta tras validar su documento y datos obligatorios | Ajuste del flujo de alta | El nuevo cliente queda disponible para cotizar. El formulario rechaza documentos inválidos o duplicados |
+| Revisar las actualizaciones de clientes, altas y cambios de productos, listas y promociones. Otra persona resuelve | PDF pp. 6, 23; decisión de esta interfaz | Las solicitudes previas de alta conservan su revisión. La versión vigente de un maestro se usa hasta aprobar su actualización |
 | Usar una sola lista vigente por canal y segmento, con productos y precios aprobados | PDF pp. 6–7 | Listas vencida, futura, inactiva, ambigua, ausente y solapada; canal y segmento; precio faltante |
 | Conservar copia de líneas, cantidades, precios, descuento e impuesto | PDF pp. 4, 7–8 | Cambiar catálogo no modifica cotización ni pedido; cantidades cero y productos repetidos rechazados |
 | Calcular dinero en céntimos; separar bruto, descuento, base e impuesto | PDF pp. 7, 12, 14; DEC-003/004 | Ejemplo 3547,00 + 638,46 = 4185,46; con 10 %: descuento 354,70, base 3192,30, IGV 574,61, total 3766,91 |

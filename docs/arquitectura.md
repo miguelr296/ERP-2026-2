@@ -34,6 +34,8 @@ Las pantallas agrupan acciones y registros en zonas que se distinguen con diviso
 
 La sesión se mantiene al recargar. **Salir** elimina la sesión y conserva los documentos. Los registros pertenecen al origen y perfil del navegador. Usar otro puerto, otro perfil o un equipo distinto puede mostrar otro conjunto de datos. Eliminar los datos del sitio borra sus registros locales.
 
+Al abrir el ERP por primera vez en un perfil sin datos guardados, `registros-demo.js` aporta un escenario ficticio común e `inicializar-demo.js` lo copia a las tres claves antes de iniciar la aplicación. La carga automática conserva los perfiles con registros previos. Desde la pantalla de acceso se puede abrir una carga manual que solicita descargar un respaldo antes de sustituir los datos del perfil. Cada perfil guarda localmente los cambios posteriores.
+
 Los importes se representan como céntimos de sol. Las fichas usan identificadores UUID, correlativos legibles, sede, referencias de origen e historial de acciones cuando corresponde. Clientes y catálogo son compartidos. Las operaciones aplican su filtro de sede y hay excepciones de proceso, como la consulta de traslados desde origen y destino.
 
 Cada comando relee su estado, aplica las reglas y guarda una vez. En Libros, el documento o movimiento y su asiento propuesto quedan en la misma escritura. Las áreas se consultan entre sí a través de funciones públicas. La aplicación atiende eventos de almacenamiento del mismo origen y su persistencia local carece de garantía transaccional entre claves o pestañas.

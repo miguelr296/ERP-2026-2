@@ -47,6 +47,7 @@ async function ejecutar() {
     const decidir = async (a, motivo = "Revisión independiente conforme") => { await accion(a); await rellenar({ "#log-motivo": motivo }); await guardar(); };
     const foto = async nombre => { const r = await enviar("Page.captureScreenshot", { format: "png", captureBeyondViewport: true }); fs.writeFileSync(path.join(carpeta, nombre + ".png"), Buffer.from(r.data, "base64")); };
     await enviar("Runtime.enable"); await enviar("Page.enable"); await enviar("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+    await enviar("Page.addScriptToEvaluateOnNewDocument", { source: "window.FAMIHOGAR_OMITIR_DEMO = true;" });
     await enviar("Page.navigate", { url: "http://localhost:5300/" }); await esperar("!!window.PantallasLogistica && Array.from(document.querySelector('#rol').options).some(o=>o.value==='Super Admin')");
     await login("Pablo", "Compras"); await clic("[data-modulo=logistica]"); await esperar("document.querySelector('#contenido h1')?.textContent==='Panel logístico'");
     await comprobar("document.querySelectorAll('[data-log-vista]').length>10", "Navegación logística agrupada por procesos");

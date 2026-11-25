@@ -222,18 +222,32 @@ test("devolución autorizada espera recepción, nota y ajuste de sus áreas", ()
   t.r.seguirDevolucion(t.datos, s.id, asesor, t.puertos); assert.equal(s.estado, "Completada");
   assert.equal(t.datos.pagos, undefined);
 });
-test("cliente nuevo requiere aprobación antes de cotizar", () => {
+test("cliente nuevo queda disponible para cotizar al registrarlo", () => {
   const t = entorno();
-  const s = t.r.solicitarMaestro(t.datos, "cliente", { nombre: "Cliente nuevo", tipoDocumento: "DNI", documento: "70000003", direccion: "Dirección", segmento: "Retail" }, "", asesor);
+  const cliente = t.r.registrarCliente(t.datos, { nombre: "Cliente nuevo", tipoDocumento: "DNI", documento: "70000003", direccion: "Dirección", segmento: "Retail" }, asesor);
+  assert.equal(t.datos.solicitudesMaestro.length, 0);
+  assert.equal(cliente.historial[0].usuario, asesor.nombre);
+  t.datos.oportunidades[0].clienteId = cliente.id;
+  assert.equal(cotizacion(t).cliente.id, cliente.id);
+});
+test("el alta conserva los permisos y rechaza documentos inválidos o repetidos", () => {
+  const t = entorno(), cliente = t.datos.clientes[0], cantidad = t.datos.clientes.length;
+  assert.throws(() => t.r.registrarCliente(t.datos, cliente, asesor), /Ya existe/);
+  assert.throws(() => t.r.registrarCliente(t.datos, { ...cliente, documento: "123" }, asesor), /Formato/);
+  assert.throws(() => t.r.registrarCliente(t.datos, { ...cliente, documento: "70000003" }, { ...asesor, rol: "Tesorería" }), /corresponde a Comercial/);
+  assert.equal(t.datos.clientes.length, cantidad);
+});
+test("un alta pendiente de la versión anterior sigue su revisión", () => {
+  const t = entorno();
+  const valor = { nombre: "Cliente pendiente", tipoDocumento: "DNI", documento: "70000003", direccion: "Dirección", segmento: "Retail" };
+  const s = { id: "sol-anterior", tipo: "cliente", objetivoId: "cli-anterior", datos: valor, estado: "Pendiente", registradoPor: asesor.nombre, historial: [] };
+  t.datos.clientes.push({ ...valor, id: s.objetivoId, estado: "Pendiente" });
+  t.datos.solicitudesMaestro.push(s);
   t.datos.oportunidades[0].clienteId = s.objetivoId;
   assert.throws(() => cotizacion(t), /cliente debe estar aprobado/);
-  assert.throws(() => t.r.resolverMaestro(t.datos, s.id, true, "Revisado", { ...jefatura, nombre: "Luis" }), /Otra persona/);
+  assert.throws(() => t.r.registrarCliente(t.datos, valor, asesor), /Ya existe/);
   t.r.resolverMaestro(t.datos, s.id, true, "Identificación revisada", jefatura);
   assert.equal(cotizacion(t).cliente.id, s.objetivoId);
-});
-test("documentos de clientes repetidos se rechazan", () => {
-  const t = entorno();
-  assert.throws(() => t.r.solicitarMaestro(t.datos, "cliente", structuredClone(t.datos.clientes[0]), "", asesor), /Ya existe/);
 });
 test("cambio de lista conserva versión anterior hasta otra aprobación", () => {
   const t = entorno(), original = t.datos.listasPrecio[0], propuesta = structuredClone(original);

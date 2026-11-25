@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cargar datos de demostración · FAMIHOGAR</title>
+  <link rel="stylesheet" href="estilos.css?v=20261125.7">
+  <script src="registros-demo.js?v=20261125.1" defer></script>
+  <script src="inicializar-demo.js?v=20261125.2" defer></script>
+</head>
+<body>
+  <main class="acceso" aria-labelledby="titulo-demo">
+    <div class="tarjeta-acceso">
+      <h1 id="titulo-demo">Cargar datos de demostración</h1>
+      <p>Esta operación reemplaza los registros del ERP en este navegador con los datos ficticios del proyecto.</p>
+      <form id="formulario-demo">
+        <p>Descarga el respaldo de los datos actuales y comprueba que se guardó antes de continuar.</p>
+        <div class="acciones-formulario">
+          <button id="descargar-respaldo" class="boton" type="button" disabled>Descargar respaldo</button>
+          <button class="boton primario" type="submit" disabled>Reemplazar con datos simulados</button>
+        </div>
+        <p role="status" aria-live="polite"></p>
+      </form>
+      <a class="enlace-boton" href="./">Abrir el ERP</a>
+    </div>
+  </main>
+</body>
+</html>

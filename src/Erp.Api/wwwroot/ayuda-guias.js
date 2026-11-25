@@ -12,7 +12,7 @@ window.GuiasERP = {
     "Las opciones que aparecen al entrar dependen de tu rol."
   ],
   comercial: [
-    "En el Recorrido de venta, abre Clientes y verifica que el cliente esté aprobado.",
+    "En el Recorrido de venta, abre Clientes y busca al cliente o regístralo si es nuevo.",
     "Crea una oportunidad, prepara una cotización y registra la aceptación del cliente.",
     "Crea el pedido y valida sus controles. Jefatura lo revisa antes de que Almacén lo prepare."
   ],
@@ -55,7 +55,7 @@ window.GuiasERP = {
   "comercial/clientes": [
     "Busca al cliente por nombre o documento antes de registrar uno nuevo.",
     "En Nuevo cliente, indica su DNI o RUC, segmento y direcciones de entrega, facturación y cobranza.",
-    "Jefatura revisa el alta o la actualización en Aprobaciones. Con el cliente aprobado, crea una oportunidad."
+    "Pulsa Registrar cliente. Puedes seleccionarlo de inmediato al crear una oportunidad. Jefatura revisa las solicitudes de actualización en Aprobaciones."
   ],
   "comercial/oportunidades": [
     "Selecciona un cliente aprobado en la sede activa y registra qué necesita, por qué canal llegó y qué productos le interesan.",
