@@ -47,9 +47,9 @@ window.GuiasERP = {
     "En Cierre y libros, resuelve los pendientes y consulta el diario, el mayor y el balance de comprobación."
   ],
   reportes: [
-    "Abre la consulta disponible para tu perfil en la sede seleccionada.",
-    "Indica las fechas o el mes contable y pulsa Aplicar filtro. Revisa la nota que explica el período de cada total.",
-    "Usa Exportar CSV en una tabla con datos o Imprimir reporte para el informe completo."
+    "Abre el Dashboard para ver indicadores, gráficos y alertas de tu sede. Cada sección muestra las consultas de tu perfil.",
+    "Indica las fechas y, para Contabilidad, el mes. Pulsa Aplicar filtro antes de exportar.",
+    "Descarga Excel o CSV. Para el PDF completo, elige Exportar PDF y selecciona Guardar como PDF en la ventana del navegador."
   ],
 
   "comercial/clientes": [

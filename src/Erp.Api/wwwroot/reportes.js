@@ -11,14 +11,22 @@ window.ReportesERP = (() => {
   const porFecha = (lista, campo, filtro) => lista.filter(item => item[campo] >= filtro.desde && item[campo] <= filtro.hasta);
   const fechaDescendente = (lista, campo) => lista.slice().sort((a, b) => b[campo].localeCompare(a[campo]));
 
+  function porEstado(lista) {
+    const cantidades = new Map();
+    for (const { estado } of lista) cantidades.set(estado, (cantidades.get(estado) || 0) + 1);
+    return [...cantidades];
+  }
+
   function ventas(filtro, actor, comercial) {
     const puede = roles => window.Permisos.tieneRol(actor, roles);
-    const indicadores = [], tablas = [];
+    const indicadores = [], tablas = [], graficos = [], alertas = [];
     if (puede(["Asesor", "Jefatura"])) {
       window.Libros.exigir(comercial, "No se pudieron leer los registros de Comercial.");
       const pedidos = porFecha(enSede(comercial.pedidos, actor.sede), "fecha", filtro);
       const cotizaciones = porFecha(enSede(comercial.cotizaciones, actor.sede), "fecha", filtro);
       indicadores.push(["Pedidos registrados", pedidos.length], ["Cotizaciones registradas", cotizaciones.length]);
+      graficos.push({ titulo: "Pedidos por estado", barras: porEstado(pedidos) });
+      alertas.push(["Pedidos bloqueados", pedidos.filter(p => p.estado === "Bloqueado").length]);
       tablas.push(tabla("Pedidos de venta", [columna("Pedido"), fecha("Fecha"), columna("Cliente"), columna("Estado"), moneda("Total")],
         fechaDescendente(pedidos, "fecha").map(p => [documento(p.numero, "comercial/pedidos/" + p.id), p.fecha, p.cliente.nombre, p.estado, p.total])));
       tablas.push(tabla("Cotizaciones", [columna("Cotización"), fecha("Fecha"), columna("Cliente"), columna("Estado"), moneda("Total")],
@@ -27,10 +35,16 @@ window.ReportesERP = (() => {
     if (puede(["Facturación", "Jefatura"])) {
       const ventas = porFecha(enSede(window.Libros.leer().documentos, actor.sede), "fecha", filtro).filter(d => d.tipo === "venta");
       indicadores.push(["Comprobantes emitidos", ventas.length], ["Total emitido con IGV", total(ventas, "total"), "moneda"]);
+      const porTipo = new Map();
+      for (const venta of ventas) {
+        const tipo = window.Finanzas.tiposComprobante[venta.tipoComprobante] || "Comprobante de venta";
+        porTipo.set(tipo, (porTipo.get(tipo) || 0) + venta.total);
+      }
+      graficos.push({ titulo: "Facturación por tipo", barras: [...porTipo], formato: "moneda" });
       tablas.push(tabla("Comprobantes de venta", [columna("Número"), fecha("Emisión"), columna("Cliente"), columna("Pedido"), moneda("Base"), moneda("IGV"), moneda("Total")],
         fechaDescendente(ventas, "fecha").map(d => [documento(d.referencia, window.Finanzas.rutaComprobante(d)), d.fecha, d.tercero, d.origenNumero, d.base, d.igv, d.total])));
     }
-    return { indicadores, tablas };
+    return { indicadores, tablas, graficos, alertas };
   }
 
   function inventario(filtro, actor) {
@@ -51,7 +65,11 @@ window.ReportesERP = (() => {
       tablas.push(tabla("Facturas verificadas", [columna("Cotejo"), columna("Factura"), fecha("Fecha"), columna("Proveedor"), moneda("Total con IGV")],
         fechaDescendente(facturas, "fecha").map(f => [documento(f.numero, "compras/facturas/" + f.id), f.documento, f.fecha, f.proveedor, f.base + f.igv])));
     }
-    return { indicadores, tablas };
+    const porProducto = new Map();
+    for (const s of stock) porProducto.set(s.codigo, (porProducto.get(s.codigo) || 0) + s.disponible);
+    const graficos = [{ titulo: "Unidades disponibles por producto", barras: [...porProducto] }];
+    const alertas = [["Productos sin stock disponible", [...porProducto.values()].filter(cantidad => cantidad === 0).length]];
+    return { indicadores, tablas, graficos, alertas };
   }
 
   function entregas(filtro, actor) {
@@ -62,7 +80,10 @@ window.ReportesERP = (() => {
       columna("Destino"), columna("Estado"), columna("Unidades entregadas")], fechaDescendente(salidas, "fecha").map(s => [
       documento(s.numero, "despachos/despachos/" + s.id), s.fecha, s.entregadoEn || "", s.destino, s.estado, total(s.lineas, "entregada")
     ]))];
-    return { indicadores, tablas };
+    const graficos = [{ titulo: "Órdenes de salida por estado", barras: porEstado(salidas) }];
+    const alertas = indicadores.filter(([estado]) => ["No entregado", "Entrega parcial"].includes(estado))
+      .map(([estado, cantidad]) => [estado === "No entregado" ? "Órdenes no entregadas" : "Órdenes con entrega parcial", cantidad]);
+    return { indicadores, tablas, graficos, alertas };
   }
 
   function tesoreria(filtro, actor) {
@@ -86,7 +107,9 @@ window.ReportesERP = (() => {
       fechaDescendente(delPeriodo, "fecha").map(m => [m.numero, m.fecha, F.cuentas[m.cuenta].nombre, m.tipo, m.referencia, m.importe])),
     tabla("Saldos por cuenta al corte", [columna("Cuenta"), moneda("Saldo")],
       Object.entries(F.cuentas).map(([id, cuenta]) => [cuenta.nombre, F.saldoCuenta(corte, actor.sede, id, filtro.hasta)]))];
-    return { indicadores, tablas };
+    const graficos = [{ titulo: "Movimientos de tesorería", barras: indicadores.slice(2), formato: "moneda" }];
+    const alertas = [["Cuentas vencidas al corte", pendientes.filter(({ doc }) => doc.vence < filtro.hasta).length]];
+    return { indicadores, tablas, graficos, alertas };
   }
 
   function contabilidad(filtro, actor) {
@@ -106,7 +129,9 @@ window.ReportesERP = (() => {
         const { debe, haber } = window.Libros.totales(a.lineas);
         return [documento(a.numero, "contabilidad/asientos/" + a.id), a.fecha, a.concepto, a.estado, debe, haber];
       }))];
-    return { indicadores, tablas };
+    const graficos = [{ titulo: "Asientos por estado", barras: indicadores.slice(1) }];
+    const alertas = [["Asientos pendientes de contabilizar", indicadores[2][1]]];
+    return { indicadores, tablas, graficos, alertas };
   }
 
   function csv({ columnas, filas }) {

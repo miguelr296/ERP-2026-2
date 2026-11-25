@@ -21,7 +21,7 @@ El servidor HTTP estático entrega los archivos de `src/Erp.Api/wwwroot`. El nav
 
 Las rutas usan el fragmento de la URL. `#facturacion/comprobantes` abre un listado y `#finanzas/cobrar/<id>` abre una ficha. Los archivos de la entrada llevan una versión en su URL para que el navegador cargue dependencias compatibles al cambiar la aplicación.
 
-Las pantallas agrupan acciones y registros en zonas que se distinguen con divisores. La identidad combina verde profundo, superficies claras y acentos cálidos. La navegación queda en el lateral en escritorio y pasa a una franja horizontal en pantallas estrechas. Los botones **?** ofrecen ayuda y **Paso sugerido** orienta el recorrido. Los selectores pueden preseleccionar el documento de origen y sugerir valores. Las reglas validan al ejecutar la operación. Guardar actualiza la vista actual y ofrece **Ver registro guardado** si la ficha está en otra ruta.
+Las pantallas agrupan acciones y registros en zonas que se distinguen con divisores. La interfaz usa un tema oscuro con niveles de grafito, acentos cian y colores semánticos. Los comprobantes y reportes se imprimen con una paleta clara. La navegación queda en el lateral en escritorio y pasa a una franja horizontal en pantallas estrechas. Los botones **?** ofrecen ayuda y **Paso sugerido** orienta el recorrido. Los selectores pueden preseleccionar el documento de origen y sugerir valores. Las reglas validan al ejecutar la operación. Guardar actualiza la vista actual y ofrece **Ver registro guardado** si la ficha está en otra ruta.
 
 ## Datos y persistencia
 

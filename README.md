@@ -26,7 +26,7 @@ Usa el mismo perfil de navegador y la misma dirección para acceder a tus regist
 | Facturación | Factura o boleta interna desde un pedido entregado, ficha imprimible, cuenta por cobrar y asiento pendiente |
 | Finanzas | Cuentas por cobrar y pagar, crédito, programación y confirmación de pagos, caja, bancos y conciliación |
 | Contabilidad | Asientos, apertura de inventario, activos, depreciación, balance de comprobación, diario, mayor y cierre |
-| Reportes | Ventas, inventario y compras, entregas, tesorería y contabilidad, con filtros, CSV e impresión |
+| Reportes | Ventas, inventario y compras, entregas, tesorería y contabilidad, con dashboard, filtros y exportación a Excel, PDF y CSV |
 
 Las pantallas agrupan tareas y registros en zonas diferenciadas. Los botones **?** explican la interfaz y **Paso sugerido** orienta el recorrido. Al guardar se mantiene la vista actual y se ofrece **Ver registro guardado** cuando corresponde.
 
@@ -65,6 +65,6 @@ node tests/interfaz/logistica-navegador.cjs 9245
 
 Si Chrome está en otra carpeta, ajusta su ruta. Cada script usa Chrome headless y elimina su contexto al finalizar. Las capturas, PDF y resultados se guardan en carpetas temporales fuera del repositorio. Al terminar, cierra solo el Chrome de prueba.
 
-Verificación local del 25 de noviembre de 2026 con datos aislados. Pasaron 134 pruebas de reglas y 222 comprobaciones de navegador (74 de Comercial y 148 del recorrido integrado), con cero excepciones JavaScript.
+Verificación local del 25 de noviembre de 2026 con datos aislados. Pasaron 134 pruebas de reglas y 226 comprobaciones de navegador (74 de Comercial y 152 del recorrido integrado), con cero excepciones JavaScript.
 
 El [escenario de evaluación del Kardex valorizado](docs/borradores/evaluacion-kardex-valorizado.md) también está disponible desde la aplicación y trabaja con datos en memoria.

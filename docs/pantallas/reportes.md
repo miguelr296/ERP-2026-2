@@ -2,7 +2,9 @@
 
 [Inicio](../../README.md) · [Arquitectura y perfiles](../arquitectura.md)
 
-En **Aplicaciones → Reportes**, elige una consulta, activa la sede en la cabecera y selecciona las fechas o el mes. La vista abre inicialmente con el mes actual. **Aplicar filtro** actualiza la consulta. Puedes abrir los documentos enlazados, exportar las tablas con datos a CSV o imprimir el reporte completo desde el navegador.
+En **Aplicaciones → Reportes**, el **Dashboard** muestra indicadores, gráficos y alertas calculados con los registros de la sede activa que puede consultar tu perfil. Los gráficos vacíos indican la ausencia de datos. Entre las alertas se incluyen los pedidos bloqueados, los productos sin disponibilidad, las entregas parciales o fallidas, los vencimientos de tesorería y los asientos pendientes, según el acceso.
+
+La vista abre inicialmente con el mes actual. Usa **Aplicar filtro** para actualizar el rango y el mes contable. Cada área explica el criterio de fechas que usa. **Ver detalle** lleva a la consulta y conserva los filtros.
 
 | Consulta | Datos y criterio | Perfiles principales |
 |---|---|---|
@@ -16,4 +18,4 @@ Jefatura y Super Admin pueden consultar todas las vistas. Cada reporte usa los d
 
 En Tesorería el corte incluye documentos y movimientos anteriores al inicio del rango si afectan el saldo final. Las existencias de Inventario reflejan el estado actual y las fechas filtran las compras. En Contabilidad, el saldo inicial acumula los asientos contabilizados de meses anteriores.
 
-El CSV contiene encabezados y filas de la tabla elegida. Está en UTF-8, usa punto y coma como separador y expresa los importes en soles. Para guardar un PDF, elige **Imprimir reporte** y selecciona la opción de guardar como PDF del navegador.
+En el Dashboard, Excel y CSV descargan los indicadores, las alertas y los valores de los gráficos. En el detalle, descargan la tabla elegida. Excel genera un archivo `.xlsx` con hojas **Datos** y **Contexto** (sede, período y perfil). El CSV está en UTF-8, usa punto y coma como separador y expresa los importes en soles. Para el informe completo con el diseño y gráficos disponibles, elige **Exportar PDF** y selecciona **Guardar como PDF** en el navegador.

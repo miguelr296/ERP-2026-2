@@ -262,6 +262,11 @@ async function ejecutar() {
     const csvReporte = path.join(carpeta, "famihogar-centro-comprobantes-de-venta.csv");
     for (let i = 0; !fs.existsSync(csvReporte) && i < 60; i++) await new Promise(r => setTimeout(r, 50));
     if (!fs.readFileSync(csvReporte, "utf8").includes('"BOL-INT-000001"')) throw Error("El CSV descargado no incluye el comprobante");
+    await clic("[aria-label='Exportar Comprobantes de venta a Excel']");
+    const excelReporte = path.join(carpeta, "famihogar-centro-comprobantes-de-venta.xlsx");
+    for (let i = 0; !fs.existsSync(excelReporte) && i < 60; i++) await new Promise(r => setTimeout(r, 50));
+    const libroExcel = fs.readFileSync(excelReporte);
+    if (libroExcel.readUInt32LE() !== 0x04034b50 || !libroExcel.includes(Buffer.from("BOL-INT-000001"))) throw Error("La descarga de Excel no contiene el comprobante");
     await foto("reportes-ventas");
     const pdfReporte = await enviar("Page.printToPDF", { printBackground: true, preferCSSPageSize: true, displayHeaderFooter: false });
     if (!Buffer.from(pdfReporte.data, "base64").toString("latin1").includes("/Type /Page")) throw Error("Reporte PDF vacío");
@@ -282,9 +287,26 @@ async function ejecutar() {
     await ir("reportes/contabilidad");
     await rellenar({ "#reporte-mes": mesAnterior }); await evaluar("document.querySelector('#filtros-reportes').requestSubmit()");
     await comprobar("document.querySelector('#contenido').textContent.includes('Cerrado') && document.querySelector('#contenido').textContent.includes('Depreciación de Equipo de exhibición')", "Reporte de contabilidad refleja asientos y cierre del mes");
+    await ir("reportes/resumen");
+    await comprobar("document.querySelectorAll('#contenido .panel-dashboard').length===5 && document.querySelector('#contenido').textContent.includes('Facturación por tipo') && document.querySelector('#contenido').textContent.includes('Alertas operativas') && document.querySelector('#imprimir-reporte').textContent==='Exportar PDF'", "Dashboard reúne gráficos, alertas y exportaciones de las áreas autorizadas");
+    await foto("reportes-dashboard");
+    const pdfDashboard = await enviar("Page.printToPDF", { printBackground: true, preferCSSPageSize: true, displayHeaderFooter: false });
+    if (!Buffer.from(pdfDashboard.data, "base64").toString("latin1").includes("/Type /Page")) throw Error("Dashboard PDF vacío");
+    await rellenar({ "#reporte-desde": mesAnterior + "-01", "#reporte-hasta": mesAnterior + "-01" });
+    await evaluar("document.querySelector('#filtros-reportes').requestSubmit()");
+    await comprobar("document.querySelector('.panel-dashboard').textContent.includes('Sin datos para graficar') && document.querySelector('.reporte-impresion').textContent.includes('Sin datos para graficar')", "Dashboard y PDF reflejan el filtro sin rellenar gráficos con datos ficticios");
+    await rellenar({ "#reporte-desde": hoyLibros, "#reporte-hasta": hoyLibros });
+    await evaluar("document.querySelector('#filtros-reportes').requestSubmit()");
     await comprobar("JSON.stringify(localStorage)===" + JSON.stringify(datosAntesReportes), "Consultas de Reportes conservan los registros");
     await login("Operador de facturación", "Facturación"); await ir("reportes/tesoreria");
     await comprobar("!document.querySelector('#navegacion [href=\\\"#reportes/tesoreria\\\"]') && document.querySelector('#contenido').textContent.includes('no está disponible') && !document.querySelector('#contenido [data-reporte-csv]')", "El acceso directo y la exportación respetan el perfil");
+    await ir("reportes/resumen");
+    await comprobar("document.querySelectorAll('#contenido .panel-dashboard').length===1 && !document.querySelector('#contenido').textContent.includes('Saldo por cobrar al corte') && !document.querySelector('.reporte-impresion').textContent.includes('Tesorería')", "Dashboard y PDF excluyen las áreas ajenas al perfil");
+    await clic("[aria-label='Exportar Dashboard a Excel']");
+    const excelDashboard = path.join(carpeta, "famihogar-centro-dashboard.xlsx");
+    for (let i = 0; !fs.existsSync(excelDashboard) && i < 60; i++) await new Promise(r => setTimeout(r, 50));
+    const contenidoDashboardExcel = fs.readFileSync(excelDashboard).toString("utf8");
+    if (!contenidoDashboardExcel.includes("Comprobantes emitidos") || contenidoDashboardExcel.includes("Saldo por cobrar al corte")) throw Error("El Excel del dashboard debe respetar el perfil");
     await ir("reportes/ventas");
     await comprobar("document.querySelector('#contenido').textContent.includes('BOL-INT-000001') && !document.querySelector('#contenido').textContent.includes('Pedidos de venta')", "Facturación consulta comprobantes dentro de Ventas");
     await login("Persona de demostración", "Super Admin");
@@ -296,7 +318,7 @@ async function ejecutar() {
       if (ancho === 768) await foto("tableta-reportes");
     }
     await enviar("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
-    for (const ruta of ["reportes/ventas", "reportes/inventario", "reportes/entregas", "reportes/tesoreria", "reportes/contabilidad", "finanzas/cobrar", "finanzas/pagar", "finanzas/caja", "contabilidad/asientos", "contabilidad/activos", "contabilidad/cierre"]) {
+    for (const ruta of ["reportes/resumen", "reportes/ventas", "reportes/inventario", "reportes/entregas", "reportes/tesoreria", "reportes/contabilidad", "finanzas/cobrar", "finanzas/pagar", "finanzas/caja", "contabilidad/asientos", "contabilidad/activos", "contabilidad/cierre"]) {
       await ir(ruta);
       await comprobar("document.documentElement.scrollWidth<=innerWidth && !document.querySelector('#contenido .error:not(:empty)')", "Móvil sin desbordamiento: " + ruta);
     }
