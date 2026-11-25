@@ -254,10 +254,51 @@ async function ejecutar() {
     await esperar("document.querySelector('#contenido h1')?.textContent==='Cierre y libros'");
     await comprobar("Libros.leer().cierres.length===1 && document.querySelector('#rol-actual').textContent==='Super Admin'", "Recarga conserva registros y sesión de ambos módulos");
 
+    const datosAntesReportes = await evaluar("JSON.stringify(localStorage)");
+    await ir("reportes/ventas");
+    await comprobar("document.querySelector('#contenido').textContent.includes('BOL-INT-000001') && !!document.querySelector('#contenido [data-reporte-csv]') && !!document.querySelector('.reporte-impresion')", "Reporte de ventas muestra comprobante, exportación e impresión");
+    await browser.enviar("Browser.setDownloadBehavior", { behavior: "allow", browserContextId, downloadPath: carpeta });
+    await clic("[aria-label='Exportar Comprobantes de venta a CSV']");
+    const csvReporte = path.join(carpeta, "famihogar-centro-comprobantes-de-venta.csv");
+    for (let i = 0; !fs.existsSync(csvReporte) && i < 60; i++) await new Promise(r => setTimeout(r, 50));
+    if (!fs.readFileSync(csvReporte, "utf8").includes('"BOL-INT-000001"')) throw Error("El CSV descargado no incluye el comprobante");
+    await foto("reportes-ventas");
+    const pdfReporte = await enviar("Page.printToPDF", { printBackground: true, preferCSSPageSize: true, displayHeaderFooter: false });
+    if (!Buffer.from(pdfReporte.data, "base64").toString("latin1").includes("/Type /Page")) throw Error("Reporte PDF vacío");
+    await rellenar({ "#reporte-desde": hoyLibros, "#reporte-hasta": mesAnterior + "-01" });
+    await evaluar("document.querySelector('#filtros-reportes').requestSubmit()");
+    await comprobar("document.querySelector('#filtros-reportes .error').textContent.includes('fecha inicial') && document.querySelector('#contenido').textContent.includes('BOL-INT-000001')", "Un rango inválido conserva el reporte existente");
+    await rellenar({ "#reporte-desde": mesAnterior + "-01", "#reporte-hasta": mesAnterior + "-01" });
+    await evaluar("document.querySelector('#filtros-reportes').requestSubmit()");
+    await comprobar("!document.querySelector('#contenido').textContent.includes('BOL-INT-000001')", "El filtro de fechas excluye comprobantes fuera del rango");
+    await rellenar({ "#reporte-desde": hoyLibros, "#reporte-hasta": hoyLibros });
+    await evaluar("document.querySelector('#filtros-reportes').requestSubmit()");
+    await ir("reportes/inventario");
+    await comprobar("document.querySelector('#contenido').textContent.includes('SOF-001') && document.querySelector('#contenido').textContent.includes('F001-001')", "Reporte de inventario y compras reúne stock y facturas verificadas");
+    await ir("reportes/entregas");
+    await comprobar("document.querySelector('#contenido').textContent.includes('Entregado') && document.querySelector('#contenido tbody').textContent.includes('DES-')", "Reporte de entregas muestra la orden confirmada");
+    await ir("reportes/tesoreria");
+    await comprobar("document.querySelector('#contenido').textContent.includes('AB-001') && document.querySelector('#contenido').textContent.includes('PG-001')", "Reporte de tesorería muestra los movimientos del rango");
+    await ir("reportes/contabilidad");
+    await rellenar({ "#reporte-mes": mesAnterior }); await evaluar("document.querySelector('#filtros-reportes').requestSubmit()");
+    await comprobar("document.querySelector('#contenido').textContent.includes('Cerrado') && document.querySelector('#contenido').textContent.includes('Depreciación de Equipo de exhibición')", "Reporte de contabilidad refleja asientos y cierre del mes");
+    await comprobar("JSON.stringify(localStorage)===" + JSON.stringify(datosAntesReportes), "Consultas de Reportes conservan los registros");
+    await login("Operador de facturación", "Facturación"); await ir("reportes/tesoreria");
+    await comprobar("!document.querySelector('#navegacion [href=\\\"#reportes/tesoreria\\\"]') && document.querySelector('#contenido').textContent.includes('no está disponible') && !document.querySelector('#contenido [data-reporte-csv]')", "El acceso directo y la exportación respetan el perfil");
+    await ir("reportes/ventas");
+    await comprobar("document.querySelector('#contenido').textContent.includes('BOL-INT-000001') && !document.querySelector('#contenido').textContent.includes('Pedidos de venta')", "Facturación consulta comprobantes dentro de Ventas");
+    await login("Persona de demostración", "Super Admin");
+
+    for (const ancho of [768, 1024]) {
+      await enviar("Emulation.setDeviceMetricsOverride", { width: ancho, height: 900, deviceScaleFactor: 1, mobile: false });
+      await ir("reportes/ventas");
+      await comprobar("document.documentElement.scrollWidth<=innerWidth && document.querySelector('#navegacion [aria-current=page]').textContent.trim()==='Ventas' && !!document.querySelector('#filtros-reportes button[type=submit]')", "Tablet conserva navegación y filtros a " + ancho + " px");
+      if (ancho === 768) await foto("tableta-reportes");
+    }
     await enviar("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
-    for (const ruta of ["finanzas/cobrar", "finanzas/pagar", "finanzas/caja", "contabilidad/asientos", "contabilidad/activos", "contabilidad/cierre"]) {
+    for (const ruta of ["reportes/ventas", "reportes/inventario", "reportes/entregas", "reportes/tesoreria", "reportes/contabilidad", "finanzas/cobrar", "finanzas/pagar", "finanzas/caja", "contabilidad/asientos", "contabilidad/activos", "contabilidad/cierre"]) {
       await ir(ruta);
-      await comprobar("document.documentElement.scrollWidth<=innerWidth && !document.querySelector('#contenido .error')", "Móvil sin desbordamiento: " + ruta);
+      await comprobar("document.documentElement.scrollWidth<=innerWidth && !document.querySelector('#contenido .error:not(:empty)')", "Móvil sin desbordamiento: " + ruta);
     }
     await enviar("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
     await login("Luis", "Asesor"); await ir("comercial/pedidos/" + pv);

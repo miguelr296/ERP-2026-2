@@ -22,7 +22,7 @@ function entorno() {
   const localStorage = { getItem: k => memoria.get(k) ?? null, setItem: (k, v) => memoria.set(k, v) };
   const w = {};
   const ctx = vm.createContext({ window: w, Date: FechaFija, localStorage, crypto: webcrypto });
-  for (const archivo of ["permisos.js", "datos-comercial.js", "libros.js", "finanzas-reglas.js", "contabilidad-reglas.js"]) {
+  for (const archivo of ["permisos.js", "datos-comercial.js", "libros.js", "finanzas-reglas.js", "contabilidad-reglas.js", "reportes.js"]) {
     vm.runInContext(fs.readFileSync(path.join(raiz, archivo), "utf8"), ctx, { filename: archivo });
   }
   const pedido = { id: "pedido-1", numero: "PV-00001", estado: "Aprobado", sede: "centro", cliente: w.FAMIHOGAR.clientes[0],
@@ -45,7 +45,7 @@ function entorno() {
     assert.throws(() => ejecutar(actor, f, ...args), mensaje);
     assert.equal(memoria.get(L.CLAVE), anterior);
   };
-  return { L, F, C, pedido, entregas, ejecutar, fallaSinEscritura };
+  return { L, F, C, R: w.ReportesERP, pedido, entregas, ejecutar, fallaSinEscritura };
 }
 
 test("la cuenta por cobrar exige entrega completa y calcula exposición con el saldo al día", () => {
@@ -149,4 +149,36 @@ test("el cierre exige asientos contabilizados y protege el período de operacion
   t.ejecutar(contador, C.cerrarPeriodo, "2026-10", "Cierre de prueba");
   assert.equal(C.balances(L.leer(), "centro", "2026-11").find(x => x.cuenta === "42").inicial, -11800);
   t.fallaSinEscritura(/cerrado/, admin, F.fondoInicial, { fecha: "2026-10-31", referencia: "AP", cuenta: "banco", importe: 5000 });
+});
+
+test("el reporte separa los saldos al corte de los movimientos del rango y de otras sedes", () => {
+  const t = entorno();
+  t.L.ejecutar(tesorero, d => {
+    d.documentos.push(
+      { id: "venta", tipo: "venta", sede: "centro", fecha: "2026-11-01", vence: "2026-11-11", total: 10000, referencia: "BOL-1" },
+      { id: "futura", tipo: "venta", sede: "centro", fecha: "2026-11-24", vence: "2026-11-24", total: 5000, referencia: "BOL-2" },
+      { id: "otra", tipo: "compra", sede: "surco", fecha: "2026-11-01", vence: "2026-11-01", total: 8000, referencia: "CXP-1" }
+    );
+    d.movimientos.push(
+      { sede: "centro", documentoId: "venta", fecha: "2026-11-10", direccion: "Ingreso", cuenta: "banco", importe: 2000 },
+      { sede: "centro", documentoId: "venta", fecha: "2026-11-15", direccion: "Ingreso", cuenta: "banco", importe: 3000 },
+      { sede: "centro", documentoId: "venta", fecha: "2026-11-24", direccion: "Ingreso", cuenta: "banco", importe: 5000 }
+    );
+  });
+  const filtro = { desde: "2026-11-15", hasta: "2026-11-20" };
+  const previo = JSON.stringify(t.L.leer());
+  const reporte = t.R.tesoreria(filtro, tesorero);
+  assert.deepEqual(Array.from(reporte.indicadores, fila => fila[1]), [5000, 0, 3000, 0]);
+  assert.equal(reporte.tablas[0].filas[0].at(-1), "Vencida");
+  assert.equal(reporte.tablas[1].filas.length, 1);
+  assert.equal(JSON.stringify(t.L.leer()), previo);
+});
+
+test("el CSV exporta textos protegidos y conserva importes numéricos", () => {
+  const { R } = entorno();
+  const datos = {
+    columnas: [{ titulo: "Tercero" }, { titulo: "Documento" }, { titulo: "Saldo", formato: "moneda" }],
+    filas: [["  =VALOR", { texto: 'Factura "1"', ruta: "interno" }, -1200]]
+  };
+  assert.equal(R.csv(datos), '\uFEFF"Tercero";"Documento";"Saldo"\r\n"\'  =VALOR";"Factura ""1""";-12.00\r\n');
 });

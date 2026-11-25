@@ -14,13 +14,14 @@ El servidor HTTP estático entrega los archivos de `src/Erp.Api/wwwroot`. El nav
 | Comercial | `datos-comercial.js`, `reglas-comerciales.js`, `pantallas-comerciales.js` y `ContratosComerciales` en `aplicaciones.js` |
 | Logística, Compras y Despachos | `datos-logistica.js`, `logistica-aplicacion.js`, `logistica-reglas.js`, `compras-reglas.js`, `almacenes-reglas.js`, `distribucion-reglas.js` y sus pantallas |
 | Facturación, Finanzas y Contabilidad | `pantallas-libros.js` organiza las vistas de las tres áreas. Cada área tiene su archivo `pantallas-*.js` |
+| Reportes | `pantallas-reportes.js` presenta y exporta consultas. `reportes.js` calcula indicadores y tablas a partir de los registros operativos |
 | Reglas de documentos, movimientos y asientos | `finanzas-reglas.js`, `contabilidad-reglas.js` y `libros.js`. `Finanzas.registrarVenta` valida el perfil de Facturación y guarda el documento, su cuenta y su asiento |
 | Permisos e integración | `permisos.js`, `integraciones-locales.js` y los contratos públicos |
 | Pruebas y evaluación del inventario | [tests/interfaz](../tests/interfaz), `logistica-evaluacion.js` y [generar-evaluacion-kardex.cjs](../scripts/generar-evaluacion-kardex.cjs) |
 
 Las rutas usan el fragmento de la URL. `#facturacion/comprobantes` abre un listado y `#finanzas/cobrar/<id>` abre una ficha. Los archivos de la entrada llevan una versión en su URL para que el navegador cargue dependencias compatibles al cambiar la aplicación.
 
-Las pantallas agrupan acciones y registros en zonas que se distinguen con divisores. La paleta usa índigo para la cabecera, verde para la acción principal, ámbar para la orientación y un tono propio para cada aplicación. Los botones **?** ofrecen ayuda y **Paso sugerido** orienta el recorrido. Los selectores pueden preseleccionar el documento de origen y sugerir valores. Las reglas validan al ejecutar la operación. Guardar actualiza la vista actual y ofrece **Ver registro guardado** si la ficha está en otra ruta.
+Las pantallas agrupan acciones y registros en zonas que se distinguen con divisores. La identidad combina verde profundo, superficies claras y acentos cálidos. La navegación queda en el lateral en escritorio y pasa a una franja horizontal en pantallas estrechas. Los botones **?** ofrecen ayuda y **Paso sugerido** orienta el recorrido. Los selectores pueden preseleccionar el documento de origen y sugerir valores. Las reglas validan al ejecutar la operación. Guardar actualiza la vista actual y ofrece **Ver registro guardado** si la ficha está en otra ruta.
 
 ## Datos y persistencia
 
@@ -83,7 +84,6 @@ Las operaciones con revisión independiente comprueban que el autor y el revisor
 
 ## Alcance pendiente
 
-- La entrada de **Reportes** sigue en desarrollo. Los indicadores y los libros se consultan dentro de sus áreas.
 - El retorno físico de una devolución se puede registrar. La emisión de nota de crédito y su regularización financiera siguen pendientes.
 - La facturación es interna y de demostración. La conciliación usa partidas ingresadas manualmente. Las conexiones tributarias y bancarias corresponden a otra etapa.
 - Los diagramas TO-BE se prepararán a partir de la revisión del prototipo.

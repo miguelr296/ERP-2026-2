@@ -2,7 +2,7 @@
 
 ## Prototipo actual
 
-FAMIHOGAR SAC cuenta con un prototipo local de Comercial, Logística, Compras, Despachos, Facturación, Finanzas y Contabilidad. El recorrido conecta pedidos, entregas, comprobantes, cuentas por cobrar y pagar, movimientos de tesorería y asientos. **Reportes** figura como área pendiente. La documentación describe las operaciones realizadas y sirve de insumo para elaborar los TO-BE después de revisar el prototipo.
+FAMIHOGAR SAC cuenta con un prototipo local de Comercial, Logística, Compras, Despachos, Facturación, Finanzas y Contabilidad. El recorrido conecta pedidos, entregas, comprobantes, cuentas por cobrar y pagar, movimientos de tesorería y asientos. **Reportes** consolida consultas por sede y perfil con CSV e impresión. La documentación describe las operaciones realizadas y sirve de insumo para elaborar los TO-BE después de revisar el prototipo.
 
 La sesión guarda nombre, perfil y sede. Los registros viven en el navegador. Super Admin facilita la presentación completa y los perfiles operativos permiten comprobar la separación de responsabilidades. La facturación es interna y de demostración.
 

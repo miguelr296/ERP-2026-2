@@ -34,7 +34,7 @@
     { id: "facturacion", nombre: "Facturación", icono: "documento", color: "#d59946", descripcion: "Facturas y boletas de venta" },
     { id: "contabilidad", nombre: "Contabilidad", icono: "libro", color: "#687fa7", descripcion: "Asientos, activos y libros" },
     { id: "compras", nombre: "Compras", icono: "compra", color: "#559694", descripcion: "Proveedores y abastecimiento" },
-    { id: "reportes", nombre: "Reportes", icono: "ventas", color: "#b57479" }
+    { id: "reportes", nombre: "Reportes", icono: "ventas", color: "#b57479", descripcion: "Indicadores y exportaciones" }
   ];
   const secciones = { resumen: "Inicio", clientes: "Clientes", oportunidades: "Oportunidades", cotizaciones: "Cotizaciones", pedidos: "Pedidos", catalogo: "Catálogo", precios: "Precios", aprobaciones: "Aprobaciones", solicitudes: "Postventa", indicadores: "Indicadores" };
   const pasosVenta = [["clientes", "Cliente"], ["oportunidades", "Oportunidad"], ["cotizaciones", "Cotización"], ["pedidos", "Pedido"]];
@@ -100,7 +100,7 @@
 
   function dibujarModulos() {
     const lista = modulos.filter(modulo => normalizar(modulo.nombre).includes(normalizar($("#buscar-aplicacion").value)));
-    $("#modulos").innerHTML = lista.map(modulo => `<button class="modulo" type="button" data-modulo="${modulo.id}" style="--color-modulo:${modulo.color}"><span class="icono-modulo">${icono(modulo.icono)}</span><strong>${modulo.nombre}</strong><small>${modulo.descripcion || "En desarrollo"}</small></button>`).join("");
+    $("#modulos").innerHTML = lista.map(modulo => `<button class="modulo" type="button" data-modulo="${modulo.id}" style="--color-modulo:${modulo.color}"><span class="icono-modulo">${icono(modulo.icono)}</span><span class="texto-modulo"><strong>${modulo.nombre}</strong><small>${modulo.descripcion || "En desarrollo"}</small></span><span class="flecha-modulo">${icono("flecha")}</span></button>`).join("");
     $("#sin-modulos").hidden = lista.length !== 0;
     ayuda.aplicaciones();
   }
@@ -135,6 +135,12 @@
       ayuda.vista(modulo.id, partes[1]);
       return;
     }
+    if (modulo.id === "reportes") {
+      reportes.dibujar(partes);
+      ayuda.vista(modulo.id, partes[1]);
+      $("#contenido").focus();
+      return;
+    }
     if (["facturacion", "finanzas", "contabilidad"].includes(modulo.id)) {
       libros.dibujar(modulo, partes);
       ayuda.vista(modulo.id, partes[1]);
@@ -166,7 +172,9 @@
     const identificacion = contexto ? `<p class="ceja">${esc(contexto)}</p>` : "";
     const subtitulo = descripcion ? `<p class="descripcion-vista">${esc(descripcion)}</p>` : "";
     const operaciones = acciones ? `<div class="acciones-vista" role="group" aria-label="Acciones de la sección">${acciones}</div>` : "";
-    return `<header class="encabezado-vista"><div class="titulo-vista">${identificacion}<h1>${esc(titulo)}</h1>${subtitulo}</div>${operaciones}</header>`;
+    const modulo = modulos.find(item => location.hash.startsWith("#" + item.id + "/"));
+    return `<header class="encabezado-vista"><div class="identidad-vista"><span class="icono-cabecera">${icono(modulo?.icono || "documento")}</span>
+      <div class="titulo-vista">${identificacion}<h1>${esc(titulo)}</h1>${subtitulo}</div></div>${operaciones}</header>`;
   }
 
   function zonaTrabajo(etiqueta, contenido) {
@@ -182,8 +190,8 @@
     return `<span class="etiqueta ${color}">${esc(estado)}</span>`;
   }
 
-  function tabla(titulo, columnas, filas, buscar = true) {
-    return `<section class="tarjeta"><div class="barra-tabla"><h2>${esc(titulo)}</h2>${buscar ? '<label class="solo-lectores" for="filtro-tabla">Buscar en la tabla</label><input id="filtro-tabla" type="search" placeholder="Buscar en esta vista…">' : ""}</div><div class="tabla-desplazable"><table><thead><tr>${columnas.map(columna => `<th scope="col">${columna}</th>`).join("")}</tr></thead><tbody>${filas.join("") || `<tr><td colspan="${columnas.length}" class="vacio">No hay registros en esta vista.</td></tr>`}</tbody></table></div>${buscar ? '<p id="tabla-sin-resultados" class="vacio" hidden>No se encontraron coincidencias.</p>' : ""}</section>`;
+  function tabla(titulo, columnas, filas, buscar = true, control = "") {
+    return `<section class="tarjeta tarjeta-tabla"><div class="barra-tabla"><div class="titulo-tabla"><span class="icono-tabla">${icono("tabla")}</span><h2>${esc(titulo)}</h2></div>${buscar ? '<label class="solo-lectores" for="filtro-tabla">Buscar en la tabla</label><input id="filtro-tabla" type="search" placeholder="Buscar en esta vista…">' : ""}${control}</div><div class="tabla-desplazable"><table><thead><tr>${columnas.map(columna => `<th scope="col">${columna}</th>`).join("")}</tr></thead><tbody>${filas.join("") || `<tr><td colspan="${columnas.length}" class="vacio">No hay registros en esta vista.</td></tr>`}</tbody></table></div>${buscar ? '<p id="tabla-sin-resultados" class="vacio" hidden>No se encontraron coincidencias.</p>' : ""}</section>`;
   }
 
   function filasOportunidades(lista) {
@@ -242,7 +250,7 @@
     const resultado = document.createElement("div");
     resultado.className = "resultado-operacion";
     resultado.tabIndex = -1;
-    resultado.innerHTML = `<span>${esc(mensaje)}</span><a class="boton" href="#${esc(destino)}">Ver registro guardado</a>`;
+    resultado.innerHTML = `<span class="texto-resultado">${icono("confirmado")}${esc(mensaje)}</span><a class="boton" href="#${esc(destino)}">Ver registro guardado</a>`;
     if (encabezado) encabezado.after(resultado);
     else $("#contenido").prepend(resultado);
     $("#estado").hidden = true;
@@ -435,6 +443,7 @@
   const ampliacion = window.PantallasComerciales(contextoPantallas);
   const logistica = window.PantallasLogistica(contextoPantallas);
   const libros = window.PantallasLibros(contextoPantallas);
+  const reportes = window.PantallasReportes(contextoPantallas);
 
   // Contratos públicos de solo consulta para las áreas que consumen documentos comerciales.
   window.ContratosComerciales = {

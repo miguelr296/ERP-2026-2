@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#232845">
+  <meta name="theme-color" content="#142e30">
   <title>FAMIHOGAR · ERP</title>
-  <link rel="stylesheet" href="estilos.css?v=20261124.5">
+  <link rel="stylesheet" href="estilos.css?v=20261125.4">
   <script src="permisos.js?v=20261124.1" defer></script>
   <script src="datos-comercial.js?v=20261124.1" defer></script>
   <script src="integraciones-locales.js?v=20261124.1" defer></script>
@@ -29,9 +29,11 @@
   <script src="pantallas-facturacion.js?v=20261124.4" defer></script>
   <script src="pantallas-finanzas.js?v=20261124.4" defer></script>
   <script src="pantallas-contabilidad.js?v=20261124.4" defer></script>
-  <script src="ayuda-guias.js?v=20261124.1" defer></script>
+  <script src="reportes.js?v=20261125.1" defer></script>
+  <script src="pantallas-reportes.js?v=20261125.1" defer></script>
+  <script src="ayuda-guias.js?v=20261125.1" defer></script>
   <script src="ayuda.js?v=20261124.2" defer></script>
-  <script src="aplicaciones.js?v=20261124.4" defer></script>
+  <script src="aplicaciones.js?v=20261125.2" defer></script>
 </head>
 <body>
   <svg class="simbolos" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -46,11 +48,25 @@
     <symbol id="i-personas" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M2 21v-3a7 7 0 0 1 14 0v3M17 3a4 4 0 0 1 0 8M19 14a6 6 0 0 1 3 5v2"/></symbol>
     <symbol id="i-buscar" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></symbol>
     <symbol id="i-salir" viewBox="0 0 24 24"><path d="M10 3H3v18h7M8 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-flecha" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-tabla" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11m6-11v11M3 14h18"/></symbol>
+    <symbol id="i-formulario" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6m-6 4h6m-6 4h4"/></symbol>
+    <symbol id="i-ayuda" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 4 2.8c-.9.4-1 1.1-1 2.2m0 3h.01"/></symbol>
+    <symbol id="i-confirmado" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></symbol>
+    <symbol id="i-sede" viewBox="0 0 24 24"><path d="M19 10c0 5-7 10-7 10S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2"/></symbol>
     <symbol id="i-casa" viewBox="0 0 24 24"><path d="m2 11 10-9 10 9M5 9v13h14V9M9 22v-8h6v8"/></symbol>
   </svg>
   <section id="acceso" class="acceso" aria-labelledby="titulo-acceso">
-    <div class="tarjeta-acceso">
-      <a class="marca" href="#"><span class="marca-icono">F</span><span>FAMIHOGAR<small>ERP · Gestión empresarial</small></span></a>
+    <div class="marco-acceso">
+      <div class="identidad-acceso">
+        <a class="marca" href="#"><span class="marca-icono">F</span><span>FAMIHOGAR<small>ERP · Gestión empresarial</small></span></a>
+        <div class="mosaico-acceso" aria-hidden="true">
+          <span><svg><use href="#i-ventas"/></svg></span><span><svg><use href="#i-caja"/></svg></span>
+          <span><svg><use href="#i-libro"/></svg></span><span><svg><use href="#i-finanzas"/></svg></span>
+        </div>
+        <p class="pie-acceso">FAMIHOGAR SAC</p>
+      </div>
+      <div class="tarjeta-acceso">
       <div class="titulo-acceso"><p class="ceja">BIENVENIDO</p><h1 id="titulo-acceso">Iniciar sesión</h1></div>
       <form id="formulario-acceso">
         <label for="nombre">Usuario</label><input id="nombre" name="nombre" maxlength="60" autocomplete="username" placeholder="Tu nombre de usuario" required>
@@ -58,9 +74,9 @@
         <select id="rol" name="rol" required><option value="">Selecciona tu rol</option><option>Asesor</option><option>Jefatura</option><option>Tesorería</option><option>Almacén</option><option>Transporte</option><option>Facturación</option><option>Contabilidad</option><option>Compras</option><option>Super Admin</option></select>
         <label for="sede-acceso">Sede</label><select id="sede-acceso" name="sede" required></select>
         <p id="error-acceso" class="error" role="alert"></p>
-        <button class="boton primario ancho" type="submit">Ingresar <span aria-hidden="true">→</span></button>
+        <button class="boton primario ancho" type="submit">Ingresar <svg aria-hidden="true"><use href="#i-flecha"/></svg></button>
       </form>
-      <p class="pie-acceso">FAMIHOGAR SAC</p>
+      </div>
     </div>
   </section>
   <section id="sistema" hidden>
@@ -81,11 +97,11 @@
       <p id="sin-modulos" class="vacio" hidden>No se encontraron aplicaciones.</p>
     </main>
     <section id="area" hidden aria-label="Área de trabajo">
-      <nav id="navegacion" class="navegacion" aria-label="Secciones de Comercial"></nav>
       <div class="espacio-trabajo">
         <aside class="panel-lateral">
-          <p class="ceja">ÁREA DE TRABAJO</p><h2 id="nombre-modulo">Comercial</h2>
-          <div class="tarjeta lateral"><h3>Mi sede</h3><p id="sede-panel"></p><small id="responsabilidad-panel"></small></div>
+          <div class="contexto-modulo"><p class="ceja">ÁREA DE TRABAJO</p><h2 id="nombre-modulo">Comercial</h2></div>
+          <nav id="navegacion" class="navegacion" aria-label="Secciones de Comercial"></nav>
+          <div class="tarjeta lateral sede-lateral"><h3><svg aria-hidden="true"><use href="#i-sede"/></svg> Mi sede</h3><p id="sede-panel"></p><small id="responsabilidad-panel"></small></div>
           <div id="accesos-rapidos" class="tarjeta lateral"><h3>Accesos rápidos</h3><button type="button" data-accion="nuevo-cliente">+ Nuevo cliente</button><button type="button" data-accion="nueva-oportunidad">+ Nueva oportunidad</button><button type="button" data-accion="nueva-cotizacion">+ Nueva cotización</button></div>
           <a class="volver-aplicaciones" href="#aplicaciones">← Todas las aplicaciones</a>
         </aside>
@@ -96,12 +112,12 @@
     <footer class="pie-sistema"><span>FAMIHOGAR SAC</span><span id="pie-sede"></span></footer>
   </section>
   <dialog id="modal" aria-labelledby="titulo-modal">
-    <div class="cabecera-modal"><h2 id="titulo-modal"></h2><button id="cerrar-modal" class="boton-icono" type="button" aria-label="Cerrar">×</button></div>
+    <div class="cabecera-modal"><div class="titulo-modal"><span class="icono-cabecera"><svg aria-hidden="true"><use href="#i-formulario"/></svg></span><h2 id="titulo-modal"></h2></div><button id="cerrar-modal" class="boton-icono" type="button" aria-label="Cerrar">×</button></div>
     <div id="cuerpo-modal"></div>
   </dialog>
   <dialog id="ayuda" aria-labelledby="titulo-ayuda">
     <form class="cabecera-modal" method="dialog">
-      <h2 id="titulo-ayuda" tabindex="-1"></h2>
+      <div class="titulo-modal"><span class="icono-cabecera"><svg aria-hidden="true"><use href="#i-ayuda"/></svg></span><h2 id="titulo-ayuda" tabindex="-1"></h2></div>
       <button type="submit" class="boton-icono" aria-label="Cerrar ayuda">×</button>
     </form>
     <div class="cuerpo-ayuda">

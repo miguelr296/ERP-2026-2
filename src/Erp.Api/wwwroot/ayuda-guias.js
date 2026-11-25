@@ -47,9 +47,9 @@ window.GuiasERP = {
     "En Cierre y libros, resuelve los pendientes y consulta el diario, el mayor y el balance de comprobación."
   ],
   reportes: [
-    "Esta aplicación muestra En desarrollo.",
-    "Para ver ventas y cotizaciones, usa Comercial → Indicadores. Para revisar la operación de almacén o entrega, abre Logística → Control.",
-    "Para consultar el diario, el mayor o los saldos contables, ve a Contabilidad → Cierre y libros."
+    "Abre la consulta disponible para tu perfil en la sede seleccionada.",
+    "Indica las fechas o el mes contable y pulsa Aplicar filtro. Revisa la nota que explica el período de cada total.",
+    "Usa Exportar CSV en una tabla con datos o Imprimir reporte para el informe completo."
   ],
 
   "comercial/clientes": [
